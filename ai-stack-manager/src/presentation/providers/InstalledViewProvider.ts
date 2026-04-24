@@ -6,10 +6,8 @@
 
 import * as vscode from 'vscode';
 import { WebviewHelper } from '../webview/WebviewHelper';
-import { LocalRegistry } from '../../infrastructure/repositories/LocalRegistry';
-import { WorkspaceScanner } from '../../infrastructure/services/WorkspaceScanner';
-import { FileInstaller } from '../../infrastructure/services/FileInstaller';
 import { Package, InstallStatus } from '../../domain/entities/Package';
+import { IPackageRepository, IWorkspaceScanner, IInstaller } from '../../domain/interfaces';
 
 export class InstalledViewProvider implements vscode.WebviewViewProvider {
   public static readonly viewType = 'dai-installed';
@@ -17,9 +15,9 @@ export class InstalledViewProvider implements vscode.WebviewViewProvider {
 
   constructor(
     private readonly _extensionUri: vscode.Uri,
-    private readonly _registry: LocalRegistry,
-    private readonly _scanner: WorkspaceScanner,
-    private readonly _installer: FileInstaller,
+    private readonly _registry: IPackageRepository,
+    private readonly _scanner: IWorkspaceScanner,
+    private readonly _installer: IInstaller,
   ) {}
 
   public resolveWebviewView(
@@ -32,8 +30,15 @@ export class InstalledViewProvider implements vscode.WebviewViewProvider {
 
     webviewView.webview.onDidReceiveMessage(async (message) => {
       switch (message.command) {
-        case 'uninstall': await this.handleUninstall(message.packageId); break;
-        case 'openFile': await this.handleOpenFile(message.filePath); break;
+        case 'uninstall':
+          await this.handleUninstall(message.packageId);
+          break;
+        case 'openFile':
+          await this.handleOpenFile(message.filePath);
+          break;
+        case 'configure':
+          vscode.commands.executeCommand('dai.configureAgent', message.packageId);
+          break;
         case 'refresh': await this.updateView(); break;
       }
     });
@@ -117,6 +122,7 @@ export class InstalledViewProvider implements vscode.WebviewViewProvider {
             </div>
             <div class="dai-installed-actions">
               ${status === InstallStatus.Partial ? '<span class="dai-partial-badge">Incompleto</span>' : ''}
+              ${pkg.type.value === 'agent' ? `<button class="dai-btn dai-btn-ghost dai-btn-sm" data-config="${pkg.id}" title="Configurar Agente">⚙️</button>` : ''}
               <button class="dai-btn dai-btn-ghost dai-btn-sm" data-open="${pkg.primaryFilePath}" title="Abrir arquivo">📂</button>
               <button class="dai-btn dai-btn-danger dai-btn-sm" data-uninstall="${pkg.id}" title="Desinstalar">✕</button>
             </div>
@@ -162,6 +168,12 @@ export class InstalledViewProvider implements vscode.WebviewViewProvider {
     document.querySelectorAll('[data-open]').forEach(btn => {
       btn.addEventListener('click', (e) => {
         vscode.postMessage({ command: 'openFile', filePath: e.currentTarget.dataset.open });
+      });
+    });
+
+    document.querySelectorAll('[data-config]').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        vscode.postMessage({ command: 'configure', packageId: e.currentTarget.dataset.config });
       });
     });
     `;

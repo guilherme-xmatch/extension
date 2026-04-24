@@ -6,11 +6,9 @@
  */
 
 import * as vscode from 'vscode';
-import { WebviewHelper } from '../webview/WebviewHelper';
-import { LocalRegistry } from '../../infrastructure/repositories/LocalRegistry';
-import { WorkspaceScanner } from '../../infrastructure/services/WorkspaceScanner';
-import { FileInstaller } from '../../infrastructure/services/FileInstaller';
 import { Package, InstallStatus } from '../../domain/entities/Package';
+import { IPackageRepository, IWorkspaceScanner, IInstaller } from '../../domain/interfaces';
+import { WebviewHelper } from '../webview/WebviewHelper';
 import { Bundle } from '../../domain/entities/Bundle';
 import { PackageType } from '../../domain/value-objects/PackageType';
 import { AgentCategory } from '../../domain/value-objects/AgentCategory';
@@ -21,9 +19,9 @@ export class CatalogViewProvider implements vscode.WebviewViewProvider {
 
   constructor(
     private readonly _extensionUri: vscode.Uri,
-    private readonly _registry: LocalRegistry,
-    private readonly _scanner: WorkspaceScanner,
-    private readonly _installer: FileInstaller,
+    private readonly _registry: IPackageRepository,
+    private readonly _scanner: IWorkspaceScanner,
+    private readonly _installer: IInstaller,
   ) {}
 
   public resolveWebviewView(
@@ -70,7 +68,7 @@ export class CatalogViewProvider implements vscode.WebviewViewProvider {
 
     if (profiles.length > 0 && !query && !filterType) {
       // Pick the most confident profile
-      const bestProfile = profiles.reduce((prev, current) => (prev.confidence > current.confidence) ? prev : current);
+      const bestProfile = profiles.reduce((prev: any, current: any) => (prev.confidence > current.confidence) ? prev : current);
       // Check if bundle is already fully installed
       const recommendedBundle = bundles.find(b => b.id === bestProfile.bundleId);
       if (recommendedBundle) {
@@ -344,7 +342,14 @@ export class CatalogViewProvider implements vscode.WebviewViewProvider {
   private async handleInstall(packageId: string): Promise<void> {
     const pkg = await this._registry.findById(packageId);
     if (!pkg) { return; }
-    await this._installer.install(pkg);
+
+    const packagesToInstall = await this.resolvePackagesForInstall(pkg);
+    if (packagesToInstall.length > 1) {
+      await this._installer.installMany(packagesToInstall);
+    } else {
+      await this._installer.install(pkg);
+    }
+
     await this.updateView();
   }
 
@@ -461,6 +466,47 @@ export class CatalogViewProvider implements vscode.WebviewViewProvider {
       });
     });
     `;
+  }
+
+  private async resolvePackagesForInstall(pkg: Package): Promise<Package[]> {
+    const autoResolve = vscode.workspace.getConfiguration('descomplicai').get<boolean>('autoResolveDependencies', true);
+    if (!autoResolve || pkg.dependencies.length === 0) {
+      return [pkg];
+    }
+
+    const resolved = new Map<string, Package>();
+    const visited = new Set<string>();
+
+    const visit = async (current: Package): Promise<void> => {
+      if (visited.has(current.id)) { return; }
+      visited.add(current.id);
+      resolved.set(current.id, current);
+
+      for (const dependencyId of current.dependencies) {
+        const dependency = await this._registry.findById(dependencyId);
+        if (dependency) {
+          await visit(dependency);
+        }
+      }
+    };
+
+    await visit(pkg);
+    if (resolved.size <= 1) {
+      return [pkg];
+    }
+
+    const choice = await vscode.window.showInformationMessage(
+      `"${pkg.displayName}" possui ${resolved.size - 1} dependência(s). Deseja instalar junto?`,
+      { modal: true },
+      `Instalar com dependências (${resolved.size})`,
+      'Apenas este pacote',
+    );
+
+    if (choice?.startsWith('Instalar com dependências')) {
+      return [...resolved.values()];
+    }
+
+    return [pkg];
   }
 
   private esc(t: string): string { return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }

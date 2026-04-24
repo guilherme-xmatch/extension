@@ -5,13 +5,12 @@
 
 import { InsightsReport, CoverageMap, SecurityAlert } from '../../domain/entities/InsightsReport';
 import { Package, InstallStatus } from '../../domain/entities/Package';
-import { LocalRegistry } from '../repositories/LocalRegistry';
-import { WorkspaceScanner } from './WorkspaceScanner';
+import { IPackageRepository, IWorkspaceScanner } from '../../domain/interfaces';
 
 export class InsightsGenerator {
   constructor(
-    private readonly _registry: LocalRegistry,
-    private readonly _scanner: WorkspaceScanner
+    private readonly _registry: IPackageRepository,
+    private readonly _scanner: IWorkspaceScanner
   ) {}
 
   public async generateReport(): Promise<InsightsReport> {
@@ -52,8 +51,8 @@ export class InsightsGenerator {
     const securityAlerts: SecurityAlert[] = [];
     for (const agent of agents) {
       const tools = agent.agentMeta?.tools || [];
-      const terminalAccess = tools.includes('runInTerminal');
-      const fileEditAccess = tools.includes('editFiles');
+      const terminalAccess = tools.some(tool => this.isTerminalTool(tool));
+      const fileEditAccess = tools.some(tool => this.isEditTool(tool));
 
       if (terminalAccess || fileEditAccess) {
         securityAlerts.push({
@@ -84,5 +83,23 @@ export class InsightsGenerator {
       securityAlerts,
       missingDependencies
     };
+  }
+
+  private isTerminalTool(tool: string): boolean {
+    return [
+      'execute',
+      'runInTerminal',
+      'bash',
+      'terminal',
+      'runCommands',
+    ].includes(tool) || tool.startsWith('runCommands/');
+  }
+
+  private isEditTool(tool: string): boolean {
+    return [
+      'edit',
+      'editFiles',
+      'file-manager',
+    ].includes(tool) || tool.startsWith('edit/');
   }
 }

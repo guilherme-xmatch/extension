@@ -13,8 +13,15 @@
     "Other"
   ],
   "keywords": [
-    "ai", "agents", "skills", "mcp", "copilot",
-    "infrastructure", "package-manager", "itau", "descomplicai"
+    "ai",
+    "agents",
+    "skills",
+    "mcp",
+    "copilot",
+    "infrastructure",
+    "package-manager",
+    "itau",
+    "descomplicai"
   ],
   "activationEvents": [
     "onView:dai-catalog",
@@ -91,6 +98,16 @@
         "command": "dai.openInsights",
         "title": "DescomplicAI: Abrir Insights Engine",
         "icon": "$(graph)"
+      },
+      {
+        "command": "dai.configureAgent",
+        "title": "DescomplicAI: Configurar Agente",
+        "icon": "$(gear)"
+      },
+      {
+        "command": "dai.publishPackage",
+        "title": "DescomplicAI: Contribuir / Publicar",
+        "icon": "$(cloud-upload)"
       }
     ],
     "chatParticipants": [
@@ -142,6 +159,21 @@
           "default": true,
           "description": "Mostrar mensagem de boas-vindas na primeira ativação."
         },
+        "descomplicai.llmProvider": {
+          "type": "string",
+          "enum": [
+            "Azure OpenAI",
+            "Anthropic Claude",
+            "Local Llama 3"
+          ],
+          "default": "Azure OpenAI",
+          "description": "Provedor padrão de LLM para os agentes."
+        },
+        "descomplicai.temperature": {
+          "type": "number",
+          "default": 0.2,
+          "description": "Temperatura global para os agentes ZM1 (0.0 a 1.0)."
+        },
         "descomplicai.autoResolveDependencies": {
           "type": "boolean",
           "default": true,
@@ -158,8 +190,12 @@
     "clean": "rimraf out"
   },
   "devDependencies": {
+    "@types/adm-zip": "^0.5.8",
     "@types/node": "^20.0.0",
     "@types/vscode": "^1.100.0",
     "typescript": "^5.7.0"
+  },
+  "dependencies": {
+    "adm-zip": "^0.5.17"
   }
 }

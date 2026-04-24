@@ -149,11 +149,11 @@ export class LocalRegistry implements IPackageRepository {
         author: 'Itaú Engineering',
         files: [{
           relativePath: '.github/agents/backend-specialist.agent.md',
-          content: '---\nname: backend-specialist\ndescription: >\n  ⚙️ Especialista Backend.\ntools:\n  - read\n  - editFiles\n  - runInTerminal\n  - search\nagents: []\nuser-invocable: false\n---\n\n# Backend Specialist\n',
+          content: '---\nname: backend-specialist\ndescription: >\n  ⚙️ Especialista Backend.\ntools:\n  - read\n  - edit\n  - execute\n  - search\nagents: []\nuser-invocable: false\n---\n\n# Backend Specialist\n',
         }],
         agentMeta: {
           category: AgentCategory.Specialist,
-          tools: ['read', 'editFiles', 'runInTerminal', 'search'],
+          tools: ['read', 'edit', 'execute', 'search'],
           delegatesTo: [],
           workflowPhase: 'EXECUTION',
           userInvocable: false,
@@ -173,11 +173,11 @@ export class LocalRegistry implements IPackageRepository {
         author: 'Itaú Engineering',
         files: [{
           relativePath: '.github/agents/frontend-specialist.agent.md',
-          content: '---\nname: frontend-specialist\ndescription: >\n  🎨 Especialista Frontend.\ntools:\n  - read\n  - editFiles\n  - runInTerminal\n  - search\nagents: []\nuser-invocable: false\n---\n\n# Frontend Specialist\n',
+          content: '---\nname: frontend-specialist\ndescription: >\n  🎨 Especialista Frontend.\ntools:\n  - read\n  - edit\n  - execute\n  - search\nagents: []\nuser-invocable: false\n---\n\n# Frontend Specialist\n',
         }],
         agentMeta: {
           category: AgentCategory.Specialist,
-          tools: ['read', 'editFiles', 'runInTerminal', 'search'],
+          tools: ['read', 'edit', 'execute', 'search'],
           delegatesTo: [],
           workflowPhase: 'EXECUTION',
           userInvocable: false,
@@ -197,11 +197,11 @@ export class LocalRegistry implements IPackageRepository {
         author: 'Itaú Engineering',
         files: [{
           relativePath: '.github/agents/database-specialist.agent.md',
-          content: '---\nname: database-specialist\ndescription: >\n  🗄️ Especialista em Banco de Dados.\ntools:\n  - read\n  - editFiles\n  - search\nagents: []\nuser-invocable: false\n---\n\n# Database Specialist\n',
+          content: '---\nname: database-specialist\ndescription: >\n  🗄️ Especialista em Banco de Dados.\ntools:\n  - read\n  - edit\n  - search\nagents: []\nuser-invocable: false\n---\n\n# Database Specialist\n',
         }],
         agentMeta: {
           category: AgentCategory.Specialist,
-          tools: ['read', 'editFiles', 'search'],
+          tools: ['read', 'edit', 'search'],
           delegatesTo: [],
           workflowPhase: 'EXECUTION',
           userInvocable: false,
@@ -221,11 +221,11 @@ export class LocalRegistry implements IPackageRepository {
         author: 'Itaú Engineering',
         files: [{
           relativePath: '.github/agents/devops-specialist.agent.md',
-          content: '---\nname: devops-specialist\ndescription: >\n  🔧 Especialista DevOps.\ntools:\n  - read\n  - editFiles\n  - runInTerminal\n  - search\nagents: []\nuser-invocable: false\n---\n\n# DevOps Specialist\n',
+          content: '---\nname: devops-specialist\ndescription: >\n  🔧 Especialista DevOps.\ntools:\n  - read\n  - edit\n  - execute\n  - search\nagents: []\nuser-invocable: false\n---\n\n# DevOps Specialist\n',
         }],
         agentMeta: {
           category: AgentCategory.Specialist,
-          tools: ['read', 'editFiles', 'runInTerminal', 'search'],
+          tools: ['read', 'edit', 'execute', 'search'],
           delegatesTo: [],
           workflowPhase: 'EXECUTION',
           userInvocable: false,
@@ -245,11 +245,11 @@ export class LocalRegistry implements IPackageRepository {
         author: 'Itaú Engineering',
         files: [{
           relativePath: '.github/agents/test-engineer.agent.md',
-          content: '---\nname: test-engineer\ndescription: >\n  🧪 Engenheiro de Testes.\ntools:\n  - read\n  - editFiles\n  - runInTerminal\n  - search\nagents: []\nuser-invocable: false\n---\n\n# Test Engineer\n',
+          content: '---\nname: test-engineer\ndescription: >\n  🧪 Engenheiro de Testes.\ntools:\n  - read\n  - edit\n  - execute\n  - search\nagents: []\nuser-invocable: false\n---\n\n# Test Engineer\n',
         }],
         agentMeta: {
           category: AgentCategory.Guardian,
-          tools: ['read', 'editFiles', 'runInTerminal', 'search'],
+          tools: ['read', 'edit', 'execute', 'search'],
           delegatesTo: [],
           workflowPhase: 'VALIDATION',
           userInvocable: false,
@@ -306,8 +306,8 @@ export class LocalRegistry implements IPackageRepository {
 
   private static mcpPackages(): Package[] {
     return [
-      Package.create({ id: 'mcp-github', name: 'github-mcp', displayName: 'GitHub MCP', description: 'GitHub MCP server — issues, PRs, repos, code search, repository management.', type: PackageType.MCP, version: '1.0.0', tags: ['core', 'workflow'], author: 'GitHub', files: [{ relativePath: '.vscode/mcp.json', content: '// GitHub MCP' }] }),
-      Package.create({ id: 'mcp-context7', name: 'context7-mcp', displayName: 'Context7 MCP', description: 'Context7 MCP server — up-to-date library documentation for AI agents.', type: PackageType.MCP, version: '1.0.0', tags: ['core', 'ai'], author: 'Context7', files: [{ relativePath: '.vscode/mcp.json', content: '// Context7 MCP' }] }),
+      Package.create({ id: 'mcp-github', name: 'github-mcp', displayName: 'GitHub MCP', description: 'GitHub MCP server — issues, PRs, repositórios e busca de código via servidor remoto oficial.', type: PackageType.MCP, version: '1.0.0', tags: ['core', 'workflow'], author: 'GitHub', files: [{ relativePath: '.vscode/mcp.json', content: '{\n  "servers": {\n    "github": {\n      "type": "http",\n      "url": "https://api.githubcopilot.com/mcp/"\n    }\n  }\n}' }] }),
+      Package.create({ id: 'mcp-context7', name: 'context7-mcp', displayName: 'Context7 MCP', description: 'Context7 MCP server — documentação atualizada e exemplos de código para bibliotecas.', type: PackageType.MCP, version: '1.0.0', tags: ['core', 'ai'], author: 'Context7', files: [{ relativePath: '.vscode/mcp.json', content: '{\n  "servers": {\n    "context7": {\n      "type": "http",\n      "url": "https://mcp.context7.com/mcp"\n    }\n  }\n}' }] }),
     ];
   }
 
@@ -329,9 +329,9 @@ export class LocalRegistry implements IPackageRepository {
 
   private static promptPackages(): Package[] {
     return [
-      Package.create({ id: 'prompt-bugfix', name: 'bugfix', displayName: 'Bugfix Prompt', description: 'Structured prompt for debugging and fixing bugs systematically.', type: PackageType.Prompt, version: '1.0.0', tags: ['workflow'], author: 'Itaú Engineering', files: [{ relativePath: '.github/prompts/bugfix.prompt.md', content: '---\nmode: agent\n---\n# 🐛 Bugfix\n' }] }),
-      Package.create({ id: 'prompt-new-feature', name: 'new-feature', displayName: 'New Feature Prompt', description: 'Structured prompt for planning and implementing new features.', type: PackageType.Prompt, version: '1.0.0', tags: ['workflow'], author: 'Itaú Engineering', files: [{ relativePath: '.github/prompts/new-feature.prompt.md', content: '---\nmode: agent\n---\n# ✨ New Feature\n' }] }),
-      Package.create({ id: 'prompt-health-check', name: 'health-check-prompt', displayName: 'Health Check Prompt', description: 'Structured prompt for comprehensive project health check.', type: PackageType.Prompt, version: '1.0.0', tags: ['workflow'], author: 'Itaú Engineering', files: [{ relativePath: '.github/prompts/health-check.prompt.md', content: '---\nmode: agent\n---\n# 🏥 Health Check\n' }] }),
+      Package.create({ id: 'prompt-bugfix', name: 'bugfix', displayName: 'Bugfix Prompt', description: 'Structured prompt for debugging and fixing bugs systematically.', type: PackageType.Prompt, version: '1.0.0', tags: ['workflow'], author: 'Itaú Engineering', files: [{ relativePath: '.github/prompts/bugfix.prompt.md', content: '---\ndescription: "Structured prompt for debugging and fixing bugs systematically."\nagent: agent\n---\n# 🐛 Bugfix\n\nInvestigue a causa raiz do problema, proponha a menor correção segura e valide o resultado.\n' }] }),
+      Package.create({ id: 'prompt-new-feature', name: 'new-feature', displayName: 'New Feature Prompt', description: 'Structured prompt for planning and implementing new features.', type: PackageType.Prompt, version: '1.0.0', tags: ['workflow'], author: 'Itaú Engineering', files: [{ relativePath: '.github/prompts/new-feature.prompt.md', content: '---\ndescription: "Structured prompt for planning and implementing new features."\nagent: agent\n---\n# ✨ New Feature\n\nEntenda o contexto, proponha um plano de implementação e execute mudanças incrementais com validação.\n' }] }),
+      Package.create({ id: 'prompt-health-check', name: 'health-check-prompt', displayName: 'Health Check Prompt', description: 'Structured prompt for comprehensive project health check.', type: PackageType.Prompt, version: '1.0.0', tags: ['workflow'], author: 'Itaú Engineering', files: [{ relativePath: '.github/prompts/health-check.prompt.md', content: '---\ndescription: "Structured prompt for comprehensive project health check."\nagent: agent\n---\n# 🏥 Health Check\n\nRevise build, arquivos de configuração, saúde dos agentes e riscos operacionais, depois resuma ações recomendadas.\n' }] }),
     ];
   }
 

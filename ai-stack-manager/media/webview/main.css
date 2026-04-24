@@ -1329,3 +1329,120 @@ body {
   margin-top: 12px;
   justify-content: space-between;
 }
+
+/* ═══════════════════════════════════════════════════
+   CONFIGURATOR FORMS & CONTROLS
+   ═══════════════════════════════════════════════════ */
+
+.dai-form-group {
+  margin-bottom: 16px;
+}
+
+.dai-form-label {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--vscode-descriptionForeground);
+  margin-bottom: 6px;
+}
+
+.dai-form-hint {
+  font-size: 11px;
+  color: var(--vscode-descriptionForeground);
+  opacity: 0.7;
+  margin-top: 4px;
+}
+
+.dai-input {
+  width: 100%;
+  box-sizing: border-box;
+  background: var(--vscode-input-background);
+  color: var(--vscode-input-foreground);
+  border: 1px solid var(--vscode-input-border, transparent);
+  padding: 8px;
+  border-radius: 4px;
+  font-size: 13px;
+}
+
+.dai-input:focus {
+  outline: 1px solid var(--vscode-focusBorder);
+  border-color: var(--vscode-focusBorder);
+}
+
+.dai-slider {
+  -webkit-appearance: none;
+  width: 100%;
+  height: 4px;
+  background: var(--vscode-scrollbarSlider-background);
+  border-radius: 2px;
+  outline: none;
+}
+
+.dai-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--itau-primary);
+  cursor: pointer;
+  box-shadow: 0 0 5px rgba(236, 112, 0, 0.5);
+}
+
+/* Toggle Switch */
+.dai-toggle-group {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.dai-toggle-text {
+  flex: 1;
+  padding-right: 16px;
+}
+
+.dai-switch {
+  position: relative;
+  display: inline-block;
+  width: 36px;
+  height: 20px;
+}
+
+.dai-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.dai-slider-switch {
+  position: absolute;
+  cursor: pointer;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-color: var(--vscode-editorWidget-background);
+  transition: .4s;
+  border-radius: 20px;
+  border: 1px solid var(--vscode-widget-border);
+}
+
+.dai-slider-switch:before {
+  position: absolute;
+  content: "";
+  height: 14px;
+  width: 14px;
+  left: 2px;
+  bottom: 2px;
+  background-color: var(--vscode-foreground);
+  transition: .4s;
+  border-radius: 50%;
+}
+
+input:checked + .dai-slider-switch {
+  background-color: var(--itau-primary);
+  border-color: var(--itau-primary);
+}
+
+input:checked + .dai-slider-switch:before {
+  transform: translateX(16px);
+  background-color: #fff;
+}

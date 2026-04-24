@@ -168,7 +168,7 @@ export class InsightsPanel {
               ${a.terminalAccess && !a.isGuardianPresent ? '🔴 Risco Crítico' : '🟡 Atenção'} — ${a.agentName}
             </span>
             <span class="alert-desc">
-              Este agente possui ferramentas destrutivas (${a.terminalAccess ? 'runInTerminal' : ''} ${a.fileEditAccess ? 'editFiles' : ''}). 
+              Este agente possui ferramentas destrutivas (${a.terminalAccess ? 'execute ' : ''}${a.fileEditAccess ? 'edit' : ''}). 
               ${a.isGuardianPresent ? '<b>✓ Guardian instalado</b> na rede para mitigar riscos.' : '⚠️ <b>Nenhum Guardian (Critic)</b> instalado para validar os outputs!'}
             </span>
           </div>

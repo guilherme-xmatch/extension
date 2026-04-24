@@ -7,13 +7,14 @@ import * as vscode from 'vscode';
 import * as path from 'path';
 
 // Domain
-import { InstallStatus } from './domain/entities/Package';
+import { InstallStatus, Package } from './domain/entities/Package';
 
 // Infrastructure
-import { LocalRegistry } from './infrastructure/repositories/LocalRegistry';
+import { GitRegistry } from './infrastructure/repositories/GitRegistry';
 import { WorkspaceScanner } from './infrastructure/services/WorkspaceScanner';
 import { FileInstaller } from './infrastructure/services/FileInstaller';
 import { HealthCheckerService } from './infrastructure/services/HealthChecker';
+import { PublishService } from './infrastructure/services/PublishService';
 
 // Presentation
 import { CatalogViewProvider } from './presentation/providers/CatalogViewProvider';
@@ -21,13 +22,16 @@ import { InstalledViewProvider } from './presentation/providers/InstalledViewPro
 import { HealthViewProvider } from './presentation/providers/HealthViewProvider';
 import { WorkflowPanel } from './presentation/panels/WorkflowPanel';
 import { InsightsPanel } from './presentation/panels/InsightsPanel';
+import { ConfigPanel } from './presentation/panels/ConfigPanel';
 import { InsightsGenerator } from './infrastructure/services/InsightsGenerator';
+import { StatusBarManager } from './infrastructure/services/StatusBarManager';
 
 export function activate(context: vscode.ExtensionContext): void {
-  const registry = new LocalRegistry();
+  const registry = new GitRegistry();
   const scanner = new WorkspaceScanner();
   const installer = new FileInstaller();
   const healthChecker = new HealthCheckerService();
+  const publishService = new PublishService();
   const insightsGenerator = new InsightsGenerator(registry, scanner);
 
   // ─── Sidebar Providers ───────────────────────
@@ -35,11 +39,56 @@ export function activate(context: vscode.ExtensionContext): void {
   const installedProvider = new InstalledViewProvider(context.extensionUri, registry, scanner, installer);
   const healthProvider = new HealthViewProvider(context.extensionUri, healthChecker);
 
+  const statusBar = StatusBarManager.getInstance();
+
   context.subscriptions.push(
     vscode.window.registerWebviewViewProvider(CatalogViewProvider.viewType, catalogProvider),
     vscode.window.registerWebviewViewProvider(InstalledViewProvider.viewType, installedProvider),
     vscode.window.registerWebviewViewProvider(HealthViewProvider.viewType, healthProvider),
+    statusBar
   );
+
+  const resolvePackagesForInstall = async (pkg: Package): Promise<Package[]> => {
+    const config = vscode.workspace.getConfiguration('descomplicai');
+    const autoResolve = config.get<boolean>('autoResolveDependencies', true);
+    if (!autoResolve || pkg.dependencies.length === 0) {
+      return [pkg];
+    }
+
+    const resolved = new Map<string, Package>();
+    const visited = new Set<string>();
+
+    const visit = async (current: Package): Promise<void> => {
+      if (visited.has(current.id)) { return; }
+      visited.add(current.id);
+      resolved.set(current.id, current);
+
+      for (const dependencyId of current.dependencies) {
+        const dependency = await registry.findById(dependencyId);
+        if (dependency) {
+          await visit(dependency);
+        }
+      }
+    };
+
+    await visit(pkg);
+    if (resolved.size <= 1) {
+      return [pkg];
+    }
+
+    const choice = await vscode.window.showInformationMessage(
+      `"${pkg.displayName}" possui ${resolved.size - 1} dependência(s). Deseja instalar o pacote completo?`,
+      { modal: true },
+      `Instalar com dependências (${resolved.size})`,
+      'Apenas este pacote',
+    );
+
+    if (choice?.startsWith('Instalar com dependências')) {
+      return [...resolved.values()];
+    }
+
+    return [pkg];
+  };
 
   // ─── Commands ────────────────────────────────
   context.subscriptions.push(
@@ -54,7 +103,18 @@ export function activate(context: vscode.ExtensionContext): void {
       const selected = await vscode.window.showQuickPick(items, { placeHolder: 'Selecione um pacote para instalar...', matchOnDescription: true, matchOnDetail: true });
       if (selected) {
         const pkg = await registry.findById(selected.id);
-        if (pkg) { await installer.install(pkg); catalogProvider.refresh(); installedProvider.refresh(); }
+        if (pkg) { 
+          const packagesToInstall = await resolvePackagesForInstall(pkg);
+          statusBar.setWorking(packagesToInstall.length > 1 ? `Instalando ${packagesToInstall.length} pacotes...` : `Instalando ${pkg.displayName}...`);
+          if (packagesToInstall.length > 1) {
+            await installer.installMany(packagesToInstall);
+          } else {
+            await installer.install(pkg);
+          }
+          catalogProvider.refresh(); 
+          installedProvider.refresh(); 
+          statusBar.setSuccess('Pronto');
+        }
       }
     }),
 
@@ -76,7 +136,13 @@ export function activate(context: vscode.ExtensionContext): void {
     }),
 
     vscode.commands.registerCommand('dai.healthCheck', async () => { await healthProvider.refresh(); }),
-    vscode.commands.registerCommand('dai.refresh', async () => { await catalogProvider.refresh(); await installedProvider.refresh(); }),
+    vscode.commands.registerCommand('dai.refresh', async () => { 
+      statusBar.setWorking('Sincronizando com GitHub...');
+      await registry.sync();
+      await catalogProvider.refresh(); 
+      await installedProvider.refresh(); 
+      statusBar.setSuccess('Sincronizado');
+    }),
 
     vscode.commands.registerCommand('dai.installBundle', async () => {
       const bundles = await registry.getAllBundles();
@@ -87,7 +153,13 @@ export function activate(context: vscode.ExtensionContext): void {
         if (bundle) {
           const packages: import('./domain/entities/Package').Package[] = [];
           for (const pkgId of bundle.packageIds) { const pkg = await registry.findById(pkgId); if (pkg) { packages.push(pkg); } }
-          if (packages.length > 0) { await installer.installMany(packages); catalogProvider.refresh(); installedProvider.refresh(); }
+          if (packages.length > 0) { 
+            statusBar.setWorking(`Instalando rede: ${bundle.displayName}...`);
+            await installer.installMany(packages); 
+            catalogProvider.refresh(); 
+            installedProvider.refresh(); 
+            statusBar.setSuccess('Rede ativada');
+          }
         }
       }
     }),
@@ -110,10 +182,10 @@ export function activate(context: vscode.ExtensionContext): void {
       if (!root) { vscode.window.showErrorMessage('Nenhum workspace aberto.'); return; }
 
       const templates: Record<string, { path: string; content: string }> = {
-        agent: { path: `.github/agents/${name}.agent.md`, content: `---\nname: ${name}\ndescription: >\n  ${description ?? 'Agent customizado.'}\ntools:\n  - read\n  - editFiles\n  - search\nagents: []\nuser-invocable: false\n---\n\n# ${name}\n\n${description ?? 'Agent customizado.'}\n` },
+        agent: { path: `.github/agents/${name}.agent.md`, content: `---\nname: ${name}\ndescription: >\n  ${description ?? 'Agent customizado.'}\ntools:\n  - read\n  - edit\n  - search\nagents: []\nuser-invocable: false\n---\n\n# ${name}\n\n${description ?? 'Agent customizado.'}\n` },
         skill: { path: `.github/skills/${name}/SKILL.md`, content: `---\nname: ${name}\ndescription: "${description ?? 'Skill customizada.'}"\n---\n\n# ${name}\n\n> ${description ?? 'Skill customizada.'}\n` },
         instruction: { path: `.github/instructions/${name}.instructions.md`, content: `---\napplyTo: "*"\n---\n# ${name}\n\n${description ?? 'Instruction customizada.'}\n` },
-        prompt: { path: `.github/prompts/${name}.prompt.md`, content: `---\nmode: agent\ndescription: "${description ?? 'Prompt customizado.'}"\n---\n\n# ${name}\n\n${description ?? 'Prompt customizado.'}\n` },
+        prompt: { path: `.github/prompts/${name}.prompt.md`, content: `---\ndescription: "${description ?? 'Prompt customizado.'}"\nagent: agent\n---\n\n# ${name}\n\n${description ?? 'Prompt customizado.'}\n` },
       };
       const template = templates[typeChoice.value];
       if (!template) { return; }
@@ -134,6 +206,38 @@ export function activate(context: vscode.ExtensionContext): void {
 
     vscode.commands.registerCommand('dai.openInsights', async () => {
       InsightsPanel.createOrShow(context.extensionUri, insightsGenerator);
+    }),
+
+    vscode.commands.registerCommand('dai.configureAgent', async (agentId?: string) => {
+      if (!agentId) {
+        const packages = await registry.getAll();
+        const agents = packages.filter(p => p.type.value === 'agent');
+        const items = agents.map(p => ({ label: `${p.categoryEmoji} ${p.displayName}`, description: p.id, id: p.id }));
+        const selected = await vscode.window.showQuickPick(items, { placeHolder: 'Selecione um agente para configurar...' });
+        if (selected) { agentId = selected.id; }
+      }
+      
+      if (agentId) {
+        const pkg = await registry.findById(agentId);
+        if (pkg) {
+          ConfigPanel.createOrShow(context.extensionUri, pkg);
+        }
+      }
+    }),
+
+    vscode.commands.registerCommand('dai.publishPackage', async () => {
+      const uris = await vscode.window.showOpenDialog({
+        canSelectMany: false,
+        openLabel: 'Publicar',
+        filters: {
+          'Pacotes DescomplicAI': ['zip', 'json']
+        }
+      });
+      if (uris && uris[0]) {
+        await publishService.publishPackage(uris[0]);
+        await registry.sync();
+        await catalogProvider.refresh();
+      }
     }),
   );
 
@@ -247,7 +351,9 @@ export function activate(context: vscode.ExtensionContext): void {
     setTimeout(() => healthProvider.refresh(), 3000);
   }
 
-  if (config.get<boolean>('showWelcome', true)) {
+  const hasShownWelcome = context.globalState.get<boolean>('descomplicai.welcomeShown', false);
+  if (config.get<boolean>('showWelcome', true) && !hasShownWelcome) {
+    void context.globalState.update('descomplicai.welcomeShown', true);
     vscode.window.showInformationMessage('🧠 DescomplicAI ativado! Abra a barra lateral para gerenciar seus AI agents.', 'Abrir Catálogo').then((choice) => {
       if (choice === 'Abrir Catálogo') { vscode.commands.executeCommand('dai-catalog.focus'); }
     });

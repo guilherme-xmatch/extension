@@ -1,0 +1,15 @@
+﻿{
+  "id": "mcp-github-git",
+  "name": "github-mcp",
+  "displayName": "GitHub MCP (Git)",
+  "description": "Servidor MCP do GitHub vindo do repositório mockado",
+  "type": "mcp",
+  "version": "1.0.0",
+  "tags": ["core"],
+  "mcpServers": {
+    "github": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-github"]
+    }
+  }
+}

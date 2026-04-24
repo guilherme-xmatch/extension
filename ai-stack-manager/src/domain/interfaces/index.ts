@@ -20,6 +20,8 @@ export interface IPackageRepository {
   getAllBundles(): Promise<Bundle[]>;
   /** Find a bundle by ID */
   findBundleById(id: string): Promise<Bundle | undefined>;
+  getAgentNetwork(agentId: string): Promise<Package[]>;
+  getRelatedSkills(agentId: string): Promise<Package[]>;
 }
 
 /** Detects what's installed in the current workspace */
@@ -30,6 +32,7 @@ export interface IWorkspaceScanner {
   getInstalledPackageIds(): Promise<string[]>;
   /** Check if workspace has a .github directory */
   hasGitHubDirectory(): Promise<boolean>;
+  detectProjectProfile(): Promise<{ profile: string; bundleId: string; confidence: number; }[]>;
 }
 
 /** Installs and uninstalls packages in the workspace */
