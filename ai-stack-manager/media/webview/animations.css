@@ -1,0 +1,193 @@
+/**
+ * AI Stack Manager — Animations
+ * 
+ * Micro-animations for premium feel:
+ * - Slide-in staggered cards
+ * - Scale-in for score ring
+ * - Fade-in for empty states
+ * - Pulse for status indicators
+ * - Score progress animation
+ * - Ripple click effect
+ * - Shimmer loading state
+ */
+
+/* ═══════════════════════════════════════════════════
+   KEYFRAMES
+   ═══════════════════════════════════════════════════ */
+
+@keyframes slide-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.85);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes ripple-effect {
+  to {
+    transform: scale(3);
+    opacity: 0;
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% center;
+  }
+  100% {
+    background-position: 200% center;
+  }
+}
+
+@keyframes score-draw {
+  from {
+    stroke-dashoffset: 251.327;
+  }
+}
+
+@keyframes glow-pulse {
+  0%, 100% {
+    box-shadow: 0 0 4px rgba(236, 112, 0, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 16px rgba(236, 112, 0, 0.4);
+  }
+}
+
+@keyframes border-shine {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+/* ═══════════════════════════════════════════════════
+   ANIMATION CLASSES
+   ═══════════════════════════════════════════════════ */
+
+.animate-slide-in {
+  animation: slide-in 0.35s cubic-bezier(0.4, 0, 0.2, 1) both;
+  animation-delay: var(--delay, 0s);
+}
+
+.animate-fade-in {
+  animation: fade-in 0.4s ease-out both;
+}
+
+.animate-scale-in {
+  animation: scale-in 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+.animate-pulse {
+  animation: pulse 2s ease-in-out infinite;
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+/* Score ring animation */
+.dai-score-progress {
+  animation: score-draw 1.2s cubic-bezier(0.4, 0, 0.2, 1) both;
+  animation-delay: 0.3s;
+}
+
+/* Logo glow on hover */
+.dai-logo-icon:hover {
+  animation: glow-pulse 2s ease-in-out infinite;
+}
+
+/* Shimmer loading effect */
+.dai-shimmer {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.04) 25%,
+    rgba(255, 255, 255, 0.08) 50%,
+    rgba(255, 255, 255, 0.04) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+  border-radius: 6px;
+}
+
+/* Bundle card border animation on hover */
+.dai-bundle-card:hover .dai-bundle-glow {
+  animation: border-shine 2s ease infinite;
+  background-size: 200% auto;
+  background-image: linear-gradient(
+    90deg,
+    var(--accent, var(--itau-primary)),
+    var(--itau-primary-light),
+    var(--accent, var(--itau-primary))
+  );
+}
+
+/* Health icon floating animation */
+.dai-health-icon-large {
+  animation: float 3s ease-in-out infinite;
+}
+
+/* ═══════════════════════════════════════════════════
+   TRANSITION UTILITIES
+   ═══════════════════════════════════════════════════ */
+
+/* Smooth hover transitions for interactive elements */
+.dai-package-card,
+.dai-bundle-card,
+.dai-installed-item,
+.dai-finding,
+.dai-filter-chip,
+.dai-btn {
+  will-change: transform, box-shadow;
+}
+
+/* Reduce motion for accessibility */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

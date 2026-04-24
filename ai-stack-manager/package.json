@@ -1,0 +1,160 @@
+{
+  "name": "descomplicai",
+  "displayName": "DescomplicAI",
+  "description": "🧠 Simplifique sua infraestrutura de AI Agents — instale, visualize e gerencie redes de Agents, Skills, MCPs e Bundles com um clique.",
+  "version": "0.1.0",
+  "publisher": "itau-engineering",
+  "icon": "media/icons/sidebar-icon.svg",
+  "engines": {
+    "vscode": "^1.100.0"
+  },
+  "categories": [
+    "AI",
+    "Other"
+  ],
+  "keywords": [
+    "ai", "agents", "skills", "mcp", "copilot",
+    "infrastructure", "package-manager", "itau", "descomplicai"
+  ],
+  "activationEvents": [
+    "onView:dai-catalog",
+    "onView:dai-installed",
+    "onView:dai-health"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "dai-sidebar",
+          "title": "DescomplicAI",
+          "icon": "media/icons/sidebar-icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "dai-sidebar": [
+        {
+          "id": "dai-catalog",
+          "name": "Catálogo",
+          "type": "webview"
+        },
+        {
+          "id": "dai-installed",
+          "name": "Instalados",
+          "type": "webview"
+        },
+        {
+          "id": "dai-health",
+          "name": "Health Check",
+          "type": "webview"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "dai.install",
+        "title": "DescomplicAI: Instalar Pacote",
+        "icon": "$(add)"
+      },
+      {
+        "command": "dai.uninstall",
+        "title": "DescomplicAI: Desinstalar Pacote",
+        "icon": "$(trash)"
+      },
+      {
+        "command": "dai.healthCheck",
+        "title": "DescomplicAI: Executar Health Check",
+        "icon": "$(heart)"
+      },
+      {
+        "command": "dai.scaffold",
+        "title": "DescomplicAI: Criar Novo Pacote",
+        "icon": "$(file-add)"
+      },
+      {
+        "command": "dai.refresh",
+        "title": "DescomplicAI: Atualizar Visualizações",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "dai.installBundle",
+        "title": "DescomplicAI: Instalar Bundle",
+        "icon": "$(package)"
+      },
+      {
+        "command": "dai.openWorkflow",
+        "title": "DescomplicAI: Abrir Visualizador de Workflow",
+        "icon": "$(type-hierarchy)"
+      }
+    ],
+    "chatParticipants": [
+      {
+        "id": "dai.stack",
+        "name": "stack",
+        "fullName": "DescomplicAI",
+        "description": "Gerencie sua infraestrutura de AI agents — instale pacotes, verifique a saúde, explore workflows.",
+        "isSticky": false,
+        "commands": [
+          {
+            "name": "recommend",
+            "description": "Analisa seu projeto e recomenda agents e skills"
+          },
+          {
+            "name": "explain",
+            "description": "Explica um agent ou pacote específico em detalhes"
+          },
+          {
+            "name": "workflow",
+            "description": "Mostra o pipeline de workflow dos agents"
+          },
+          {
+            "name": "health",
+            "description": "Executa um health check na sua infraestrutura de AI"
+          },
+          {
+            "name": "install",
+            "description": "Instala um pacote ou bundle"
+          }
+        ]
+      }
+    ],
+    "configuration": {
+      "title": "DescomplicAI",
+      "properties": {
+        "descomplicai.registryUrl": {
+          "type": "string",
+          "default": "",
+          "description": "URL do registry remoto de pacotes (Repositório Git ou API). Deixe vazio para usar apenas o modo local."
+        },
+        "descomplicai.autoHealthCheck": {
+          "type": "boolean",
+          "default": true,
+          "description": "Executar automaticamente o health check ao abrir um workspace."
+        },
+        "descomplicai.showWelcome": {
+          "type": "boolean",
+          "default": true,
+          "description": "Mostrar mensagem de boas-vindas na primeira ativação."
+        },
+        "descomplicai.autoResolveDependencies": {
+          "type": "boolean",
+          "default": true,
+          "description": "Sugerir automaticamente a instalação de dependências ao instalar uma rede de agents."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "lint": "eslint src --ext ts",
+    "clean": "rimraf out"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/vscode": "^1.100.0",
+    "typescript": "^5.7.0"
+  }
+}
