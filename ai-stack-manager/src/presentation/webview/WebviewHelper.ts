@@ -62,11 +62,11 @@ export class WebviewHelper {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource} 'nonce-${nonce}'; script-src 'nonce-${nonce}'; font-src ${webview.cspSource};">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource} 'unsafe-inline'; script-src 'nonce-${nonce}'; font-src ${webview.cspSource};">
   <title>${title}</title>
   <link rel="stylesheet" href="${styleUri}">
   <link rel="stylesheet" href="${animationsUri}">
-  <style nonce="${nonce}">
+  <style>
     :root {
       --itau-primary: ${ITAU_TOKENS.colors.primary};
       --itau-primary-light: ${ITAU_TOKENS.colors.primaryLight};

@@ -41,6 +41,54 @@ export class WorkspaceScanner implements IWorkspaceScanner {
     return this.fileExists(path.join(root, '.github'));
   }
 
+  /**
+   * Smart Workspace Analyzer
+   * Detects project profiles based on files and dependencies.
+   * Returns a list of recommended Bundle IDs.
+   */
+  async detectProjectProfile(): Promise<{ profile: string; bundleId: string; confidence: number }[]> {
+    const root = this.workspaceRoot;
+    if (!root) { return []; }
+
+    const recommendations: { profile: string; bundleId: string; confidence: number }[] = [];
+
+    // Check package.json for Frontend/Backend
+    const pkgJsonPath = path.join(root, 'package.json');
+    if (await this.fileExists(pkgJsonPath)) {
+      try {
+        const content = await vscode.workspace.fs.readFile(vscode.Uri.file(pkgJsonPath));
+        const json = JSON.parse(Buffer.from(content).toString('utf-8'));
+        const deps = { ...(json.dependencies || {}), ...(json.devDependencies || {}) };
+
+        // Frontend heuristics
+        if (deps['react'] || deps['next'] || deps['vue'] || deps['@angular/core']) {
+          recommendations.push({ profile: 'Frontend App', bundleId: 'bundle-frontend-starter', confidence: 0.9 });
+        }
+
+        // Backend heuristics
+        if (deps['express'] || deps['@nestjs/core'] || deps['fastify']) {
+          recommendations.push({ profile: 'Backend API', bundleId: 'bundle-backend-starter', confidence: 0.9 });
+        }
+      } catch {
+        // Ignore JSON parse errors
+      }
+    }
+
+    // Check DevOps/Cloud heuristics
+    const hasDocker = await this.fileExists(path.join(root, 'Dockerfile')) || await this.fileExists(path.join(root, 'docker-compose.yml'));
+    const hasTerraform = await this.fileExists(path.join(root, 'main.tf'));
+    if (hasDocker || hasTerraform) {
+      recommendations.push({ profile: 'Infra & Cloud', bundleId: 'bundle-devops-starter', confidence: 0.8 });
+    }
+
+    // Default recommendation if empty or full stack
+    if (recommendations.length > 1) {
+      recommendations.push({ profile: 'Full Stack', bundleId: 'bundle-zm1-full', confidence: 0.7 });
+    }
+
+    return recommendations;
+  }
+
   private async fileExists(filePath: string): Promise<boolean> {
     try {
       await vscode.workspace.fs.stat(vscode.Uri.file(filePath));

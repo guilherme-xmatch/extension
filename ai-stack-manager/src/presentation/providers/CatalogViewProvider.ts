@@ -63,11 +63,35 @@ export class CatalogViewProvider implements vscode.WebviewViewProvider {
       statusMap.set(pkg.id, await this._scanner.getInstallStatus(pkg));
     }));
 
+    // Detect Project Profile for Smart Recommendation
+    const profiles = await this._scanner.detectProjectProfile();
+    let recommendedBundleId: string | undefined;
+    let recommendationMsg = '';
+
+    if (profiles.length > 0 && !query && !filterType) {
+      // Pick the most confident profile
+      const bestProfile = profiles.reduce((prev, current) => (prev.confidence > current.confidence) ? prev : current);
+      // Check if bundle is already fully installed
+      const recommendedBundle = bundles.find(b => b.id === bestProfile.bundleId);
+      if (recommendedBundle) {
+        let isFullyInstalled = true;
+        for (const pkgId of recommendedBundle.packageIds) {
+          if (statusMap.get(pkgId) !== InstallStatus.Installed) {
+            isFullyInstalled = false; break;
+          }
+        }
+        if (!isFullyInstalled) {
+          recommendedBundleId = recommendedBundle.id;
+          recommendationMsg = `Detectamos um projeto <b>${bestProfile.profile}</b>. O Bundle <b>${recommendedBundle.displayName}</b> é ideal para você.`;
+        }
+      }
+    }
+
     this._view.webview.html = WebviewHelper.buildHtml({
       webview: this._view.webview,
       extensionUri: this._extensionUri,
-      title: 'DescomplicAI — Catalog',
-      bodyContent: this.renderCatalog(packages, bundles, statusMap, query ?? '', filterType),
+      title: 'DescomplicAI — Catálogo',
+      bodyContent: this.renderCatalog(packages, bundles, statusMap, query ?? '', filterType, recommendedBundleId, recommendationMsg),
       scriptContent: this.getScript(),
     });
   }
@@ -76,7 +100,7 @@ export class CatalogViewProvider implements vscode.WebviewViewProvider {
   // RENDERING
   // ═══════════════════════════════════════════
 
-  private renderCatalog(packages: Package[], bundles: Bundle[], statusMap: Map<string, InstallStatus>, query: string, filterType?: string): string {
+  private renderCatalog(packages: Package[], bundles: Bundle[], statusMap: Map<string, InstallStatus>, query: string, filterType?: string, recBundleId?: string, recMsg?: string): string {
     const installedCount = Array.from(statusMap.values()).filter(s => s === InstallStatus.Installed).length;
     const typeFilters = PackageType.all();
 
@@ -110,23 +134,34 @@ export class CatalogViewProvider implements vscode.WebviewViewProvider {
           </div>
           <div class="dai-logo-text">
             <span class="dai-brand">Descomplica<span class="dai-brand-ai">AI</span></span>
-            <span class="dai-tagline">${packages.length} packages · ${installedCount} installed</span>
+            <span class="dai-tagline">${packages.length} pacotes · ${installedCount} instalados</span>
           </div>
         </div>
       </div>
+
+      <!-- Smart Recommendation Banner -->
+      ${recBundleId && recMsg ? /*html*/`
+      <div class="dai-recommendation-banner animate-slide-in">
+        <div class="dai-rec-icon">💡</div>
+        <div class="dai-rec-content">
+          <p class="dai-rec-msg">${recMsg}</p>
+          <button class="dai-btn dai-btn-primary dai-btn-sm" data-bundle-id="${recBundleId}">Instalar Bundle Recomendado</button>
+        </div>
+      </div>
+      ` : ''}
 
       <!-- Search -->
       <div class="dai-search-container">
         <div class="dai-search-wrapper">
           <span class="dai-search-icon">⌕</span>
-          <input type="text" class="dai-search-input" placeholder="Search packages..." value="${this.esc(query)}" id="search-input"/>
+          <input type="text" class="dai-search-input" placeholder="Buscar pacotes..." value="${this.esc(query)}" id="search-input"/>
           ${query ? '<button class="dai-search-clear" id="search-clear">✕</button>' : ''}
         </div>
       </div>
 
       <!-- Type Filters -->
       <div class="dai-filters">
-        <button class="dai-filter-chip ${!filterType ? 'active' : ''}" data-type="">All</button>
+        <button class="dai-filter-chip ${!filterType ? 'active' : ''}" data-type="">Todos</button>
         ${typeFilters.map(t => `<button class="dai-filter-chip ${filterType === t.value ? 'active' : ''}" data-type="${t.value}" style="--chip-color: ${t.color}">${t.label}</button>`).join('')}
       </div>
 
@@ -139,17 +174,17 @@ export class CatalogViewProvider implements vscode.WebviewViewProvider {
         return this.renderCategorySection(catLabel, cat, catAgents, statusMap);
       }).join('') : ''}
 
-      <!-- Non-Agent Packages -->
+      <!-- Non-Agent pacotes -->
       ${nonAgents.length > 0 ? this.renderNonAgentSection(nonAgents, statusMap, filterType) : ''}
 
-      ${packages.length === 0 ? '<div class="dai-empty animate-fade-in"><span class="dai-empty-icon">🔍</span><span class="dai-empty-text">No packages found</span></div>' : ''}
+      ${packages.length === 0 ? '<div class="dai-empty animate-fade-in"><span class="dai-empty-icon">🔍</span><span class="dai-empty-text">Nenhum pacote encontrado</span></div>' : ''}
     </div>`;
   }
 
   private renderBundles(bundles: Bundle[]): string {
     return /*html*/`
     <div class="dai-section">
-      <div class="dai-section-header"><span class="dai-section-title">⚡ Quick Start Bundles</span></div>
+      <div class="dai-section-header"><span class="dai-section-title">⚡ Bundles de Início Rápido</span></div>
       ${bundles.map((b, i) => /*html*/`
         <div class="dai-bundle-card animate-slide-in" style="--delay: ${i * 0.08}s; --accent: ${b.color}">
           <div class="dai-bundle-glow" style="background: ${b.color}"></div>
@@ -157,8 +192,8 @@ export class CatalogViewProvider implements vscode.WebviewViewProvider {
             <span class="dai-bundle-name">${b.displayName}</span>
             <span class="dai-bundle-desc">${b.description}</span>
             <div class="dai-bundle-meta">
-              <span class="dai-bundle-count">${b.packageCount} packages</span>
-              <button class="dai-btn dai-btn-bundle" data-bundle-id="${b.id}">⬇ Install</button>
+              <span class="dai-bundle-count">${b.packageCount} pacotes</span>
+              <button class="dai-btn dai-btn-bundle" data-bundle-id="${b.id}">⬇ Instalar</button>
             </div>
           </div>
         </div>`).join('')}
@@ -167,13 +202,12 @@ export class CatalogViewProvider implements vscode.WebviewViewProvider {
 
   private renderCategorySection(catLabel: string, cat: AgentCategory | undefined, agents: Package[], statusMap: Map<string, InstallStatus>): string {
     const emoji = cat?.emoji ?? '⚡';
-    const gradient = cat?.gradient ?? '';
     const color = cat?.color ?? '#EC7000';
 
     return /*html*/`
     <div class="dai-section animate-slide-in" style="--delay: 0.1s">
       <div class="dai-section-header">
-        <span class="dai-section-title">
+        <span class="dai-section-title" style="color: ${color}">
           <span class="dai-cat-emoji">${emoji}</span> ${catLabel}s
         </span>
         <span class="dai-section-count" style="background: ${color}20; color: ${color}">${agents.length}</span>
@@ -212,29 +246,29 @@ export class CatalogViewProvider implements vscode.WebviewViewProvider {
 
       <!-- Meta Bar (always visible) -->
       <div class="dai-card-meta">
-        <span class="dai-meta-item" title="Tools">🔧 ${toolCount}</span>
-        ${hasNetwork ? `<span class="dai-meta-item dai-meta-network" title="Agent Network">🔗 ${networkCount} agents</span>` : '<span class="dai-meta-item">📦 Standalone</span>'}
-        ${skillCount > 0 ? `<span class="dai-meta-item" title="Related Skills">📚 ${skillCount}</span>` : ''}
+        <span class="dai-meta-item" title="Ferramentas">🔧 ${toolCount}</span>
+        ${hasNetwork ? `<span class="dai-meta-item dai-meta-network" title="Rede de Agents">🔗 ${networkCount} agents</span>` : '<span class="dai-meta-item">📦 Independente</span>'}
+        ${skillCount > 0 ? `<span class="dai-meta-item" title="Skills Relacionadas">📚 ${skillCount}</span>` : ''}
       </div>
 
-      ${isInstalled ? '<div class="dai-installed-indicator">✓ Installed</div>' : ''}
+      ${isInstalled ? '<div class="dai-installed-indicator">✓ Instalado</div>' : ''}
 
-      <!-- Expandable Details (toggled via JS) -->
+      <!-- Expandable Detalhes (toggled via JS) -->
       <div class="dai-card-details" id="details-${pkg.id}">
         ${hasNetwork ? this.renderNetworkSection(pkg) : ''}
-        ${toolCount > 0 ? `<div class="dai-detail-section"><span class="dai-detail-label">🔧 Tools</span><div class="dai-tool-chips">${meta!.tools.map(t => `<span class="dai-tool-chip">${t}</span>`).join('')}</div></div>` : ''}
-        ${meta?.workflowPhase ? `<div class="dai-detail-section"><span class="dai-detail-label">🔄 Workflow Phase</span><span class="dai-detail-value">${meta.workflowPhase}</span></div>` : ''}
-        <div class="dai-detail-section"><span class="dai-detail-label">📊 Complexity</span><div class="dai-complexity-bar"><div class="dai-complexity-fill" style="width: ${pkg.complexityScore}%; background: ${catColor}"></div></div><span class="dai-complexity-score">${pkg.complexityScore}/100</span></div>
+        ${toolCount > 0 ? `<div class="dai-detail-section"><span class="dai-detail-label">🔧 Ferramentas</span><div class="dai-tool-chips">${meta!.tools.map(t => `<span class="dai-tool-chip">${t}</span>`).join('')}</div></div>` : ''}
+        ${meta?.workflowPhase ? `<div class="dai-detail-section"><span class="dai-detail-label">🔄 Fase no Workflow</span><span class="dai-detail-value">${meta.workflowPhase}</span></div>` : ''}
+        <div class="dai-detail-section"><span class="dai-detail-label">📊 Complexidade</span><div class="dai-complexity-bar"><div class="dai-complexity-fill" style="width: ${pkg.complexityScore}%; background: ${catColor}"></div></div><span class="dai-complexity-score">${pkg.complexityScore}/100</span></div>
       </div>
 
       <!-- Actions -->
       <div class="dai-card-actions">
-        <button class="dai-btn dai-btn-ghost dai-btn-sm" data-toggle-details="${pkg.id}">▼ Details</button>
+        <button class="dai-btn dai-btn-ghost dai-btn-sm" data-toggle-details="${pkg.id}">▼ Detalhes</button>
         ${isInstalled
           ? `<button class="dai-btn dai-btn-danger dai-btn-sm" data-uninstall="${pkg.id}">✕</button>`
           : hasNetwork
-            ? `<button class="dai-btn dai-btn-primary dai-btn-sm" data-install-network="${pkg.id}">⬇ Install Network</button>`
-            : `<button class="dai-btn dai-btn-primary dai-btn-sm" data-install="${pkg.id}">⬇ Install</button>`
+            ? `<button class="dai-btn dai-btn-primary dai-btn-sm" data-install-network="${pkg.id}">⬇ Instalar Rede</button>`
+            : `<button class="dai-btn dai-btn-primary dai-btn-sm" data-install="${pkg.id}">⬇ Instalar</button>`
         }
       </div>
     </div>`;
@@ -246,7 +280,7 @@ export class CatalogViewProvider implements vscode.WebviewViewProvider {
 
     return /*html*/`
     <div class="dai-detail-section">
-      <span class="dai-detail-label">🔗 Agent Network (${delegates.length})</span>
+      <span class="dai-detail-label">🔗 Rede de Agents (${delegates.length})</span>
       <div class="dai-network-tree">
         ${delegates.map(d => {
           const emoji = d.includes('planner') ? '📐'
@@ -258,7 +292,7 @@ export class CatalogViewProvider implements vscode.WebviewViewProvider {
         }).join('')}
       </div>
       <div class="dai-network-hint">
-        💡 "Install Network" installs this agent + all ${delegates.length} sub-agents
+        💡 "Instalar Rede" baixa este agent + todos os ${delegates.length} dependentes
       </div>
     </div>`;
   }
@@ -328,16 +362,16 @@ export class CatalogViewProvider implements vscode.WebviewViewProvider {
     const unique = allPackages.filter(p => { if (seen.has(p.id)) { return false; } seen.add(p.id); return true; });
 
     const choice = await vscode.window.showInformationMessage(
-      `📦 "${pkg.displayName}" coordinates ${network.length} agents. Install the full network? (${unique.length} packages total)`,
+      `📦 "${pkg.displayName}" coordena ${network.length} agents. Instalar a rede completa? (${unique.length} pacotes no total)`,
       { modal: true },
-      `Install Full Network (${unique.length})`,
-      'Only This Agent',
-      'Cancel',
+      `Instalar Rede Completa (${unique.length})`,
+      'Apenas este Agent',
+      'Cancelar',
     );
 
-    if (choice?.startsWith('Install Full')) {
+    if (choice?.startsWith('Instalar Rede')) {
       await this._installer.installMany(unique);
-    } else if (choice === 'Only This Agent') {
+    } else if (choice === 'Apenas este Agent') {
       await this._installer.install(pkg);
     }
 
@@ -386,14 +420,14 @@ export class CatalogViewProvider implements vscode.WebviewViewProvider {
       });
     });
 
-    // Toggle card details
+    // Toggle card Detalhes
     document.querySelectorAll('[data-toggle-details]').forEach(btn => {
       btn.addEventListener('click', (e) => {
         const id = e.currentTarget.dataset.toggleDetails;
         const details = document.getElementById('details-' + id);
         if (details) {
           const isOpen = details.classList.toggle('open');
-          e.currentTarget.textContent = isOpen ? '▲ Less' : '▼ Details';
+          e.currentTarget.textContent = isOpen ? '▲ Menos' : '▼ Detalhes';
         }
       });
     });
@@ -419,10 +453,10 @@ export class CatalogViewProvider implements vscode.WebviewViewProvider {
       btn.addEventListener('click', (e) => vscode.postMessage({ command: 'uninstall', packageId: e.currentTarget.dataset.uninstall }));
     });
 
-    // Bundle install
+    // Bundle Install
     document.querySelectorAll('[data-bundle-id]').forEach(btn => {
       btn.addEventListener('click', (e) => {
-        e.currentTarget.innerHTML = '<span class="dai-spinner"></span> Installing...';
+        e.currentTarget.innerHTML = '<span class="dai-spinner"></span> Instalando...';
         vscode.postMessage({ command: 'installBundle', bundleId: e.currentTarget.dataset.bundleId });
       });
     });

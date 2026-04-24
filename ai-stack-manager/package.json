@@ -86,6 +86,11 @@
         "command": "dai.openWorkflow",
         "title": "DescomplicAI: Abrir Visualizador de Workflow",
         "icon": "$(type-hierarchy)"
+      },
+      {
+        "command": "dai.openInsights",
+        "title": "DescomplicAI: Abrir Insights Engine",
+        "icon": "$(graph)"
       }
     ],
     "chatParticipants": [

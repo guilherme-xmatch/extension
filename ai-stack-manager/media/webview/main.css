@@ -1,7 +1,7 @@
-/**
- * AI Stack Manager — Main Stylesheet
+﻿/**
+ * AI Stack Manager â€” Main Stylesheet
  * 
- * Design System: Itaú Engineering
+ * Design System: ItaÃº Engineering
  * Colors: Orange (#EC7000) + Navy (#003366)
  * Features: Glassmorphism, dark/light theme-aware, CSS custom properties
  * 
@@ -10,11 +10,13 @@
  * - Works automatically with any VS Code theme
  */
 
-/* ═══════════════════════════════════════════════════
+/* 
    RESET & BASE
-   ═══════════════════════════════════════════════════ */
+    */
 
-*, *::before, *::after {
+*,
+*::before,
+*::after {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
@@ -30,9 +32,9 @@ body {
   overflow-x: hidden;
 }
 
-/* ═══════════════════════════════════════════════════
+/* 
    CONTAINER
-   ═══════════════════════════════════════════════════ */
+    */
 
 .dai-container {
   padding: 0 8px 16px;
@@ -41,9 +43,9 @@ body {
   gap: 12px;
 }
 
-/* ═══════════════════════════════════════════════════
+/* 
    HEADER & LOGO
-   ═══════════════════════════════════════════════════ */
+    */
 
 .dai-header {
   padding: 12px 4px 4px;
@@ -89,9 +91,9 @@ body {
   font-weight: 400;
 }
 
-/* ═══════════════════════════════════════════════════
+/* 
    SEARCH
-   ═══════════════════════════════════════════════════ */
+    */
 
 .dai-search-container {
   padding: 0 2px;
@@ -114,9 +116,9 @@ body {
 .dai-search-input {
   width: 100%;
   padding: 8px 32px 8px 32px;
-  border: 1px solid var(--vscode-input-border, rgba(255,255,255,0.1));
+  border: 1px solid var(--vscode-input-border, rgba(255, 255, 255, 0.1));
   border-radius: 8px;
-  background: var(--vscode-input-background, rgba(255,255,255,0.05));
+  background: var(--vscode-input-background, rgba(255, 255, 255, 0.05));
   color: var(--vscode-input-foreground, inherit);
   font-size: 12px;
   outline: none;
@@ -151,9 +153,9 @@ body {
   background: rgba(255, 255, 255, 0.1);
 }
 
-/* ═══════════════════════════════════════════════════
+/* 
    FILTER CHIPS
-   ═══════════════════════════════════════════════════ */
+    */
 
 .dai-filters {
   display: flex;
@@ -165,7 +167,7 @@ body {
 .dai-filter-chip {
   padding: 3px 10px;
   border-radius: 12px;
-  border: 1px solid var(--vscode-widget-border, rgba(255,255,255,0.1));
+  border: 1px solid var(--vscode-widget-border, rgba(255, 255, 255, 0.1));
   background: transparent;
   color: var(--vscode-foreground);
   font-size: 11px;
@@ -189,9 +191,9 @@ body {
   font-weight: 600;
 }
 
-/* ═══════════════════════════════════════════════════
+/* 
    SECTION HEADERS
-   ═══════════════════════════════════════════════════ */
+    */
 
 .dai-section {
   display: flex;
@@ -216,16 +218,16 @@ body {
 
 .dai-section-count {
   font-size: 10px;
-  background: var(--vscode-badge-background, rgba(255,255,255,0.1));
+  background: var(--vscode-badge-background, rgba(255, 255, 255, 0.1));
   color: var(--vscode-badge-foreground, inherit);
   padding: 1px 7px;
   border-radius: 10px;
   font-weight: 600;
 }
 
-/* ═══════════════════════════════════════════════════
+/* 
    BUNDLE CARDS
-   ═══════════════════════════════════════════════════ */
+    */
 
 .dai-bundles-section {
   margin-bottom: 4px;
@@ -296,9 +298,9 @@ body {
   font-weight: 500;
 }
 
-/* ═══════════════════════════════════════════════════
+/* 
    PACKAGE CARDS
-   ═══════════════════════════════════════════════════ */
+    */
 
 .dai-packages-list {
   display: flex;
@@ -306,17 +308,17 @@ body {
   gap: 6px;
 }
 
-.dai-package-card {
+.dai-card-card {
   position: relative;
   border-radius: 8px;
-  border: 1px solid var(--vscode-widget-border, rgba(255,255,255,0.06));
+  border: 1px solid var(--vscode-widget-border, rgba(255, 255, 255, 0.06));
   background: var(--vscode-editor-background, rgba(30, 33, 48, 0.4));
   padding: 10px 12px;
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   overflow: hidden;
 }
 
-.dai-package-card::before {
+.dai-card-card::before {
   content: '';
   position: absolute;
   left: 0;
@@ -328,32 +330,32 @@ body {
   transition: opacity 0.25s;
 }
 
-.dai-package-card:hover {
+.dai-card-card:hover {
   border-color: rgba(255, 255, 255, 0.12);
-  background: var(--vscode-list-hoverBackground, rgba(255,255,255,0.04));
+  background: var(--vscode-list-hoverBackground, rgba(255, 255, 255, 0.04));
 }
 
-.dai-package-card:hover::before {
+.dai-card-card:hover::before {
   opacity: 1;
 }
 
-.dai-package-card.installed {
+.dai-card-card.installed {
   border-color: rgba(0, 200, 83, 0.15);
 }
 
-.dai-package-card.installed::before {
+.dai-card-card.installed::before {
   background: var(--itau-success);
   opacity: 0.6;
 }
 
-.dai-package-header {
+.dai-card-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   margin-bottom: 6px;
 }
 
-.dai-package-type-badge {
+.dai-card-type-badge {
   font-size: 9px;
   font-weight: 700;
   text-transform: uppercase;
@@ -370,20 +372,20 @@ body {
   font-weight: 600;
 }
 
-.dai-package-body {
+.dai-card-body {
   display: flex;
   flex-direction: column;
   gap: 3px;
   margin-bottom: 8px;
 }
 
-.dai-package-name {
+.dai-card-name {
   font-size: 13px;
   font-weight: 600;
   letter-spacing: -0.2px;
 }
 
-.dai-package-desc {
+.dai-card-desc {
   font-size: 11px;
   opacity: 0.55;
   line-height: 1.4;
@@ -393,14 +395,14 @@ body {
   overflow: hidden;
 }
 
-.dai-package-footer {
+.dai-card-footer {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 8px;
 }
 
-.dai-package-tags {
+.dai-card-tags {
   display: flex;
   gap: 4px;
   flex-wrap: wrap;
@@ -417,7 +419,7 @@ body {
   white-space: nowrap;
 }
 
-.dai-package-version {
+.dai-card-version {
   position: absolute;
   top: 10px;
   right: 12px;
@@ -425,13 +427,13 @@ body {
   opacity: 0.3;
 }
 
-.dai-package-actions {
+.dai-card-actions {
   flex-shrink: 0;
 }
 
-/* ═══════════════════════════════════════════════════
+/* 
    INSTALLED VIEW
-   ═══════════════════════════════════════════════════ */
+    */
 
 .dai-installed-summary {
   display: flex;
@@ -467,13 +469,13 @@ body {
   padding: 8px 10px;
   border-radius: 6px;
   border-left: 3px solid var(--type-color, var(--itau-primary));
-  background: var(--vscode-editor-background, rgba(255,255,255,0.02));
+  background: var(--vscode-editor-background, rgba(255, 255, 255, 0.02));
   transition: background 0.15s;
   gap: 8px;
 }
 
 .dai-installed-item:hover {
-  background: var(--vscode-list-hoverBackground, rgba(255,255,255,0.04));
+  background: var(--vscode-list-hoverBackground, rgba(255, 255, 255, 0.04));
 }
 
 .dai-installed-info {
@@ -514,9 +516,9 @@ body {
   font-weight: 600;
 }
 
-/* ═══════════════════════════════════════════════════
+/* 
    HEALTH VIEW
-   ═══════════════════════════════════════════════════ */
+    */
 
 .dai-health-hero {
   display: flex;
@@ -597,8 +599,8 @@ body {
   display: flex;
   justify-content: space-around;
   padding: 10px 0;
-  border-top: 1px solid var(--vscode-widget-border, rgba(255,255,255,0.06));
-  border-bottom: 1px solid var(--vscode-widget-border, rgba(255,255,255,0.06));
+  border-top: 1px solid var(--vscode-widget-border, rgba(255, 255, 255, 0.06));
+  border-bottom: 1px solid var(--vscode-widget-border, rgba(255, 255, 255, 0.06));
 }
 
 .dai-stat {
@@ -627,13 +629,13 @@ body {
   gap: 8px;
   padding: 8px 10px;
   border-radius: 6px;
-  border: 1px solid var(--vscode-widget-border, rgba(255,255,255,0.04));
-  background: var(--vscode-editor-background, rgba(255,255,255,0.02));
+  border: 1px solid var(--vscode-widget-border, rgba(255, 255, 255, 0.04));
+  background: var(--vscode-editor-background, rgba(255, 255, 255, 0.02));
   transition: background 0.15s;
 }
 
 .dai-finding:hover {
-  background: var(--vscode-list-hoverBackground, rgba(255,255,255,0.04));
+  background: var(--vscode-list-hoverBackground, rgba(255, 255, 255, 0.04));
 }
 
 .dai-finding-icon {
@@ -675,9 +677,9 @@ body {
   margin-top: 2px;
 }
 
-/* ═══════════════════════════════════════════════════
+/* 
    BUTTONS
-   ═══════════════════════════════════════════════════ */
+    */
 
 .dai-btn {
   position: relative;
@@ -738,7 +740,7 @@ body {
   background: transparent;
   color: var(--vscode-foreground);
   opacity: 0.55;
-  border: 1px solid var(--vscode-widget-border, rgba(255,255,255,0.1));
+  border: 1px solid var(--vscode-widget-border, rgba(255, 255, 255, 0.1));
 }
 
 .dai-btn-ghost:hover {
@@ -781,9 +783,9 @@ body {
   margin-top: -50px;
 }
 
-/* ═══════════════════════════════════════════════════
+/* 
    SPINNER
-   ═══════════════════════════════════════════════════ */
+    */
 
 .dai-spinner {
   display: inline-block;
@@ -795,9 +797,9 @@ body {
   animation: spin 0.6s linear infinite;
 }
 
-/* ═══════════════════════════════════════════════════
+/* 
    EMPTY STATE
-   ═══════════════════════════════════════════════════ */
+    */
 
 .dai-empty {
   display: flex;
@@ -824,9 +826,9 @@ body {
   opacity: 0.35;
 }
 
-/* ═══════════════════════════════════════════════════
+/* 
    SCROLLBAR STYLING
-   ═══════════════════════════════════════════════════ */
+    */
 
 ::-webkit-scrollbar {
   width: 5px;
@@ -844,9 +846,10 @@ body {
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(236, 112, 0, 0.4);
 }
-/* ═══════════════════════════════════════════════════
+
+/* 
    DESCOMPLICAI BRAND & ANIMATED LOGO
-   ═══════════════════════════════════════════════════ */
+    */
 
 .dai-header {
   padding: 16px 20px;
@@ -886,11 +889,13 @@ body {
   animation: stack-drop-1 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
   background: linear-gradient(135deg, #003366, #448AFF);
 }
+
 .dai-layer-2 {
   transform: rotateX(60deg) rotateZ(-45deg) translateZ(0px);
   animation: stack-drop-2 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) 0.2s both;
   background: linear-gradient(135deg, #7C4DFF, #AB47BC);
 }
+
 .dai-layer-3 {
   transform: rotateX(60deg) rotateZ(-45deg) translateZ(8px);
   animation: stack-drop-3 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) 0.4s both;
@@ -915,9 +920,9 @@ body {
   -webkit-text-fill-color: transparent;
 }
 
-/* ═══════════════════════════════════════════════════
+/* 
    EXPANDABLE CARDS & NETWORK TREE
-   ═══════════════════════════════════════════════════ */
+    */
 
 .dai-card-meta {
   display: flex;
@@ -944,7 +949,7 @@ body {
   display: none;
   margin-top: 12px;
   padding: 12px;
-  background: rgba(0,0,0,0.1);
+  background: rgba(0, 0, 0, 0.1);
   border-radius: 6px;
   border: 1px solid var(--border-color);
   animation: slide-down 0.2s ease-out forwards;
@@ -1014,7 +1019,7 @@ body {
 
 .dai-complexity-bar {
   height: 6px;
-  background: rgba(255,255,255,0.1);
+  background: rgba(255, 255, 255, 0.1);
   border-radius: 3px;
   overflow: hidden;
   margin-top: 4px;
@@ -1025,27 +1030,302 @@ body {
   border-radius: 3px;
 }
 
-/* ═══════════════════════════════════════════════════
+/* 
    NEW KEYFRAMES
-   ═══════════════════════════════════════════════════ */
+    */
 
 @keyframes stack-drop-1 {
-  0% { transform: rotateX(60deg) rotateZ(-45deg) translateZ(40px); opacity: 0; }
-  100% { transform: rotateX(60deg) rotateZ(-45deg) translateZ(-8px); opacity: 0.9; }
+  0% {
+    transform: rotateX(60deg) rotateZ(-45deg) translateZ(40px);
+    opacity: 0;
+  }
+
+  100% {
+    transform: rotateX(60deg) rotateZ(-45deg) translateZ(-8px);
+    opacity: 0.9;
+  }
 }
+
 @keyframes stack-drop-2 {
-  0% { transform: rotateX(60deg) rotateZ(-45deg) translateZ(40px); opacity: 0; }
-  100% { transform: rotateX(60deg) rotateZ(-45deg) translateZ(0px); opacity: 0.9; }
+  0% {
+    transform: rotateX(60deg) rotateZ(-45deg) translateZ(40px);
+    opacity: 0;
+  }
+
+  100% {
+    transform: rotateX(60deg) rotateZ(-45deg) translateZ(0px);
+    opacity: 0.9;
+  }
 }
+
 @keyframes stack-drop-3 {
-  0% { transform: rotateX(60deg) rotateZ(-45deg) translateZ(40px); opacity: 0; }
-  100% { transform: rotateX(60deg) rotateZ(-45deg) translateZ(8px); opacity: 0.9; }
+  0% {
+    transform: rotateX(60deg) rotateZ(-45deg) translateZ(40px);
+    opacity: 0;
+  }
+
+  100% {
+    transform: rotateX(60deg) rotateZ(-45deg) translateZ(8px);
+    opacity: 0.9;
+  }
 }
+
 @keyframes type-in {
-  0% { opacity: 0; transform: translateX(-10px); filter: blur(4px); }
-  100% { opacity: 1; transform: translateX(0); filter: blur(0); }
+  0% {
+    opacity: 0;
+    transform: translateX(-10px);
+    filter: blur(4px);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+    filter: blur(0);
+  }
 }
+
 @keyframes slide-down {
-  0% { opacity: 0; transform: translateY(-10px); }
-  100% { opacity: 1; transform: translateY(0); }
+  0% {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.dai-cat-desc {
+  font-size: 0.85rem;
+  color: var(--vscode-descriptionForeground);
+  margin-bottom: 12px;
+  opacity: 0.8;
+}
+
+.dai-cat-emoji {
+  margin-right: 4px;
+}
+
+/* ═══════════════════════════════════════════════════
+   SMART RECOMMENDATION BANNER
+   ═══════════════════════════════════════════════════ */
+
+.dai-recommendation-banner {
+  margin: 0 4px 12px;
+  padding: 12px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, rgba(236, 112, 0, 0.1), rgba(236, 112, 0, 0.02));
+  border: 1px solid var(--itau-primary);
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.dai-rec-icon {
+  font-size: 1.5rem;
+  margin-top: -2px;
+}
+
+.dai-rec-content {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.dai-rec-msg {
+  font-size: 0.85rem;
+  color: var(--vscode-foreground);
+  margin: 0;
+  line-height: 1.4;
+}
+
+.dai-rec-msg b {
+  color: var(--itau-primary);
+  font-weight: 600;
+}
+/* ═══════════════════════════════════════════════════
+   FIXED CARD STYLES FOR CATALOGVIEWPROVIDER
+   ═══════════════════════════════════════════════════ */
+
+.dai-card {
+  position: relative;
+  border-radius: 8px;
+  border: 1px solid var(--vscode-widget-border, rgba(255, 255, 255, 0.06));
+  background: var(--vscode-editor-background, rgba(30, 33, 48, 0.4));
+  padding: 12px;
+  margin-bottom: 8px;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
+}
+
+.dai-card::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: var(--cat-color, var(--itau-primary));
+  opacity: 0.7;
+  transition: opacity 0.25s;
+}
+
+.dai-card:hover {
+  border-color: rgba(255, 255, 255, 0.12);
+  background: var(--vscode-list-hoverBackground, rgba(255, 255, 255, 0.04));
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
+.dai-card.installed {
+  border-color: rgba(0, 200, 83, 0.2);
+}
+
+.dai-card.installed::before {
+  background: var(--itau-success);
+}
+
+.dai-card-badge {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 3px 8px;
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--badge-color, var(--itau-primary)) 15%, transparent);
+  color: var(--badge-color, var(--itau-primary));
+}
+
+.dai-card-meta {
+  display: flex;
+  gap: 8px;
+  margin: 8px 0;
+  padding-top: 8px;
+  border-top: 1px solid rgba(255,255,255,0.05);
+}
+
+.dai-meta-item {
+  font-size: 11px;
+  color: var(--vscode-descriptionForeground);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.dai-meta-network {
+  color: var(--itau-info);
+  font-weight: 600;
+}
+
+.dai-installed-indicator {
+  font-size: 11px;
+  color: var(--itau-success);
+  font-weight: 700;
+  margin-top: 8px;
+}
+
+.dai-card-details {
+  display: none;
+  margin-top: 12px;
+  padding: 12px;
+  background: rgba(0,0,0,0.15);
+  border-radius: 6px;
+  border: 1px solid var(--vscode-widget-border, rgba(255,255,255,0.05));
+  animation: slide-down 0.2s ease-out forwards;
+}
+
+.dai-card-details.open {
+  display: block;
+}
+
+.dai-detail-section {
+  margin-bottom: 12px;
+}
+
+.dai-detail-section:last-child {
+  margin-bottom: 0;
+}
+
+.dai-detail-label {
+  display: block;
+  font-size: 10px;
+  text-transform: uppercase;
+  color: var(--vscode-descriptionForeground);
+  margin-bottom: 4px;
+  font-weight: 600;
+}
+
+.dai-detail-value {
+  font-size: 12px;
+  color: var(--vscode-foreground);
+  font-weight: 500;
+}
+
+.dai-tool-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.dai-tool-chip {
+  font-size: 10px;
+  font-family: var(--vscode-editor-font-family, monospace);
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: rgba(255,255,255,0.08);
+  color: var(--vscode-foreground);
+}
+
+.dai-complexity-bar {
+  height: 6px;
+  background: rgba(255,255,255,0.1);
+  border-radius: 3px;
+  overflow: hidden;
+  margin-top: 4px;
+  flex: 1;
+}
+
+.dai-complexity-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.5s ease-out;
+}
+
+.dai-complexity-score {
+  font-size: 10px;
+  margin-left: 8px;
+  font-weight: 600;
+}
+
+.dai-network-tree {
+  margin: 6px 0;
+  padding-left: 8px;
+  border-left: 1px solid rgba(255,255,255,0.1);
+}
+
+.dai-network-node {
+  font-size: 11px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 4px;
+  color: var(--vscode-foreground);
+}
+
+.dai-node-connector {
+  color: rgba(255,255,255,0.2);
+}
+
+.dai-network-hint {
+  font-size: 10px;
+  color: var(--vscode-descriptionForeground);
+  font-style: italic;
+  margin-top: 8px;
+}
+
+.dai-card-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+  justify-content: space-between;
 }

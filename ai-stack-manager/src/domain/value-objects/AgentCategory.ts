@@ -14,23 +14,23 @@
 
 export class AgentCategory {
   static readonly Orchestrator = new AgentCategory(
-    'orchestrator', '🧠', 'Orchestrator', 'Control plane — routes, coordinates, delivers',
+    'orchestrator', '🧠', 'Orquestrador', 'Plano de controle — roteia, coordena e entrega',
     '#FFB800', 'linear-gradient(135deg, #FFB800, #FF8C00)', 0,
   );
   static readonly Planner = new AgentCategory(
-    'planner', '📐', 'Planner', 'Strategy — decomposes into actionable plans',
+    'planner', '📐', 'Planejador', 'Estratégia — decompõe tarefas em planos acionáveis',
     '#7C4DFF', 'linear-gradient(135deg, #7C4DFF, #B388FF)', 1,
   );
   static readonly Specialist = new AgentCategory(
-    'specialist', '⚡', 'Specialist', 'Execution — implements in a specific domain',
+    'specialist', '⚡', 'Especialista', 'Execução — atua em um domínio específico',
     '#448AFF', 'linear-gradient(135deg, #448AFF, #82B1FF)', 2,
   );
   static readonly Guardian = new AgentCategory(
-    'guardian', '🛡️', 'Guardian', 'Quality gate — validates, reviews, blocks',
+    'guardian', '🛡️', 'Guardião', 'Qualidade — valida, revisa e bloqueia',
     '#FF5252', 'linear-gradient(135deg, #FF5252, #FF8A80)', 3,
   );
   static readonly Memory = new AgentCategory(
-    'memory', '💾', 'Memory', 'Persistence — records decisions and episodes',
+    'memory', '💾', 'Memória', 'Persistência — grava decisões e episódios',
     '#00E676', 'linear-gradient(135deg, #00E676, #69F0AE)', 4,
   );
 

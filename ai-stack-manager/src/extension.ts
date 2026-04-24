@@ -19,12 +19,16 @@ import { HealthCheckerService } from './infrastructure/services/HealthChecker';
 import { CatalogViewProvider } from './presentation/providers/CatalogViewProvider';
 import { InstalledViewProvider } from './presentation/providers/InstalledViewProvider';
 import { HealthViewProvider } from './presentation/providers/HealthViewProvider';
+import { WorkflowPanel } from './presentation/panels/WorkflowPanel';
+import { InsightsPanel } from './presentation/panels/InsightsPanel';
+import { InsightsGenerator } from './infrastructure/services/InsightsGenerator';
 
 export function activate(context: vscode.ExtensionContext): void {
   const registry = new LocalRegistry();
   const scanner = new WorkspaceScanner();
   const installer = new FileInstaller();
   const healthChecker = new HealthCheckerService();
+  const insightsGenerator = new InsightsGenerator(registry, scanner);
 
   // ─── Sidebar Providers ───────────────────────
   const catalogProvider = new CatalogViewProvider(context.extensionUri, registry, scanner, installer);
@@ -47,7 +51,7 @@ export function activate(context: vscode.ExtensionContext): void {
         detail: p.description,
         id: p.id,
       }));
-      const selected = await vscode.window.showQuickPick(items, { placeHolder: 'Select a package to install...', matchOnDescription: true, matchOnDetail: true });
+      const selected = await vscode.window.showQuickPick(items, { placeHolder: 'Selecione um pacote para instalar...', matchOnDescription: true, matchOnDetail: true });
       if (selected) {
         const pkg = await registry.findById(selected.id);
         if (pkg) { await installer.install(pkg); catalogProvider.refresh(); installedProvider.refresh(); }
@@ -63,8 +67,8 @@ export function activate(context: vscode.ExtensionContext): void {
           installed.push({ label: `$(trash) ${pkg.displayName}`, description: pkg.type.label, id: pkg.id });
         }
       }
-      if (installed.length === 0) { vscode.window.showInformationMessage('No packages installed.'); return; }
-      const selected = await vscode.window.showQuickPick(installed, { placeHolder: 'Select a package to uninstall...' });
+      if (installed.length === 0) { vscode.window.showInformationMessage('Nenhum pacote instalado.'); return; }
+      const selected = await vscode.window.showQuickPick(installed, { placeHolder: 'Selecione um pacote para desinstalar...' });
       if (selected) {
         const pkg = await registry.findById(selected.id);
         if (pkg) { await installer.uninstall(pkg); catalogProvider.refresh(); installedProvider.refresh(); }
@@ -76,8 +80,8 @@ export function activate(context: vscode.ExtensionContext): void {
 
     vscode.commands.registerCommand('dai.installBundle', async () => {
       const bundles = await registry.getAllBundles();
-      const items = bundles.map(b => ({ label: `$(package) ${b.displayName}`, description: `${b.packageCount} packages`, detail: b.description, id: b.id }));
-      const selected = await vscode.window.showQuickPick(items, { placeHolder: 'Select a bundle to install...', matchOnDetail: true });
+      const items = bundles.map(b => ({ label: `$(package) ${b.displayName}`, description: `${b.packageCount} pacotes`, detail: b.description, id: b.id }));
+      const selected = await vscode.window.showQuickPick(items, { placeHolder: 'Selecione um bundle para instalar...', matchOnDetail: true });
       if (selected) {
         const bundle = await registry.findBundleById(selected.id);
         if (bundle) {
@@ -96,20 +100,20 @@ export function activate(context: vscode.ExtensionContext): void {
           { label: '$(book) Instruction', value: 'instruction' },
           { label: '$(comment-discussion) Prompt', value: 'prompt' },
         ],
-        { placeHolder: 'What type of package do you want to create?' },
+        { placeHolder: 'Qual tipo de pacote você quer criar?' },
       );
       if (!typeChoice) { return; }
-      const name = await vscode.window.showInputBox({ prompt: `Name for the new ${typeChoice.value}`, placeHolder: 'e.g. my-custom-agent', validateInput: (v) => { if (!v) { return 'Required'; } if (!/^[a-z0-9-]+$/.test(v)) { return 'lowercase + hyphens only'; } return null; } });
+      const name = await vscode.window.showInputBox({ prompt: `Nome para o novo ${typeChoice.value}`, placeHolder: 'ex. meu-agent-customizado', validateInput: (v) => { if (!v) { return 'Obrigatório'; } if (!/^[a-z0-9-]+$/.test(v)) { return 'apenas letras minúsculas e hífens'; } return null; } });
       if (!name) { return; }
-      const description = await vscode.window.showInputBox({ prompt: `Description for "${name}"`, placeHolder: 'Brief description...' });
+      const description = await vscode.window.showInputBox({ prompt: `Descrição para "${name}"`, placeHolder: 'Breve descrição...' });
       const root = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
-      if (!root) { vscode.window.showErrorMessage('No workspace open.'); return; }
+      if (!root) { vscode.window.showErrorMessage('Nenhum workspace aberto.'); return; }
 
       const templates: Record<string, { path: string; content: string }> = {
-        agent: { path: `.github/agents/${name}.agent.md`, content: `---\nname: ${name}\ndescription: >\n  ${description ?? 'Custom agent.'}\ntools:\n  - read\n  - editFiles\n  - search\nagents: []\nuser-invocable: false\n---\n\n# ${name}\n\n${description ?? 'Custom agent.'}\n` },
-        skill: { path: `.github/skills/${name}/SKILL.md`, content: `---\nname: ${name}\ndescription: "${description ?? 'Custom skill.'}"\n---\n\n# ${name}\n\n> ${description ?? 'Custom skill.'}\n` },
-        instruction: { path: `.github/instructions/${name}.instructions.md`, content: `---\napplyTo: "*"\n---\n# ${name}\n\n${description ?? 'Custom instruction.'}\n` },
-        prompt: { path: `.github/prompts/${name}.prompt.md`, content: `---\nmode: agent\ndescription: "${description ?? 'Custom prompt.'}"\n---\n\n# ${name}\n\n${description ?? 'Custom prompt.'}\n` },
+        agent: { path: `.github/agents/${name}.agent.md`, content: `---\nname: ${name}\ndescription: >\n  ${description ?? 'Agent customizado.'}\ntools:\n  - read\n  - editFiles\n  - search\nagents: []\nuser-invocable: false\n---\n\n# ${name}\n\n${description ?? 'Agent customizado.'}\n` },
+        skill: { path: `.github/skills/${name}/SKILL.md`, content: `---\nname: ${name}\ndescription: "${description ?? 'Skill customizada.'}"\n---\n\n# ${name}\n\n> ${description ?? 'Skill customizada.'}\n` },
+        instruction: { path: `.github/instructions/${name}.instructions.md`, content: `---\napplyTo: "*"\n---\n# ${name}\n\n${description ?? 'Instruction customizada.'}\n` },
+        prompt: { path: `.github/prompts/${name}.prompt.md`, content: `---\nmode: agent\ndescription: "${description ?? 'Prompt customizado.'}"\n---\n\n# ${name}\n\n${description ?? 'Prompt customizado.'}\n` },
       };
       const template = templates[typeChoice.value];
       if (!template) { return; }
@@ -120,12 +124,16 @@ export function activate(context: vscode.ExtensionContext): void {
       await vscode.workspace.fs.writeFile(fullPath, Buffer.from(template.content, 'utf-8'));
       const doc = await vscode.workspace.openTextDocument(fullPath);
       await vscode.window.showTextDocument(doc);
-      vscode.window.showInformationMessage(`✨ Created ${typeChoice.value}: ${name}`);
+      vscode.window.showInformationMessage(`✨ Criado ${typeChoice.value}: ${name}`);
       catalogProvider.refresh(); installedProvider.refresh();
     }),
 
     vscode.commands.registerCommand('dai.openWorkflow', async () => {
-      vscode.window.showInformationMessage('Workflow Visualizer coming soon!');
+      WorkflowPanel.createOrShow(context.extensionUri);
+    }),
+
+    vscode.commands.registerCommand('dai.openInsights', async () => {
+      InsightsPanel.createOrShow(context.extensionUri, insightsGenerator);
     }),
   );
 
@@ -136,34 +144,34 @@ export function activate(context: vscode.ExtensionContext): void {
       const prompt = request.prompt.trim();
 
       if (cmd === 'recommend' || (!cmd && prompt.toLowerCase().includes('recommend'))) {
-        stream.markdown('## 📊 Workspace Analysis\n\n');
-        stream.markdown('Based on your project, here are **recommended packages**:\n\n');
+        stream.markdown('## 📊 Análise do Workspace\n\n');
+        stream.markdown('Baseado no seu projeto, aqui estão os **pacotes recomendados**:\n\n');
         const allPkgs = await registry.getAll();
         const bundles = await registry.getAllBundles();
-        stream.markdown('### 🚀 Quick Start\n');
-        for (const b of bundles) { stream.markdown(`- **${b.displayName}** — ${b.description} (${b.packageCount} packages)\n`); }
-        stream.markdown('\n### ⚡ Individual Agents\n');
+        stream.markdown('### 🚀 Começo Rápido (Bundles)\n');
+        for (const b of bundles) { stream.markdown(`- **${b.displayName}** — ${b.description} (${b.packageCount} pacotes)\n`); }
+        stream.markdown('\n### ⚡ Agents Individuais\n');
         for (const p of allPkgs.filter(p => p.isAgent)) { stream.markdown(`- ${p.categoryEmoji} **${p.displayName}** — ${p.description}\n`); }
-        stream.markdown('\n> 💡 Use `/install <name>` to install any package.\n');
+        stream.markdown('\n> 💡 Use `/install <nome>` para instalar qualquer pacote.\n');
         return;
       }
 
       if (cmd === 'explain') {
         const pkg = (await registry.getAll()).find(p => p.name.includes(prompt.toLowerCase()) || p.displayName.toLowerCase().includes(prompt.toLowerCase()));
-        if (!pkg) { stream.markdown(`❌ Package "${prompt}" not found. Try \`/recommend\` to see all packages.`); return; }
+        if (!pkg) { stream.markdown(`❌ Pacote "${prompt}" não encontrado. Tente \`/recommend\` para ver todos os pacotes.`); return; }
         stream.markdown(`## ${pkg.categoryEmoji || '📦'} ${pkg.displayName}\n\n`);
-        stream.markdown(`**Type:** ${pkg.agentMeta?.category.label ?? pkg.type.label}\n\n`);
-        stream.markdown(`**Description:** ${pkg.description}\n\n`);
+        stream.markdown(`**Tipo:** ${pkg.agentMeta?.category.label ?? pkg.type.label}\n\n`);
+        stream.markdown(`**Descrição:** ${pkg.description}\n\n`);
         if (pkg.agentMeta) {
-          stream.markdown(`**Tools:** ${pkg.agentMeta.tools.join(', ')}\n\n`);
-          stream.markdown(`**Workflow Phase:** ${pkg.agentMeta.workflowPhase}\n\n`);
-          stream.markdown(`**Complexity:** ${pkg.complexityScore}/100\n\n`);
+          stream.markdown(`**Ferramentas:** ${pkg.agentMeta.tools.join(', ')}\n\n`);
+          stream.markdown(`**Fase no Workflow:** ${pkg.agentMeta.workflowPhase}\n\n`);
+          stream.markdown(`**Complexidade:** ${pkg.complexityScore}/100\n\n`);
           if (pkg.agentMeta.delegatesTo.length > 0) {
-            stream.markdown(`**Agent Network (${pkg.agentMeta.delegatesTo.length}):**\n`);
+            stream.markdown(`**Rede de Agents (${pkg.agentMeta.delegatesTo.length}):**\n`);
             for (const d of pkg.agentMeta.delegatesTo) { stream.markdown(`- ${d}\n`); }
           }
           if (pkg.agentMeta.relatedSkills.length > 0) {
-            stream.markdown(`\n**Related Skills:**\n`);
+            stream.markdown(`\n**Skills Relacionadas:**\n`);
             for (const s of pkg.agentMeta.relatedSkills) { stream.markdown(`- ${s}\n`); }
           }
         }
@@ -171,32 +179,33 @@ export function activate(context: vscode.ExtensionContext): void {
       }
 
       if (cmd === 'workflow') {
-        stream.markdown('## 🔄 Agent Workflow Pipeline\n\n');
+        stream.markdown('## 🔄 Pipeline de Workflow de Agents\n\n');
+        stream.markdown('Você também pode visualizar este workflow de forma interativa executando o comando `DescomplicAI: Abrir Visualizador de Workflow`.\n\n');
         stream.markdown('```\n');
         stream.markdown('TRIAGE (🧠 orchestrator)\n');
         stream.markdown('  ↓\n');
-        stream.markdown('PLAN (📐 planner) — optional for simple tasks\n');
+        stream.markdown('PLAN (📐 planner) — opcional para tarefas simples\n');
         stream.markdown('  ↓\n');
-        stream.markdown('DESIGN (🏛️ code-architect) — optional\n');
+        stream.markdown('DESIGN (🏛️ code-architect) — opcional\n');
         stream.markdown('  ↓\n');
         stream.markdown('EXECUTION (⚡ backend/frontend/database/devops)\n');
         stream.markdown('  ↓\n');
-        stream.markdown('VALIDATION (🧪 test-engineer) — optional for docs\n');
+        stream.markdown('VALIDATION (🧪 test-engineer) — opcional para documentação\n');
         stream.markdown('  ↓\n');
-        stream.markdown('CRITIC (🛡️ code-reviewer) — for non-trivial changes\n');
+        stream.markdown('CRITIC (🛡️ code-reviewer) — para alterações complexas\n');
         stream.markdown('  ↓\n');
         stream.markdown('DELIVER (🧠 orchestrator)\n');
         stream.markdown('  ↓\n');
-        stream.markdown('REMEMBER (💾 mempalace) — best-effort\n');
+        stream.markdown('REMEMBER (💾 mempalace) — extração de memória\n');
         stream.markdown('```\n\n');
-        stream.markdown('> Each gate can be skipped based on task complexity.\n');
+        stream.markdown('> Cada etapa pode ser pulada pelo orchestrator dependendo da complexidade da tarefa.\n');
         return;
       }
 
       if (cmd === 'health') {
         const report = await healthChecker.check();
         stream.markdown(`## 🩺 Health Check: ${report.statusEmoji} ${report.statusLabel}\n\n`);
-        stream.markdown(`**Score:** ${report.score}/100 | **Scan time:** ${report.scanDurationMs}ms\n\n`);
+        stream.markdown(`**Score:** ${report.score}/100 | **Tempo de Scan:** ${report.scanDurationMs}ms\n\n`);
         if (report.findings.length > 0) {
           for (const f of report.findings) {
             const icon = f.severity === 'error' ? '🔴' : f.severity === 'warning' ? '🟡' : f.severity === 'ok' ? '🟢' : '🔵';
@@ -209,20 +218,20 @@ export function activate(context: vscode.ExtensionContext): void {
       }
 
       if (cmd === 'install') {
-        stream.markdown(`To install "${prompt}", use the **DescomplicAI sidebar** or run:\n\n`);
-        stream.markdown('```\nDescomplicAI: Install Package\n```\n\n');
-        stream.markdown('from the Command Palette (`Ctrl+Shift+P`).\n');
+        stream.markdown(`Para instalar "${prompt}", use a **barra lateral do DescomplicAI** ou execute:\n\n`);
+        stream.markdown('```\nDescomplicAI: Instalar Pacote\n```\n\n');
+        stream.markdown('na Command Palette (`Ctrl+Shift+P`).\n');
         return;
       }
 
       // Default: help
       stream.markdown('## 🧠 DescomplicAI\n\n');
-      stream.markdown('I can help you manage your AI agent infrastructure:\n\n');
-      stream.markdown('- `/recommend` — Suggest packages for your project\n');
-      stream.markdown('- `/explain <name>` — Explain an agent or package\n');
-      stream.markdown('- `/workflow` — Show the agent workflow pipeline\n');
-      stream.markdown('- `/health` — Run infrastructure health check\n');
-      stream.markdown('- `/install <name>` — Install a package\n');
+      stream.markdown('Eu posso ajudar você a gerenciar sua infraestrutura de AI agents:\n\n');
+      stream.markdown('- `/recommend` — Sugere pacotes e agents para o seu projeto\n');
+      stream.markdown('- `/explain <nome>` — Explica um agent ou pacote específico em detalhes\n');
+      stream.markdown('- `/workflow` — Mostra o pipeline e fluxo de trabalho dos agents\n');
+      stream.markdown('- `/health` — Executa o health check da sua infraestrutura\n');
+      stream.markdown('- `/install <nome>` — Ajuda na instalação de um pacote\n');
     };
 
     const participant = vscode.chat.createChatParticipant('dai.stack', handler);
@@ -239,8 +248,8 @@ export function activate(context: vscode.ExtensionContext): void {
   }
 
   if (config.get<boolean>('showWelcome', true)) {
-    vscode.window.showInformationMessage('🧠 DescomplicAI activated! Open the sidebar to manage your AI agents.', 'Open Catalog').then((choice) => {
-      if (choice === 'Open Catalog') { vscode.commands.executeCommand('dai-catalog.focus'); }
+    vscode.window.showInformationMessage('🧠 DescomplicAI ativado! Abra a barra lateral para gerenciar seus AI agents.', 'Abrir Catálogo').then((choice) => {
+      if (choice === 'Abrir Catálogo') { vscode.commands.executeCommand('dai-catalog.focus'); }
     });
   }
 }
