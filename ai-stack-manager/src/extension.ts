@@ -15,6 +15,7 @@ import { WorkspaceScanner } from './infrastructure/services/WorkspaceScanner';
 import { FileInstaller } from './infrastructure/services/FileInstaller';
 import { HealthCheckerService } from './infrastructure/services/HealthChecker';
 import { PublishService } from './infrastructure/services/PublishService';
+import { GitHubMetricsService } from './infrastructure/services/GitHubMetricsService';
 
 // Presentation
 import { CatalogViewProvider } from './presentation/providers/CatalogViewProvider';
@@ -29,10 +30,13 @@ import { StatusBarManager } from './infrastructure/services/StatusBarManager';
 export function activate(context: vscode.ExtensionContext): void {
   const registry = new GitRegistry();
   const scanner = new WorkspaceScanner();
-  const installer = new FileInstaller();
-  const healthChecker = new HealthCheckerService();
+  const metricsService = new GitHubMetricsService();
+  const installer = new FileInstaller(metricsService);
+  const healthChecker = new HealthCheckerService(registry, scanner);
   const publishService = new PublishService();
   const insightsGenerator = new InsightsGenerator(registry, scanner);
+
+  void registry.sync();
 
   // ─── Sidebar Providers ───────────────────────
   const catalogProvider = new CatalogViewProvider(context.extensionUri, registry, scanner, installer);
@@ -94,7 +98,7 @@ export function activate(context: vscode.ExtensionContext): void {
   context.subscriptions.push(
     vscode.commands.registerCommand('dai.install', async () => {
       const packages = await registry.getAll();
-      const items = packages.map(p => ({
+      const items: Array<{ label: string; description: string; detail: string; id: string }> = packages.map((p: Package) => ({
         label: `${p.categoryEmoji || p.typeIcon} ${p.displayName}`,
         description: p.agentMeta?.category.label ?? p.type.label,
         detail: p.description,
@@ -146,7 +150,7 @@ export function activate(context: vscode.ExtensionContext): void {
 
     vscode.commands.registerCommand('dai.installBundle', async () => {
       const bundles = await registry.getAllBundles();
-      const items = bundles.map(b => ({ label: `$(package) ${b.displayName}`, description: `${b.packageCount} pacotes`, detail: b.description, id: b.id }));
+      const items: Array<{ label: string; description: string; detail: string; id: string }> = bundles.map((b: import('./domain/entities/Bundle').Bundle) => ({ label: `$(package) ${b.displayName}`, description: `${b.packageCount} pacotes`, detail: b.description, id: b.id }));
       const selected = await vscode.window.showQuickPick(items, { placeHolder: 'Selecione um bundle para instalar...', matchOnDetail: true });
       if (selected) {
         const bundle = await registry.findBundleById(selected.id);
@@ -211,8 +215,8 @@ export function activate(context: vscode.ExtensionContext): void {
     vscode.commands.registerCommand('dai.configureAgent', async (agentId?: string) => {
       if (!agentId) {
         const packages = await registry.getAll();
-        const agents = packages.filter(p => p.type.value === 'agent');
-        const items = agents.map(p => ({ label: `${p.categoryEmoji} ${p.displayName}`, description: p.id, id: p.id }));
+        const agents = packages.filter((p: Package) => p.type.value === 'agent');
+        const items: Array<{ label: string; description: string; id: string }> = agents.map((p: Package) => ({ label: `${p.categoryEmoji} ${p.displayName}`, description: p.id, id: p.id }));
         const selected = await vscode.window.showQuickPick(items, { placeHolder: 'Selecione um agente para configurar...' });
         if (selected) { agentId = selected.id; }
       }
@@ -228,16 +232,39 @@ export function activate(context: vscode.ExtensionContext): void {
     vscode.commands.registerCommand('dai.publishPackage', async () => {
       const uris = await vscode.window.showOpenDialog({
         canSelectMany: false,
-        openLabel: 'Publicar',
+        openLabel: 'Gerar contribuição',
         filters: {
-          'Pacotes DescomplicAI': ['zip', 'json']
+          'MCP JSON': ['json']
         }
       });
       if (uris && uris[0]) {
         await publishService.publishPackage(uris[0]);
-        await registry.sync();
         await catalogProvider.refresh();
       }
+    }),
+
+    vscode.commands.registerCommand('dai.importCustomMcp', async () => {
+      const uris = await vscode.window.showOpenDialog({
+        canSelectMany: false,
+        openLabel: 'Importar MCP',
+        filters: {
+          'MCP JSON': ['json']
+        }
+      });
+
+      if (!uris?.[0]) { return; }
+
+      const packages = await publishService.importCustomMcp(uris[0], registry);
+      if (packages.length === 0) { return; }
+
+      if (packages.length > 1) {
+        await installer.installMany(packages);
+      } else {
+        await installer.install(packages[0]);
+      }
+
+      await catalogProvider.refresh();
+      await installedProvider.refresh();
     }),
   );
 
@@ -255,13 +282,13 @@ export function activate(context: vscode.ExtensionContext): void {
         stream.markdown('### 🚀 Começo Rápido (Bundles)\n');
         for (const b of bundles) { stream.markdown(`- **${b.displayName}** — ${b.description} (${b.packageCount} pacotes)\n`); }
         stream.markdown('\n### ⚡ Agents Individuais\n');
-        for (const p of allPkgs.filter(p => p.isAgent)) { stream.markdown(`- ${p.categoryEmoji} **${p.displayName}** — ${p.description}\n`); }
+        for (const p of allPkgs.filter((p: Package) => p.isAgent)) { stream.markdown(`- ${p.categoryEmoji} **${p.displayName}** — ${p.description}\n`); }
         stream.markdown('\n> 💡 Use `/install <nome>` para instalar qualquer pacote.\n');
         return;
       }
 
       if (cmd === 'explain') {
-        const pkg = (await registry.getAll()).find(p => p.name.includes(prompt.toLowerCase()) || p.displayName.toLowerCase().includes(prompt.toLowerCase()));
+        const pkg = (await registry.getAll()).find((p: Package) => p.name.includes(prompt.toLowerCase()) || p.displayName.toLowerCase().includes(prompt.toLowerCase()));
         if (!pkg) { stream.markdown(`❌ Pacote "${prompt}" não encontrado. Tente \`/recommend\` para ver todos os pacotes.`); return; }
         stream.markdown(`## ${pkg.categoryEmoji || '📦'} ${pkg.displayName}\n\n`);
         stream.markdown(`**Tipo:** ${pkg.agentMeta?.category.label ?? pkg.type.label}\n\n`);

@@ -50,3 +50,7 @@ export interface IHealthChecker {
   /** Run a full health check on the workspace */
   check(): Promise<HealthReport>;
 }
+
+export interface IInstallTracker {
+  trackInstall(pkg: Package): Promise<void>;
+}

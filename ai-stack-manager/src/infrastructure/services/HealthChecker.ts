@@ -6,10 +6,15 @@
 
 import * as vscode from 'vscode';
 import * as path from 'path';
-import { IHealthChecker } from '../../domain/interfaces';
+import { IHealthChecker, IPackageRepository, IWorkspaceScanner } from '../../domain/interfaces';
+import { InstallStatus } from '../../domain/entities/Package';
 import { HealthReport, HealthFinding, HealthSeverity } from '../../domain/entities/HealthReport';
 
 export class HealthCheckerService implements IHealthChecker {
+  constructor(
+    private readonly _registry?: IPackageRepository,
+    private readonly _scanner?: IWorkspaceScanner,
+  ) {}
 
   private get workspaceRoot(): string | undefined {
     return vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
@@ -39,15 +44,17 @@ export class HealthCheckerService implements IHealthChecker {
       skillChecks,
       mcpChecks,
       instructionChecks,
+      catalogMetadataChecks,
     ] = await Promise.all([
       this.checkGitHubDir(root),
       this.checkAgents(root),
       this.checkSkills(root),
       this.checkMCPConfig(root),
       this.checkInstructions(root),
+      this.checkCatalogMetadata(),
     ]);
 
-    findings.push(...githubCheck, ...agentChecks, ...skillChecks, ...mcpChecks, ...instructionChecks);
+    findings.push(...githubCheck, ...agentChecks, ...skillChecks, ...mcpChecks, ...instructionChecks, ...catalogMetadataChecks);
 
     // Add positive finding if everything is good
     if (findings.length === 0) {
@@ -260,6 +267,70 @@ export class HealthCheckerService implements IHealthChecker {
       }
     } catch {
       // Directory read error
+    }
+
+    return findings;
+  }
+
+  private async checkCatalogMetadata(): Promise<HealthFinding[]> {
+    if (!this._registry || !this._scanner) { return []; }
+
+    const findings: HealthFinding[] = [];
+    const packages = await this._registry.getAll();
+
+    for (const pkg of packages) {
+      const status = await this._scanner.getInstallStatus(pkg);
+      if (status !== InstallStatus.Installed && status !== InstallStatus.Partial) {
+        continue;
+      }
+
+      if (pkg.isOfficial && !pkg.source.manifestPath) {
+        findings.push({
+          id: `catalog-manifest-missing-${pkg.id}`,
+          severity: HealthSeverity.Warning,
+          category: pkg.type.value as 'agent' | 'skill' | 'mcp' | 'instruction' | 'general',
+          title: `Manifest ausente para ${pkg.displayName}`,
+          message: 'O pacote instalado não informa o caminho do manifest público no catálogo oficial.',
+          fix: 'Atualize o manifesto do pacote no repositório DescomplicAI.',
+          autoFixable: false,
+        });
+      }
+
+      if (!pkg.installStrategy.targets.length) {
+        findings.push({
+          id: `install-targets-missing-${pkg.id}`,
+          severity: HealthSeverity.Error,
+          category: pkg.type.value as 'agent' | 'skill' | 'mcp' | 'instruction' | 'general',
+          title: `Targets de instalação ausentes: ${pkg.displayName}`,
+          message: 'O pacote não define targets de instalação no novo schema público.',
+          fix: 'Adicione install.targets ao manifest.json correspondente.',
+          autoFixable: false,
+        });
+      }
+
+      if (!pkg.ui.longDescription) {
+        findings.push({
+          id: `ui-details-missing-${pkg.id}`,
+          severity: HealthSeverity.Info,
+          category: pkg.type.value as 'agent' | 'skill' | 'mcp' | 'instruction' | 'general',
+          title: `Detalhes públicos incompletos: ${pkg.displayName}`,
+          message: 'O pacote está sem descrição longa para a UI pública do catálogo.',
+          fix: 'Preencha ui.longDescription ou details.md no repositório oficial.',
+          autoFixable: false,
+        });
+      }
+
+      if (pkg.type.value === 'mcp' && pkg.installStrategy.kind !== 'mcp-merge') {
+        findings.push({
+          id: `mcp-merge-strategy-${pkg.id}`,
+          severity: HealthSeverity.Warning,
+          category: 'mcp',
+          title: `Estratégia MCP inconsistente: ${pkg.displayName}`,
+          message: 'Pacotes MCP devem usar strategy "mcp-merge" para preservar o .vscode/mcp.json do workspace.',
+          fix: 'Atualize o manifest do MCP para usar install.strategy = mcp-merge.',
+          autoFixable: false,
+        });
+      }
     }
 
     return findings;

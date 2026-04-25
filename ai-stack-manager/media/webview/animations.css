@@ -128,6 +128,14 @@
   animation: float 3s ease-in-out infinite;
 }
 
+body.dai-hydrated .animate-slide-in,
+body.dai-hydrated .animate-fade-in,
+body.dai-hydrated .animate-scale-in {
+  animation: none !important;
+  opacity: 1 !important;
+  transform: none !important;
+}
+
 /* Score ring animation */
 .dai-score-progress {
   animation: score-draw 1.2s cubic-bezier(0.4, 0, 0.2, 1) both;

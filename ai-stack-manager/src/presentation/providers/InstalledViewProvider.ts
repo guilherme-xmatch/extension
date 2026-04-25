@@ -12,6 +12,7 @@ import { IPackageRepository, IWorkspaceScanner, IInstaller } from '../../domain/
 export class InstalledViewProvider implements vscode.WebviewViewProvider {
   public static readonly viewType = 'dai-installed';
   private _view?: vscode.WebviewView;
+  private _initialized = false;
 
   constructor(
     private readonly _extensionUri: vscode.Uri,
@@ -40,6 +41,11 @@ export class InstalledViewProvider implements vscode.WebviewViewProvider {
           vscode.commands.executeCommand('dai.configureAgent', message.packageId);
           break;
         case 'refresh': await this.updateView(); break;
+        case 'openExternal':
+          if (message.url) {
+            await vscode.env.openExternal(vscode.Uri.parse(message.url));
+          }
+          break;
       }
     });
 
@@ -70,13 +76,24 @@ export class InstalledViewProvider implements vscode.WebviewViewProvider {
       grouped.get(key)!.push(item);
     }
 
-    this._view.webview.html = WebviewHelper.buildHtml({
-      webview: this._view.webview,
-      extensionUri: this._extensionUri,
-      title: 'DescomplicAI — Instalados',
-      bodyContent: this.renderInstalled(installed, grouped),
-      scriptContent: this.getScript(),
-    });
+    const state = {
+      html: this.renderInstalled(installed, grouped),
+      animationsEnabled: !this._initialized,
+    };
+
+    if (!this._initialized) {
+      this._view.webview.html = WebviewHelper.buildStatefulHtml({
+        webview: this._view.webview,
+        extensionUri: this._extensionUri,
+        title: 'DescomplicAI — Instalados',
+        initialState: state,
+        scriptContent: this.getScript(),
+      });
+      this._initialized = true;
+      return;
+    }
+
+    WebviewHelper.postState(this._view.webview, state);
   }
 
   private renderInstalled(
@@ -86,7 +103,7 @@ export class InstalledViewProvider implements vscode.WebviewViewProvider {
     if (installed.length === 0) {
       return /*html*/`
       <div class="dai-container">
-        <div class="dai-empty animate-fade-in">
+        <div class="dai-empty ${this.animClass('animate-fade-in')}">
           <span class="dai-empty-icon">📦</span>
           <span class="dai-empty-text">Nenhum pacote instalado</span>
           <span class="dai-empty-hint">Navegue no Catálogo para instalar seu primeiro pacote</span>
@@ -95,7 +112,7 @@ export class InstalledViewProvider implements vscode.WebviewViewProvider {
     }
 
     let html = /*html*/`<div class="dai-container">
-      <div class="dai-installed-summary animate-fade-in">
+      <div class="dai-installed-summary ${this.animClass('animate-fade-in')}">
         <div class="dai-summary-stat">
           <span class="dai-summary-number">${installed.length}</span>
           <span class="dai-summary-label">Pacotes Instalados</span>
@@ -115,14 +132,16 @@ export class InstalledViewProvider implements vscode.WebviewViewProvider {
           animIndex++;
           const catColor = pkg.agentMeta?.category.color ?? pkg.type.color;
           return /*html*/`
-          <div class="dai-installed-item animate-slide-in" style="--delay: ${animIndex * 0.05}s; --type-color: ${catColor}">
+          <div class="dai-installed-item ${this.animClass('animate-slide-in')}" style="--delay: ${animIndex * 0.05}s; --type-color: ${catColor}">
             <div class="dai-installed-info">
               <span class="dai-installed-name">${pkg.displayName}</span>
               <span class="dai-installed-path">${pkg.primaryFilePath}</span>
+              <span class="dai-installed-path">${pkg.sourceLabel} · ${pkg.maturityLabel} · ${pkg.stats.installsTotal} installs</span>
             </div>
             <div class="dai-installed-actions">
               ${status === InstallStatus.Partial ? '<span class="dai-partial-badge">Incompleto</span>' : ''}
               ${pkg.type.value === 'agent' ? `<button class="dai-btn dai-btn-ghost dai-btn-sm" data-config="${pkg.id}" title="Configurar Agente">⚙️</button>` : ''}
+              ${pkg.docs.links[0] ? `<button class="dai-btn dai-btn-ghost dai-btn-sm" data-link="${pkg.docs.links[0].url}" title="Abrir documentação">🔗</button>` : ''}
               <button class="dai-btn dai-btn-ghost dai-btn-sm" data-open="${pkg.primaryFilePath}" title="Abrir arquivo">📂</button>
               <button class="dai-btn dai-btn-danger dai-btn-sm" data-uninstall="${pkg.id}" title="Desinstalar">✕</button>
             </div>
@@ -155,27 +174,40 @@ export class InstalledViewProvider implements vscode.WebviewViewProvider {
 
   private getScript(): string {
     return /*js*/`
-    document.getElementById('refresh-installed')?.addEventListener('click', () => {
-      vscode.postMessage({ command: 'refresh' });
-    });
-
-    document.querySelectorAll('[data-uninstall]').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        vscode.postMessage({ command: 'uninstall', packageId: e.currentTarget.dataset.uninstall });
+    const render = (state) => state.html || '<div class="dai-container"></div>';
+    const bind = (_state, app) => {
+      app.root.querySelector('#refresh-installed')?.addEventListener('click', () => {
+        app.postMessage({ command: 'refresh' });
       });
-    });
 
-    document.querySelectorAll('[data-open]').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        vscode.postMessage({ command: 'openFile', filePath: e.currentTarget.dataset.open });
+      app.root.querySelectorAll('[data-uninstall]').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          app.postMessage({ command: 'uninstall', packageId: btn.dataset.uninstall });
+        });
       });
-    });
 
-    document.querySelectorAll('[data-config]').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        vscode.postMessage({ command: 'configure', packageId: e.currentTarget.dataset.config });
+      app.root.querySelectorAll('[data-open]').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          app.postMessage({ command: 'openFile', filePath: btn.dataset.open });
+        });
       });
-    });
+
+      app.root.querySelectorAll('[data-config]').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          app.postMessage({ command: 'configure', packageId: btn.dataset.config });
+        });
+      });
+
+      app.root.querySelectorAll('[data-link]').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          app.postMessage({ command: 'openExternal', url: btn.dataset.link });
+        });
+      });
+    };
     `;
+  }
+
+  private animClass(className: string): string {
+    return this._initialized ? '' : className;
   }
 }

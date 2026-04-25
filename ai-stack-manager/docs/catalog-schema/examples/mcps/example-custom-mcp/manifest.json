@@ -1,0 +1,46 @@
+{
+  "id": "mcp-example-custom",
+  "name": "example-custom-mcp",
+  "displayName": "Example Custom MCP",
+  "description": "Servidor MCP de exemplo no novo schema público.",
+  "type": "mcp",
+  "version": "1.0.0",
+  "tags": ["mcp", "community", "custom"],
+  "author": "DescomplicAI Community",
+  "install": {
+    "strategy": "mcp-merge",
+    "targets": [
+      {
+        "source": "mcp.json",
+        "target": ".vscode/mcp.json",
+        "mergeStrategy": "merge-mcp-servers"
+      }
+    ]
+  },
+  "source": {
+    "official": true,
+    "packagePath": "mcps/example-custom-mcp",
+    "readmePath": "README.md",
+    "detailsPath": "details.md"
+  },
+  "ui": {
+    "longDescription": "Este MCP ilustra como a extensão consome manifests públicos no novo catálogo.",
+    "highlights": ["Schema manifest-driven", "Merge em mcp.json", "Stats públicas"],
+    "installNotes": ["O install target usa merge-mcp-servers"],
+    "badges": ["Official", "Example"],
+    "maturity": "stable"
+  },
+  "docs": {
+    "readmePath": "README.md",
+    "detailsPath": "details.md",
+    "links": [
+      {
+        "label": "Repositório",
+        "url": "https://github.com/guilherme-xmatch/DescomplicAI"
+      }
+    ]
+  },
+  "stats": {
+    "installsTotal": 0
+  }
+}

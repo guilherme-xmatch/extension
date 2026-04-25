@@ -12,6 +12,7 @@ import { HealthReport, HealthSeverity } from '../../domain/entities/HealthReport
 export class HealthViewProvider implements vscode.WebviewViewProvider {
   public static readonly viewType = 'dai-health';
   private _view?: vscode.WebviewView;
+  private _initialized = false;
 
   constructor(
     private readonly _extensionUri: vscode.Uri,
@@ -38,44 +39,41 @@ export class HealthViewProvider implements vscode.WebviewViewProvider {
   private renderInitial(): void {
     if (!this._view) { return; }
 
-    this._view.webview.html = WebviewHelper.buildHtml({
-      webview: this._view.webview,
-      extensionUri: this._extensionUri,
-      title: 'DescomplicAI — Health Check',
-      bodyContent: /*html*/`
-      <div class="dai-container">
-        <div class="dai-health-hero animate-fade-in">
-          <div class="dai-health-icon-large">🩺</div>
-          <h3 class="dai-health-title">Health Check da Infraestrutura</h3>
-          <p class="dai-health-subtitle">Valide a integridade dos seus agents, skills, MCPs e instructions.</p>
-          <button class="dai-btn dai-btn-primary dai-btn-lg" id="run-check">
-            <span class="dai-btn-icon">▶</span> Executar Health Check
-          </button>
-        </div>
-      </div>`,
-      scriptContent: /*js*/`
-      document.getElementById('run-check').addEventListener('click', () => {
-        document.getElementById('run-check').classList.add('dai-btn-loading');
-        document.getElementById('run-check').innerHTML = '<span class="dai-spinner"></span> Escaneando...';
-        vscode.postMessage({ command: 'runCheck' });
-      });`,
-    });
+    const state = { html: this.renderHero(), loading: false };
+    if (!this._initialized) {
+      this._view.webview.html = WebviewHelper.buildStatefulHtml({
+        webview: this._view.webview,
+        extensionUri: this._extensionUri,
+        title: 'DescomplicAI — Health Check',
+        initialState: state,
+        scriptContent: this.getScript(),
+      });
+      this._initialized = true;
+      return;
+    }
+
+    WebviewHelper.postState(this._view.webview, state);
   }
 
   private async runAndRender(): Promise<void> {
     if (!this._view) { return; }
+    WebviewHelper.postState(this._view.webview, { html: this.renderHero(true), loading: true });
     const report = await this._healthChecker.check();
+    WebviewHelper.postState(this._view.webview, { html: this.renderReport(report), loading: false });
+  }
 
-    this._view.webview.html = WebviewHelper.buildHtml({
-      webview: this._view.webview,
-      extensionUri: this._extensionUri,
-      title: 'DescomplicAI — Health Check',
-      bodyContent: this.renderReport(report),
-      scriptContent: /*js*/`
-      document.getElementById('rerun-check')?.addEventListener('click', () => {
-        vscode.postMessage({ command: 'runCheck' });
-      });`,
-    });
+  private renderHero(loading = false): string {
+    return /*html*/`
+    <div class="dai-container">
+      <div class="dai-health-hero ${this._initialized ? '' : 'animate-fade-in'}">
+        <div class="dai-health-icon-large">🩺</div>
+        <h3 class="dai-health-title">Health Check da Infraestrutura</h3>
+        <p class="dai-health-subtitle">Valide a integridade dos seus agents, skills, MCPs e instructions.</p>
+        <button class="dai-btn dai-btn-primary dai-btn-lg ${loading ? 'dai-btn-loading' : ''}" id="run-check">
+          ${loading ? '<span class="dai-spinner"></span> Escaneando...' : '<span class="dai-btn-icon">▶</span> Executar Health Check'}
+        </button>
+      </div>
+    </div>`;
   }
 
   private renderReport(report: HealthReport): string {
@@ -89,7 +87,7 @@ export class HealthViewProvider implements vscode.WebviewViewProvider {
     return /*html*/`
     <div class="dai-container">
       <!-- Score Ring -->
-      <div class="dai-health-score animate-scale-in">
+      <div class="dai-health-score ${this._initialized ? '' : 'animate-scale-in'}">
         <div class="dai-score-ring">
           <svg viewBox="0 0 100 100" width="120" height="120">
             <circle cx="50" cy="50" r="40" fill="none" stroke="var(--vscode-widget-border, rgba(255,255,255,0.1))" stroke-width="6"/>
@@ -110,7 +108,7 @@ export class HealthViewProvider implements vscode.WebviewViewProvider {
       </div>
 
       <!-- Stats Bar -->
-      <div class="dai-health-stats animate-slide-in" style="--delay: 0.1s">
+      <div class="dai-health-stats ${this._initialized ? '' : 'animate-slide-in'}" style="--delay: 0.1s">
         <div class="dai-stat" style="--stat-color: var(--itau-error)">
           <span class="dai-stat-value">${report.errors.length}</span>
           <span class="dai-stat-label">Erros</span>
@@ -144,7 +142,7 @@ export class HealthViewProvider implements vscode.WebviewViewProvider {
           const severityClass = `severity-${f.severity}`;
 
           return /*html*/`
-          <div class="dai-finding animate-slide-in ${severityClass}" style="--delay: ${(i + 2) * 0.06}s">
+          <div class="dai-finding ${this._initialized ? '' : 'animate-slide-in'} ${severityClass}" style="--delay: ${(i + 2) * 0.06}s">
             <div class="dai-finding-icon">${icon}</div>
             <div class="dai-finding-content">
               <span class="dai-finding-title">${f.title}</span>
@@ -156,5 +154,19 @@ export class HealthViewProvider implements vscode.WebviewViewProvider {
         }).join('')}
       </div>
     </div>`;
+  }
+
+  private getScript(): string {
+    return /*js*/`
+    const render = (state) => state.html || '<div class="dai-container"></div>';
+    const bind = (state, app) => {
+      app.root.querySelector('#run-check')?.addEventListener('click', () => {
+        app.postMessage({ command: 'runCheck' });
+      });
+      app.root.querySelector('#rerun-check')?.addEventListener('click', () => {
+        app.postMessage({ command: 'runCheck' });
+      });
+    };
+    `;
   }
 }

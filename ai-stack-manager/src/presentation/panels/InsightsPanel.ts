@@ -14,6 +14,7 @@ export class InsightsPanel {
   private readonly _extensionUri: vscode.Uri;
   private _disposables: vscode.Disposable[] = [];
   private readonly _generator: InsightsGenerator;
+  private _initialized = false;
 
   private constructor(panel: vscode.WebviewPanel, extensionUri: vscode.Uri, generator: InsightsGenerator) {
     this._panel = panel;
@@ -55,26 +56,29 @@ export class InsightsPanel {
   }
 
   private async update(): Promise<void> {
-    const webview = this._panel.webview;
     const report = await this._generator.generateReport();
-    
-    this._panel.webview.html = this.getHtmlForWebview(webview, report);
+
+    const state = { html: this.renderReport(report) };
+    if (!this._initialized) {
+      this._panel.webview.html = WebviewHelper.buildStatefulHtml({
+        webview: this._panel.webview,
+        extensionUri: this._extensionUri,
+        title: 'DescomplicAI: Insights Engine',
+        initialState: state,
+        scriptContent: this.getScript(),
+      });
+      this._initialized = true;
+      return;
+    }
+
+    WebviewHelper.postState(this._panel.webview, state);
   }
 
-  private getHtmlForWebview(webview: vscode.Webview, report: import('../../domain/entities/InsightsReport').InsightsReport): string {
-    const mainCssUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'media', 'webview', 'main.css'));
-    const animCssUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'media', 'webview', 'animations.css'));
-
-    return /*html*/`<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Insights Engine</title>
-  <link href="${mainCssUri}" rel="stylesheet">
-  <link href="${animCssUri}" rel="stylesheet">
+  private renderReport(report: import('../../domain/entities/InsightsReport').InsightsReport): string {
+    return /*html*/`
+<div class="dai-container dai-insights-root">
   <style>
-    body { padding: 32px; max-width: 1200px; margin: 0 auto; background-color: var(--vscode-editor-background); color: var(--vscode-foreground); }
+    .dai-insights-root { padding: 24px; max-width: 1200px; margin: 0 auto; color: var(--vscode-foreground); }
     .insights-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 32px; }
     .insights-title { font-size: 2rem; font-weight: 800; margin: 0; display: flex; align-items: center; gap: 12px; }
     .insights-subtitle { color: var(--vscode-descriptionForeground); margin-top: 4px; }
@@ -103,20 +107,19 @@ export class InsightsPanel {
     .score-circle { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 120px; height: 120px; border-radius: 50%; border: 8px solid var(--itau-primary); margin: 0 auto 24px; font-size: 2rem; font-weight: 800; box-shadow: 0 0 32px rgba(236,112,0,0.2); }
     .score-label { font-size: 0.8rem; font-weight: 400; color: var(--vscode-descriptionForeground); text-transform: uppercase; letter-spacing: 1px; }
   </style>
-</head>
-<body>
-  <div class="insights-header animate-fade-in">
+
+  <div class="insights-header ${this._initialized ? '' : 'animate-fade-in'}">
     <div>
       <h1 class="insights-title"><span class="dai-stack-icon" style="width: 32px; height: 32px;"><div class="dai-stack-layer dai-layer-1" style="width:24px; height:24px;"></div><div class="dai-stack-layer dai-layer-2" style="width:24px; height:24px;"></div><div class="dai-stack-layer dai-layer-3" style="width:24px; height:24px;"></div></span> Insights Engine</h1>
       <p class="insights-subtitle">Métricas avançadas da sua infraestrutura de AI Agents</p>
     </div>
-    <button class="dai-btn dai-btn-primary" onclick="vscode.postMessage({command:'refresh'})">↻ Atualizar</button>
+    <button class="dai-btn dai-btn-primary" id="refresh-insights">↻ Atualizar</button>
   </div>
 
   <div class="dashboard-grid">
     
     <!-- Coverage Map -->
-    <div class="dashboard-card animate-slide-in" style="--delay: 0.1s; grid-column: span 2;">
+    <div class="dashboard-card ${this._initialized ? '' : 'animate-slide-in'}" style="--delay: 0.1s; grid-column: span 2;">
       <div class="card-title">🗺️ Workflow Coverage Map</div>
       <p style="font-size: 0.85rem; color: var(--vscode-descriptionForeground); margin-bottom: 24px;">
         Visualiza em quais etapas do fluxo de desenvolvimento você possui agentes instalados. Uma cobertura alta significa maior automação.
@@ -145,7 +148,7 @@ export class InsightsPanel {
     </div>
 
     <!-- Health Score -->
-    <div class="dashboard-card animate-slide-in" style="--delay: 0.2s">
+    <div class="dashboard-card ${this._initialized ? '' : 'animate-slide-in'}" style="--delay: 0.2s">
       <div class="card-title">📊 Ecosystem Score</div>
       <div class="score-circle">
         ${report.coverageScore}%
@@ -157,7 +160,7 @@ export class InsightsPanel {
     </div>
 
     <!-- Tool Inventory & Security -->
-    <div class="dashboard-card animate-slide-in" style="--delay: 0.3s; grid-column: span 2;">
+    <div class="dashboard-card ${this._initialized ? '' : 'animate-slide-in'}" style="--delay: 0.3s; grid-column: span 2;">
       <div class="card-title">🔐 Security & Tool Inventory</div>
       <div class="alert-list">
         ${report.securityAlerts.length === 0 ? '<div class="alert-item ok"><span class="alert-title">🟢 Seguro</span><span class="alert-desc">Nenhum agente com permissões de terminal detectado.</span></div>' : ''}
@@ -177,7 +180,7 @@ export class InsightsPanel {
     </div>
 
     <!-- Dependency Health -->
-    <div class="dashboard-card animate-slide-in" style="--delay: 0.4s">
+    <div class="dashboard-card ${this._initialized ? '' : 'animate-slide-in'}" style="--delay: 0.4s">
       <div class="card-title">🔗 Dependency Health</div>
       <div class="alert-list">
         ${report.missingDependencies.length === 0 ? '<div class="alert-item ok"><span class="alert-title">🟢 Saudável</span><span class="alert-desc">Nenhum gap na rede de agents detectado.</span></div>' : ''}
@@ -193,10 +196,17 @@ export class InsightsPanel {
 
   </div>
 
-  <script>
-    const vscode = acquireVsCodeApi();
-  </script>
-</body>
-</html>`;
+</div>`;
+  }
+
+  private getScript(): string {
+    return /*js*/`
+      const render = (state) => state.html || '<div class="dai-container"></div>';
+      const bind = (_state, app) => {
+        app.root.querySelector('#refresh-insights')?.addEventListener('click', () => {
+          app.postMessage({ command: 'refresh' });
+        });
+      };
+    `;
   }
 }

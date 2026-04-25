@@ -26,10 +26,14 @@ body {
   font-family: var(--vscode-font-family, 'Segoe UI', system-ui, -apple-system, sans-serif);
   font-size: var(--vscode-font-size, 13px);
   color: var(--vscode-foreground);
-  background: transparent;
+  background: var(--vscode-editor-background);
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   overflow-x: hidden;
+}
+
+.dai-shell-root {
+  min-height: 100vh;
 }
 
 /* 
@@ -389,6 +393,7 @@ body {
   font-size: 11px;
   opacity: 0.55;
   line-height: 1.4;
+  line-clamp: 2;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
@@ -429,6 +434,32 @@ body {
 
 .dai-card-actions {
   flex-shrink: 0;
+}
+
+.dai-card-inline-meta {
+  font-size: 10px;
+  opacity: 0.45;
+}
+
+.dai-detail-text {
+  display: block;
+  white-space: normal;
+  line-height: 1.5;
+}
+
+.dai-detail-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.dai-detail-bullet {
+  font-size: 11px;
+  opacity: 0.75;
+}
+
+.dai-link-chip {
+  text-decoration: none;
 }
 
 /* 
@@ -916,6 +947,7 @@ body {
 
 .dai-brand-ai {
   background: linear-gradient(90deg, var(--itau-primary), #FFB300);
+  background-clip: text;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
@@ -1371,6 +1403,7 @@ body {
 }
 
 .dai-slider {
+  appearance: none;
   -webkit-appearance: none;
   width: 100%;
   height: 4px;

@@ -1,0 +1,21 @@
+{
+  "schemaVersion": "1.0.0",
+  "repoUrl": "https://github.com/guilherme-xmatch/DescomplicAI",
+  "packages": [
+    "mcps/example-custom-mcp/manifest.json"
+  ],
+  "bundles": [
+    {
+      "id": "bundle-custom-tools",
+      "name": "custom-tools",
+      "displayName": "Custom Tools",
+      "description": "Bundle de exemplo do novo catálogo público",
+      "version": "1.0.0",
+      "packageIds": ["mcp-example-custom"],
+      "color": "#EC7000"
+    }
+  ],
+  "stats": {
+    "packagesBasePath": "catalog/stats/packages"
+  }
+}

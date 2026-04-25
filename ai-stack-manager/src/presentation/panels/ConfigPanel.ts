@@ -10,6 +10,7 @@ export class ConfigPanel {
   private readonly _extensionUri: vscode.Uri;
   private _disposables: vscode.Disposable[] = [];
   private _pkg: Package;
+  private _initialized = false;
 
   private constructor(panel: vscode.WebviewPanel, extensionUri: vscode.Uri, pkg: Package) {
     this._panel = panel;
@@ -80,8 +81,8 @@ export class ConfigPanel {
   }
 
   private _update() {
-    const webview = this._panel.webview;
     const title = `Configuração: ${this._pkg.displayName}`;
+    this._panel.title = title;
     
     const configuration = vscode.workspace.getConfiguration('descomplicai');
     const currentProvider = configuration.get<string>('llmProvider') || 'Azure OpenAI';
@@ -97,7 +98,7 @@ export class ConfigPanel {
           </div>
         </header>
 
-        <div class="dai-section animate-slide-in">
+        <div class="dai-section ${this._initialized ? '' : 'animate-slide-in'}">
           <div class="dai-section-header">
             <span class="dai-section-title">Parâmetros de IA</span>
           </div>
@@ -125,7 +126,7 @@ export class ConfigPanel {
           </div>
         </div>
 
-        <div class="dai-section animate-slide-in" style="--delay: 0.1s">
+        <div class="dai-section ${this._initialized ? '' : 'animate-slide-in'}" style="--delay: 0.1s">
           <div class="dai-section-header">
             <span class="dai-section-title">Segurança & Permissões</span>
           </div>
@@ -153,39 +154,47 @@ export class ConfigPanel {
           </div>
         </div>
 
-        <div class="dai-actions animate-slide-in" style="--delay: 0.2s">
+        <div class="dai-actions ${this._initialized ? '' : 'animate-slide-in'}" style="--delay: 0.2s">
           <button id="saveBtn" class="dai-btn dai-btn-primary" style="width: 100%">Salvar Configurações</button>
         </div>
       </div>
     `;
 
     const scriptContent = /*js*/`
-      document.getElementById('temperature').addEventListener('input', (e) => {
-        document.getElementById('tempValue').innerText = e.target.value;
-      });
-
-      document.getElementById('saveBtn').addEventListener('click', () => {
-        const config = {
-          llmProvider: document.getElementById('llmProvider').value,
-          temperature: document.getElementById('temperature').value,
-          tokenLimit: document.getElementById('tokenLimit').value,
-          autoApprove: document.getElementById('autoApprove').checked,
-          fsAccess: document.getElementById('fsAccess').checked
-        };
-        
-        vscode.postMessage({
-          command: 'saveConfig',
-          config: config
+      const render = (state) => state.html || '<div class="dai-container"></div>';
+      const bind = (_state, app) => {
+        app.root.querySelector('#temperature')?.addEventListener('input', (event) => {
+          const value = event.target.value;
+          const tempEl = app.root.querySelector('#tempValue');
+          if (tempEl) { tempEl.textContent = value; }
         });
-      });
+
+        app.root.querySelector('#saveBtn')?.addEventListener('click', () => {
+          const config = {
+            llmProvider: app.root.querySelector('#llmProvider')?.value,
+            temperature: app.root.querySelector('#temperature')?.value,
+            tokenLimit: app.root.querySelector('#tokenLimit')?.value,
+            autoApprove: Boolean(app.root.querySelector('#autoApprove')?.checked),
+            fsAccess: Boolean(app.root.querySelector('#fsAccess')?.checked)
+          };
+          app.postMessage({ command: 'saveConfig', config });
+        });
+      };
     `;
 
-    this._panel.webview.html = WebviewHelper.buildHtml({
-      webview: this._panel.webview,
-      extensionUri: this._extensionUri,
-      title: title,
-      bodyContent: bodyContent,
-      scriptContent: scriptContent
-    });
+    const state = { html: bodyContent };
+    if (!this._initialized) {
+      this._panel.webview.html = WebviewHelper.buildStatefulHtml({
+        webview: this._panel.webview,
+        extensionUri: this._extensionUri,
+        title,
+        initialState: state,
+        scriptContent,
+      });
+      this._initialized = true;
+      return;
+    }
+
+    WebviewHelper.postState(this._panel.webview, state);
   }
 }

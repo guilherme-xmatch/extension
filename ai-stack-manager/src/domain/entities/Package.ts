@@ -18,10 +18,58 @@ export interface PackageFile {
 }
 
 /** Tag for categorization and search */
-export type PackageTag =
-  | 'backend' | 'frontend' | 'database' | 'devops' | 'cloud'
-  | 'security' | 'testing' | 'observability' | 'architecture'
-  | 'ai' | 'memory' | 'workflow' | 'core' | 'specialist';
+export type PackageTag = string;
+
+export type PackageMaturity = 'stable' | 'beta' | 'experimental';
+
+export interface PackageLink {
+  readonly label: string;
+  readonly url: string;
+}
+
+export interface PackageSource {
+  readonly repoUrl?: string;
+  readonly packagePath?: string;
+  readonly manifestPath?: string;
+  readonly readmePath?: string;
+  readonly detailsPath?: string;
+  readonly homepage?: string;
+  readonly official: boolean;
+}
+
+export interface PackageInstallTarget {
+  readonly sourcePath?: string;
+  readonly targetPath: string;
+  readonly mergeStrategy?: 'replace' | 'merge-mcp-servers';
+}
+
+export interface PackageInstallStrategy {
+  readonly kind: 'copy' | 'mcp-merge';
+  readonly targets: ReadonlyArray<PackageInstallTarget>;
+}
+
+export interface PackageUiMetadata {
+  readonly longDescription?: string;
+  readonly highlights: ReadonlyArray<string>;
+  readonly installNotes: ReadonlyArray<string>;
+  readonly badges: ReadonlyArray<string>;
+  readonly maturity: PackageMaturity;
+  readonly icon?: string;
+  readonly banner?: string;
+}
+
+export interface PackageDocs {
+  readonly readme?: string;
+  readonly details?: string;
+  readonly links: ReadonlyArray<PackageLink>;
+}
+
+export interface PackageStats {
+  readonly installsTotal: number;
+  readonly uniqueInstallers?: number;
+  readonly lastInstallAt?: string;
+  readonly trendScore?: number;
+}
 
 /** Installation status of a package in the workspace */
 export enum InstallStatus {
@@ -68,6 +116,11 @@ export class Package {
     public readonly files: ReadonlyArray<PackageFile>,
     public readonly dependencies: ReadonlyArray<string>,
     public readonly icon: string,
+    public readonly source: PackageSource,
+    public readonly installStrategy: PackageInstallStrategy,
+    public readonly ui: PackageUiMetadata,
+    public readonly docs: PackageDocs,
+    public readonly stats: PackageStats,
     /** Agent-specific metadata — only present for type=Agent */
     public readonly agentMeta?: AgentMeta,
   ) {}
@@ -85,6 +138,11 @@ export class Package {
     files: PackageFile[];
     dependencies?: string[];
     icon?: string;
+    source?: Partial<PackageSource>;
+    installStrategy?: Partial<PackageInstallStrategy>;
+    ui?: Partial<PackageUiMetadata>;
+    docs?: Partial<PackageDocs>;
+    stats?: Partial<PackageStats>;
     agentMeta?: {
       category: AgentCategory;
       tools: string[];
@@ -118,6 +176,44 @@ export class Package {
       Object.freeze([...props.files]),
       Object.freeze([...(props.dependencies ?? [])]),
       props.icon ?? Package.defaultIconForType(props.type),
+      {
+        repoUrl: props.source?.repoUrl,
+        packagePath: props.source?.packagePath,
+        manifestPath: props.source?.manifestPath,
+        readmePath: props.source?.readmePath,
+        detailsPath: props.source?.detailsPath,
+        homepage: props.source?.homepage,
+        official: props.source?.official ?? false,
+      },
+      {
+        kind: props.installStrategy?.kind ?? (props.type.equals(PackageType.MCP) ? 'mcp-merge' : 'copy'),
+        targets: Object.freeze([
+          ...((props.installStrategy?.targets ?? props.files.map(file => ({
+            targetPath: file.relativePath,
+            mergeStrategy: props.type.equals(PackageType.MCP) ? 'merge-mcp-servers' : 'replace',
+          }))) as PackageInstallTarget[]),
+        ]),
+      },
+      {
+        longDescription: props.ui?.longDescription ?? props.description,
+        highlights: Object.freeze([...(props.ui?.highlights ?? [])]),
+        installNotes: Object.freeze([...(props.ui?.installNotes ?? [])]),
+        badges: Object.freeze([...(props.ui?.badges ?? [])]),
+        maturity: props.ui?.maturity ?? 'stable',
+        icon: props.ui?.icon,
+        banner: props.ui?.banner,
+      },
+      {
+        readme: props.docs?.readme,
+        details: props.docs?.details,
+        links: Object.freeze([...(props.docs?.links ?? [])]),
+      },
+      {
+        installsTotal: props.stats?.installsTotal ?? 0,
+        uniqueInstallers: props.stats?.uniqueInstallers,
+        lastInstallAt: props.stats?.lastInstallAt,
+        trendScore: props.stats?.trendScore,
+      },
       meta,
     );
   }
@@ -169,6 +265,23 @@ export class Package {
   /** Human-readable type label */
   get typeLabel(): string {
     return this.type.label;
+  }
+
+  get isOfficial(): boolean {
+    return this.source.official;
+  }
+
+  get sourceLabel(): string {
+    return this.source.official ? 'Oficial do catálogo' : 'Local / customizado';
+  }
+
+  get maturityLabel(): string {
+    const labels: Record<PackageMaturity, string> = {
+      stable: 'Stable',
+      beta: 'Beta',
+      experimental: 'Experimental',
+    };
+    return labels[this.ui.maturity];
   }
 
   /** Codicon identifier for VS Code */

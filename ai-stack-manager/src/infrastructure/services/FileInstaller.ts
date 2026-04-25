@@ -7,9 +7,12 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 import { Package } from '../../domain/entities/Package';
-import { IInstaller } from '../../domain/interfaces';
+import { IInstaller, IInstallTracker } from '../../domain/interfaces';
 
 export class FileInstaller implements IInstaller {
+  constructor(
+    private readonly _tracker?: IInstallTracker,
+  ) {}
 
   private get workspaceRoot(): string | undefined {
     return vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
@@ -22,6 +25,7 @@ export class FileInstaller implements IInstaller {
     }
 
     await this.installPackage(root, pkg, 'prompt');
+    await this._tracker?.trackInstall(pkg);
 
     vscode.window.showInformationMessage(
       `✅ Installed "${pkg.displayName}" successfully!`
@@ -72,6 +76,7 @@ export class FileInstaller implements IInstaller {
           });
 
           await this.installPackage(root, pkg, 'skip');
+          await this._tracker?.trackInstall(pkg);
 
           installed++;
         }

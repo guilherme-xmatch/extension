@@ -4,7 +4,7 @@
   "description": "🧠 Simplifique sua infraestrutura de AI Agents — instale, visualize e gerencie redes de Agents, Skills, MCPs e Bundles com um clique.",
   "version": "0.1.0",
   "publisher": "itau-engineering",
-  "icon": "media/icons/sidebar-icon.svg",
+  "icon": "media/icons/sidebar-icon.png",
   "engines": {
     "vscode": "^1.100.0"
   },
@@ -22,11 +22,6 @@
     "package-manager",
     "itau",
     "descomplicai"
-  ],
-  "activationEvents": [
-    "onView:dai-catalog",
-    "onView:dai-installed",
-    "onView:dai-health"
   ],
   "main": "./out/extension.js",
   "contributes": {
@@ -108,6 +103,11 @@
         "command": "dai.publishPackage",
         "title": "DescomplicAI: Contribuir / Publicar",
         "icon": "$(cloud-upload)"
+      },
+      {
+        "command": "dai.importCustomMcp",
+        "title": "DescomplicAI: Importar MCP Customizado",
+        "icon": "$(plug)"
       }
     ],
     "chatParticipants": [
@@ -146,8 +146,8 @@
       "properties": {
         "descomplicai.registryUrl": {
           "type": "string",
-          "default": "",
-          "description": "URL do registry remoto de pacotes (Repositório Git ou API). Deixe vazio para usar apenas o modo local."
+          "default": "https://github.com/guilherme-xmatch/DescomplicAI.git",
+          "description": "URL do catálogo oficial manifest-driven (repositório Git ou index.json)."
         },
         "descomplicai.autoHealthCheck": {
           "type": "boolean",
@@ -178,6 +178,21 @@
           "type": "boolean",
           "default": true,
           "description": "Sugerir automaticamente a instalação de dependências ao instalar uma rede de agents."
+        },
+        "descomplicai.metrics.enabled": {
+          "type": "boolean",
+          "default": false,
+          "description": "Opt-in para registrar eventos de instalação via GitHub e alimentar estatísticas públicas do catálogo."
+        },
+        "descomplicai.metrics.collectorOwner": {
+          "type": "string",
+          "default": "guilherme-xmatch",
+          "description": "Owner do repositório GitHub que receberá eventos públicos de instalação."
+        },
+        "descomplicai.metrics.collectorRepo": {
+          "type": "string",
+          "default": "DescomplicAI",
+          "description": "Repositório GitHub usado para coletar eventos de instalação agregados."
         }
       }
     }

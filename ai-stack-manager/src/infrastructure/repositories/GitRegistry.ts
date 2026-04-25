@@ -4,21 +4,99 @@ import * as fs from 'fs';
 import * as https from 'https';
 import { exec } from 'child_process';
 import { promisify } from 'util';
-import { Package } from '../../domain/entities/Package';
+import {
+  Package,
+  PackageFile,
+  PackageInstallTarget,
+  PackageLink,
+  PackageMaturity,
+  PackageStats,
+} from '../../domain/entities/Package';
 import { Bundle } from '../../domain/entities/Bundle';
 import { IPackageRepository } from '../../domain/interfaces';
-import { LocalRegistry } from './LocalRegistry'; // Fallback
 import { PackageType } from '../../domain/value-objects/PackageType';
 import { AgentCategory } from '../../domain/value-objects/AgentCategory';
-import { PackageTag } from '../../domain/entities/Package';
 
 const execAsync = promisify(exec);
+
+interface CatalogIndex {
+  schemaVersion?: string;
+  repoUrl?: string;
+  packages?: Array<string | CatalogPackageManifest>;
+  bundles?: unknown[];
+  stats?: {
+    packagesBasePath?: string;
+  };
+}
+
+interface CatalogPackageManifest {
+  id?: string;
+  name?: string;
+  displayName?: string;
+  description?: string;
+  type?: string;
+  version?: string;
+  tags?: string[];
+  author?: string | { name?: string };
+  dependencies?: string[];
+  icon?: string;
+  files?: Array<{ relativePath?: string; content?: string }>;
+  install?: {
+    strategy?: 'copy' | 'mcp-merge';
+    targets?: Array<{
+      source?: string;
+      target?: string;
+      mergeStrategy?: 'replace' | 'merge-mcp-servers';
+    }>;
+  };
+  source?: {
+    repoUrl?: string;
+    packagePath?: string;
+    manifestPath?: string;
+    readmePath?: string;
+    detailsPath?: string;
+    homepage?: string;
+    official?: boolean;
+  };
+  ui?: {
+    longDescription?: string;
+    highlights?: string[];
+    installNotes?: string[];
+    badges?: string[];
+    maturity?: PackageMaturity;
+    icon?: string;
+    banner?: string;
+  };
+  docs?: {
+    readmePath?: string;
+    detailsPath?: string;
+    readme?: string;
+    details?: string;
+    links?: Array<{ label?: string; url?: string }>;
+  };
+  stats?: PackageStats;
+  agentMeta?: {
+    category?: string;
+    tools?: string[];
+    delegatesTo?: string[];
+    workflowPhase?: string;
+    userInvocable?: boolean;
+    relatedSkills?: string[];
+  };
+}
+
+type ManifestInstallTargets = Array<{
+  source?: string;
+  target?: string;
+  mergeStrategy?: 'replace' | 'merge-mcp-servers';
+}>;
+
+type ManifestLinks = Array<{ label?: string; url?: string }>;
 
 export class GitRegistry implements IPackageRepository {
   private _cache: Package[] = [];
   private _bundlesCache: Bundle[] = [];
   private _initialized = false;
-  private readonly _fallbackRegistry = new LocalRegistry();
 
   private get cacheDir(): string {
     const home = process.env.USERPROFILE || process.env.HOME || '';
@@ -34,15 +112,27 @@ export class GitRegistry implements IPackageRepository {
     return (config.get<string>('registryUrl') || '').trim();
   }
 
+  private get workspaceRoot(): string | undefined {
+    return vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+  }
+
+  private get workspaceCustomCatalogPath(): string | undefined {
+    if (!this.workspaceRoot) { return undefined; }
+    return path.join(this.workspaceRoot, '.descomplicai', 'custom-packages.json');
+  }
+
   public async sync(): Promise<void> {
     const url = this.registryUrl;
-    if (!url) {
-      await this.loadFallback();
-      return;
-    }
 
     try {
       fs.mkdirSync(this.cacheDir, { recursive: true });
+
+      if (!url) {
+        this._cache = await this.loadWorkspaceCustomPackages();
+        this._bundlesCache = [];
+        this._initialized = true;
+        return;
+      }
 
       if (this.isJsonEndpoint(url)) {
         await this.loadFromJsonEndpoint(url);
@@ -52,317 +142,415 @@ export class GitRegistry implements IPackageRepository {
       }
 
       this._initialized = true;
-    } catch (e) {
-      console.error('Falha ao sincronizar o GitRegistry. Usando fallback local.', e);
-      await this.loadFallback();
+    } catch (error) {
+      console.error('Falha ao sincronizar o catálogo manifest-driven.', error);
+      this._cache = await this.loadWorkspaceCustomPackages();
+      this._bundlesCache = [];
+      this._initialized = true;
     }
   }
 
-  private async loadFallback(): Promise<void> {
-    this._cache = await this._fallbackRegistry.getAll();
-    this._bundlesCache = await this._fallbackRegistry.getAllBundles();
-    this._initialized = true;
-  }
-
-  private async ensureLocalClone(url: string): Promise<void> {
-    if (!fs.existsSync(this.repoDir) || !fs.existsSync(path.join(this.repoDir, '.git'))) {
-      fs.rmSync(this.repoDir, { recursive: true, force: true });
-      await execAsync(`git clone --depth 1 ${this.quote(url)} ${this.quote(this.repoDir)}`);
-      return;
+  public async saveWorkspaceCustomPackage(pkg: Package): Promise<void> {
+    const filePath = this.workspaceCustomCatalogPath;
+    if (!filePath) {
+      throw new Error('Nenhum workspace aberto para salvar o MCP customizado.');
     }
 
-    try {
-      const { stdout } = await execAsync('git config --get remote.origin.url', { cwd: this.repoDir });
-      if (stdout.trim() !== url.trim()) {
-        fs.rmSync(this.repoDir, { recursive: true, force: true });
-        await execAsync(`git clone --depth 1 ${this.quote(url)} ${this.quote(this.repoDir)}`);
-        return;
-      }
+    const existing = await this.readWorkspaceCustomPackageManifests();
+    const nextManifest = this.serializePackage(pkg);
+    const filtered = existing.filter(item => this.asString(item.id) !== pkg.id);
+    filtered.push(nextManifest);
 
-      await execAsync('git pull --ff-only', { cwd: this.repoDir });
-    } catch {
-      fs.rmSync(this.repoDir, { recursive: true, force: true });
-      await execAsync(`git clone --depth 1 ${this.quote(url)} ${this.quote(this.repoDir)}`);
+    fs.mkdirSync(path.dirname(filePath), { recursive: true });
+    fs.writeFileSync(filePath, JSON.stringify(filtered, null, 2), 'utf-8');
+
+    const existingPackageIndex = this._cache.findIndex(item => item.id === pkg.id);
+    if (existingPackageIndex >= 0) {
+      this._cache.splice(existingPackageIndex, 1, pkg);
+    } else {
+      this._cache.push(pkg);
     }
   }
 
   private async loadFromJsonEndpoint(url: string): Promise<void> {
     const payload = await this.fetchJson(url);
-    const manifest = typeof payload === 'object' && payload ? payload as Record<string, unknown> : {};
-    const rawPackages = Array.isArray(manifest.packages) ? manifest.packages : [];
-    const rawBundles = Array.isArray(manifest.bundles) ? manifest.bundles : [];
+    const catalog = Array.isArray(payload)
+      ? { packages: payload }
+      : (payload && typeof payload === 'object' ? payload as CatalogIndex : {});
 
-    this._cache = rawPackages
-      .map(pkg => this.packageFromManifest(pkg))
-      .filter((pkg): pkg is Package => Boolean(pkg));
-
-    this._bundlesCache = rawBundles
-      .map(bundle => this.bundleFromManifest(bundle))
-      .filter((bundle): bundle is Bundle => Boolean(bundle));
-
-    if (this._cache.length === 0) {
-      throw new Error('Registry JSON não contém pacotes válidos.');
-    }
+    await this.loadFromCatalogPayload(catalog, undefined);
   }
 
   private async loadFromDisk(rootDir: string): Promise<void> {
-    const packages: Package[] = [];
+    const indexPath = path.join(rootDir, 'catalog', 'index.json');
+    const index = fs.existsSync(indexPath)
+      ? this.parseJsonWithComments(fs.readFileSync(indexPath, 'utf-8')) as CatalogIndex
+      : {};
 
-    packages.push(...this.loadAgents(rootDir));
-    packages.push(...this.loadSkills(rootDir));
-    packages.push(...this.loadInstructions(rootDir));
-    packages.push(...this.loadPrompts(rootDir));
-    packages.push(...this.loadMcpPackages(rootDir));
+    await this.loadFromCatalogPayload(index, rootDir);
+  }
 
-    if (packages.length === 0) {
-      throw new Error('Nenhum pacote válido foi encontrado no registry remoto.');
+  private async loadFromCatalogPayload(payload: CatalogIndex, rootDir?: string): Promise<void> {
+    const baseRepoUrl = this.normalizeRepoUrl(payload.repoUrl || this.registryUrl);
+    const packageRefs = Array.isArray(payload.packages) && payload.packages.length > 0
+      ? payload.packages
+      : rootDir
+        ? this.discoverManifestFiles(rootDir).map(filePath => this.toRelativePath(rootDir, filePath))
+        : [];
+
+    const packages = packageRefs
+      .map(ref => typeof ref === 'string'
+        ? this.loadPackageFromManifestFile(rootDir, ref, baseRepoUrl, payload)
+        : this.packageFromManifestObject(ref, rootDir, baseRepoUrl, payload))
+      .filter((pkg): pkg is Package => Boolean(pkg));
+
+    const workspaceCustomPackages = await this.loadWorkspaceCustomPackages();
+    const deduped = new Map<string, Package>();
+    for (const pkg of [...packages, ...workspaceCustomPackages]) {
+      deduped.set(pkg.id, pkg);
     }
 
-    this._cache = packages;
-    this._bundlesCache = this.loadBundles(rootDir);
+    this._cache = [...deduped.values()];
+    this._bundlesCache = rootDir ? this.loadBundles(rootDir, payload) : this.loadBundlesFromPayload(payload);
   }
 
-  private loadAgents(rootDir: string): Package[] {
-    const agentsDir = path.join(rootDir, '.github', 'agents');
-    if (!fs.existsSync(agentsDir)) { return []; }
-
-    return this.collectFiles(agentsDir, file => file.endsWith('.agent.md')).map(filePath => {
-      const relativePath = this.toRelativePath(rootDir, filePath);
-      const content = fs.readFileSync(filePath, 'utf-8');
-      const frontmatter = this.parseFrontmatter(content);
-      const rawName = this.asString(frontmatter['name']) || path.basename(filePath, '.agent.md');
-      const normalizedName = this.slugify(rawName);
-      const description = this.asString(frontmatter['description']) || this.extractBodyExcerpt(content) || `${this.toDisplayName(normalizedName)} agent`;
-      const tools = this.asStringArray(frontmatter['tools']);
-      const delegatesTo = this.asStringArray(frontmatter['agents']);
-      const category = this.inferAgentCategory(normalizedName, description);
-
-      return Package.create({
-        id: `agent-${normalizedName}`,
-        name: normalizedName,
-        displayName: this.toDisplayName(rawName),
-        description,
-        type: PackageType.Agent,
-        version: this.asString(frontmatter['version']) || '1.0.0',
-        tags: this.inferTags(`${normalizedName} ${description}`, 'agent'),
-        author: this.registryAuthor,
-        files: [{ relativePath, content }],
-        dependencies: delegatesTo.map(delegate => delegate.startsWith('agent-') ? delegate : `agent-${this.slugify(delegate)}`),
-        agentMeta: {
-          category,
-          tools,
-          delegatesTo,
-          workflowPhase: this.inferWorkflowPhase(category, normalizedName),
-          userInvocable: this.asBoolean(frontmatter['user-invocable'], true),
-          relatedSkills: [],
-        },
-      });
-    });
+  private discoverManifestFiles(rootDir: string): string[] {
+    const roots = ['agents', 'skills', 'mcps', 'prompts', 'instructions'];
+    return roots.flatMap(folder => this.collectFiles(path.join(rootDir, folder), filePath => path.basename(filePath) === 'manifest.json'));
   }
 
-  private loadSkills(rootDir: string): Package[] {
-    const skillsDir = path.join(rootDir, '.github', 'skills');
-    if (!fs.existsSync(skillsDir)) { return []; }
+  private loadPackageFromManifestFile(rootDir: string | undefined, manifestPath: string, baseRepoUrl: string, index: CatalogIndex): Package | undefined {
+    if (!rootDir) { return undefined; }
+    const absoluteManifestPath = path.isAbsolute(manifestPath) ? manifestPath : path.join(rootDir, manifestPath);
+    if (!fs.existsSync(absoluteManifestPath)) { return undefined; }
 
-    return this.collectFiles(skillsDir, file => path.basename(file) === 'SKILL.md').map(filePath => {
-      const content = fs.readFileSync(filePath, 'utf-8');
-      const frontmatter = this.parseFrontmatter(content);
-      const skillDir = path.basename(path.dirname(filePath));
-      const rawName = this.asString(frontmatter['name']) || skillDir;
-      const normalizedName = this.slugify(rawName);
-      const description = this.asString(frontmatter['description']) || this.extractBodyExcerpt(content) || `${this.toDisplayName(normalizedName)} skill`;
-
-      return Package.create({
-        id: `skill-${normalizedName}`,
-        name: normalizedName,
-        displayName: this.toDisplayName(rawName),
-        description,
-        type: PackageType.Skill,
-        version: this.asString(frontmatter['version']) || '1.0.0',
-        tags: this.inferTags(`${normalizedName} ${description}`, 'skill'),
-        author: this.registryAuthor,
-        files: [{ relativePath: this.toRelativePath(rootDir, filePath), content }],
-      });
-    });
+    const manifest = this.parseJsonWithComments(fs.readFileSync(absoluteManifestPath, 'utf-8')) as CatalogPackageManifest;
+    return this.packageFromManifestObject(
+      manifest,
+      rootDir,
+      baseRepoUrl,
+      index,
+      this.toRelativePath(rootDir, absoluteManifestPath),
+    );
   }
 
-  private loadInstructions(rootDir: string): Package[] {
-    const instructionsDir = path.join(rootDir, '.github', 'instructions');
-    if (!fs.existsSync(instructionsDir)) { return []; }
+  private packageFromManifestObject(
+    manifest: CatalogPackageManifest,
+    rootDir: string | undefined,
+    baseRepoUrl: string,
+    index: CatalogIndex,
+    manifestPathHint?: string,
+  ): Package | undefined {
+    const typeValue = this.asString(manifest.type);
+    if (!typeValue) { return undefined; }
 
-    return this.collectFiles(instructionsDir, file => file.endsWith('.instructions.md')).map(filePath => {
-      const content = fs.readFileSync(filePath, 'utf-8');
-      const name = path.basename(filePath, '.instructions.md');
-      return Package.create({
-        id: `instruction-${this.slugify(name)}`,
-        name: this.slugify(name),
-        displayName: this.toDisplayName(name),
-        description: this.extractBodyExcerpt(content) || `Instruções para ${this.toDisplayName(name)}`,
-        type: PackageType.Instruction,
-        version: '1.0.0',
-        tags: ['core', 'workflow'],
-        author: this.registryAuthor,
-        files: [{ relativePath: this.toRelativePath(rootDir, filePath), content }],
-      });
-    });
-  }
+    const type = PackageType.fromString(typeValue);
+    const manifestPath = manifestPathHint || this.asString(manifest.source?.manifestPath);
+    const manifestDirRel = manifestPath ? path.posix.dirname(manifestPath) : this.asString(manifest.source?.packagePath);
+    const manifestDirAbs = rootDir && manifestDirRel ? path.join(rootDir, manifestDirRel) : rootDir;
 
-  private loadPrompts(rootDir: string): Package[] {
-    const promptsDir = path.join(rootDir, '.github', 'prompts');
-    if (!fs.existsSync(promptsDir)) { return []; }
-
-    return this.collectFiles(promptsDir, file => file.endsWith('.prompt.md')).map(filePath => {
-      const content = fs.readFileSync(filePath, 'utf-8');
-      const frontmatter = this.parseFrontmatter(content);
-      const rawName = this.asString(frontmatter['name']) || path.basename(filePath, '.prompt.md');
-      const normalizedName = this.slugify(rawName);
-      const description = this.asString(frontmatter['description']) || this.extractBodyExcerpt(content) || `${this.toDisplayName(normalizedName)} prompt`;
-
-      return Package.create({
-        id: `prompt-${normalizedName}`,
-        name: normalizedName,
-        displayName: this.toDisplayName(rawName),
-        description,
-        type: PackageType.Prompt,
-        version: this.asString(frontmatter['version']) || '1.0.0',
-        tags: ['workflow'],
-        author: this.registryAuthor,
-        files: [{ relativePath: this.toRelativePath(rootDir, filePath), content }],
-      });
-    });
-  }
-
-  private loadMcpPackages(rootDir: string): Package[] {
-    const mcpPath = path.join(rootDir, '.vscode', 'mcp.json');
-    if (!fs.existsSync(mcpPath)) { return []; }
-
-    try {
-      const content = fs.readFileSync(mcpPath, 'utf-8');
-      const parsed = this.parseJsonWithComments(content) as { servers?: Record<string, unknown>; mcpServers?: Record<string, unknown> };
-      const servers = parsed.servers || parsed.mcpServers || {};
-
-      return Object.entries(servers).map(([serverName, serverConfig]) => {
-        const displayName = `${this.toDisplayName(serverName)} MCP`;
-        const packageContent = JSON.stringify({ servers: { [serverName]: serverConfig } }, null, 2);
-        const description = this.describeMcpServer(serverName, serverConfig);
-
-        return Package.create({
-          id: `mcp-${this.slugify(serverName)}`,
-          name: `${this.slugify(serverName)}-mcp`,
-          displayName,
-          description,
-          type: PackageType.MCP,
-          version: '1.0.0',
-          tags: this.inferTags(`${serverName} ${description}`, 'mcp'),
-          author: this.registryAuthor,
-          files: [{ relativePath: '.vscode/mcp.json', content: packageContent }],
-        });
-      });
-    } catch {
-      return [];
-    }
-  }
-
-  private loadBundles(rootDir: string): Bundle[] {
-    const candidates = [
-      path.join(rootDir, 'descomplicai-registry.json'),
-      path.join(rootDir, 'descomplicai.bundles.json'),
-      path.join(rootDir, '.github', 'descomplicai-registry.json'),
-      path.join(rootDir, '.github', 'bundles.json'),
-    ];
-
-    for (const candidate of candidates) {
-      if (!fs.existsSync(candidate)) { continue; }
-
-      try {
-        const parsed = this.parseJsonWithComments(fs.readFileSync(candidate, 'utf-8')) as Record<string, unknown>;
-        const rawBundles = Array.isArray(parsed.bundles) ? parsed.bundles : Array.isArray(parsed) ? parsed : [];
-        const bundles = rawBundles
-          .map(bundle => this.bundleFromManifest(bundle))
-          .filter((bundle): bundle is Bundle => Boolean(bundle));
-
-        if (bundles.length > 0) {
-          return bundles;
+    const installTargets = this.asInstallTargets(manifest.install?.targets);
+    const files = this.resolveFiles(rootDir, manifestDirAbs, installTargets, manifest.files, type);
+    const name = this.slugify(this.asString(manifest.name) || this.asString(manifest.displayName) || this.asString(manifest.id) || 'package');
+    const displayName = this.asString(manifest.displayName) || this.toDisplayName(name);
+    const description = this.asString(manifest.description) || displayName;
+    const author = this.asAuthor(manifest.author);
+    const readmePath = this.asString(manifest.docs?.readmePath) || this.asString(manifest.source?.readmePath);
+    const detailsPath = this.asString(manifest.docs?.detailsPath) || this.asString(manifest.source?.detailsPath);
+    const readme = manifest.docs?.readme ?? this.readOptionalText(manifestDirAbs, readmePath);
+    const details = manifest.docs?.details ?? this.readOptionalText(manifestDirAbs, detailsPath);
+    const stats = this.resolveStats(rootDir, index, manifest.id || `${type.value}-${name}`, manifest.stats);
+    const links = this.resolveLinks(manifest.docs?.links, manifest.source?.homepage, baseRepoUrl, manifestDirRel);
+    const inferredCategory = this.inferAgentCategory(name, description);
+    const agentMeta = type.equals(PackageType.Agent)
+      ? {
+          category: AgentCategory.fromString(this.asString(manifest.agentMeta?.category) || inferredCategory.value),
+          tools: this.asStringArray(manifest.agentMeta?.tools),
+          delegatesTo: this.asStringArray(manifest.agentMeta?.delegatesTo),
+          workflowPhase: this.asString(manifest.agentMeta?.workflowPhase) || this.inferWorkflowPhase(inferredCategory, name),
+          userInvocable: this.asBoolean(manifest.agentMeta?.userInvocable, false),
+          relatedSkills: this.asStringArray(manifest.agentMeta?.relatedSkills),
         }
-      } catch {
-        // Ignore malformed bundle manifests and keep trying other candidates.
-      }
+      : undefined;
+
+    return Package.create({
+      id: this.asString(manifest.id) || `${type.value}-${name}`,
+      name,
+      displayName,
+      description,
+      type,
+      version: this.asString(manifest.version) || '1.0.0',
+      tags: this.asStringArray(manifest.tags),
+      author,
+      files,
+      dependencies: this.asStringArray(manifest.dependencies),
+      icon: this.asString(manifest.icon) || type.codicon,
+      source: {
+        repoUrl: this.asString(manifest.source?.repoUrl) || baseRepoUrl,
+        packagePath: this.asString(manifest.source?.packagePath) || manifestDirRel,
+        manifestPath,
+        readmePath,
+        detailsPath,
+        homepage: this.asString(manifest.source?.homepage),
+        official: this.asBoolean(manifest.source?.official, true),
+      },
+      installStrategy: {
+        kind: manifest.install?.strategy === 'mcp-merge' || type.equals(PackageType.MCP) ? 'mcp-merge' : 'copy',
+        targets: installTargets.map(target => ({
+          sourcePath: target.sourcePath,
+          targetPath: target.targetPath,
+          mergeStrategy: target.mergeStrategy,
+        })),
+      },
+      ui: {
+        longDescription: this.asString(manifest.ui?.longDescription) || details || readme || description,
+        highlights: this.asStringArray(manifest.ui?.highlights),
+        installNotes: this.asStringArray(manifest.ui?.installNotes),
+        badges: this.asStringArray(manifest.ui?.badges),
+        maturity: this.asMaturity(manifest.ui?.maturity),
+        icon: this.asString(manifest.ui?.icon),
+        banner: this.asString(manifest.ui?.banner),
+      },
+      docs: {
+        readme,
+        details,
+        links,
+      },
+      stats,
+      agentMeta,
+    });
+  }
+
+  private resolveFiles(
+    _rootDir: string | undefined,
+    manifestDirAbs: string | undefined,
+    targets: PackageInstallTarget[],
+    inlineFiles: CatalogPackageManifest['files'],
+    type: PackageType,
+  ): PackageFile[] {
+    if (targets.length > 0 && manifestDirAbs) {
+      return targets.map(target => {
+        const sourcePath = target.sourcePath ? path.join(manifestDirAbs, target.sourcePath) : undefined;
+        const content = sourcePath && fs.existsSync(sourcePath)
+          ? fs.readFileSync(sourcePath, 'utf-8')
+          : this.defaultInlineContent(type);
+
+        return {
+          relativePath: target.targetPath,
+          content,
+        };
+      });
+    }
+
+    if (Array.isArray(inlineFiles) && inlineFiles.length > 0) {
+      return inlineFiles.flatMap(file => {
+        const relativePath = this.asString(file.relativePath);
+        const content = typeof file.content === 'string' ? file.content : '';
+        return relativePath ? [{ relativePath, content }] : [];
+      });
+    }
+
+    if (type.equals(PackageType.MCP)) {
+      return [{ relativePath: '.vscode/mcp.json', content: '{\n  "servers": {}\n}' }];
     }
 
     return [];
   }
 
-  private packageFromManifest(input: unknown): Package | undefined {
-    if (!input || typeof input !== 'object') { return undefined; }
+  private resolveStats(rootDir: string | undefined, index: CatalogIndex, packageId: string, inlineStats?: PackageStats): PackageStats {
+    const basePath = index.stats?.packagesBasePath || 'catalog/stats/packages';
+    const defaultStats: PackageStats = {
+      installsTotal: inlineStats?.installsTotal ?? 0,
+      uniqueInstallers: inlineStats?.uniqueInstallers,
+      lastInstallAt: inlineStats?.lastInstallAt,
+      trendScore: inlineStats?.trendScore,
+    };
 
-    const pkg = input as Record<string, unknown>;
-    const type = this.asString(pkg.type);
-    if (!type) { return undefined; }
+    if (!rootDir) { return defaultStats; }
+    const statsPath = path.join(rootDir, ...basePath.split('/'), `${packageId}.json`);
+    if (!fs.existsSync(statsPath)) { return defaultStats; }
 
     try {
-      return Package.create({
-        id: this.asString(pkg.id) || `${type}-${this.slugify(this.asString(pkg.name) || this.asString(pkg.displayName) || 'package')}`,
-        name: this.slugify(this.asString(pkg.name) || this.asString(pkg.displayName) || 'package'),
-        displayName: this.asString(pkg.displayName) || this.toDisplayName(this.asString(pkg.name) || 'Package'),
-        description: this.asString(pkg.description) || 'Pacote remoto do registry',
-        type: PackageType.fromString(type),
-        version: this.asString(pkg.version) || '1.0.0',
-        tags: this.asStringArray(pkg.tags).filter(this.isPackageTag),
-        author: this.asString(pkg.author) || this.registryAuthor,
-        files: this.asManifestFiles(pkg.files),
-        dependencies: this.asStringArray(pkg.dependencies),
-        agentMeta: type === 'agent'
-          ? {
-              category: AgentCategory.fromString(this.asString((pkg.agentMeta as Record<string, unknown> | undefined)?.category) || 'specialist'),
-              tools: this.asStringArray((pkg.agentMeta as Record<string, unknown> | undefined)?.tools),
-              delegatesTo: this.asStringArray((pkg.agentMeta as Record<string, unknown> | undefined)?.delegatesTo),
-              workflowPhase: this.asString((pkg.agentMeta as Record<string, unknown> | undefined)?.workflowPhase) || 'EXECUTION',
-              userInvocable: this.asBoolean((pkg.agentMeta as Record<string, unknown> | undefined)?.userInvocable, false),
-              relatedSkills: this.asStringArray((pkg.agentMeta as Record<string, unknown> | undefined)?.relatedSkills),
-            }
-          : undefined,
-      });
+      const parsed = this.parseJsonWithComments(fs.readFileSync(statsPath, 'utf-8')) as Partial<PackageStats>;
+      return {
+        installsTotal: typeof parsed.installsTotal === 'number' ? parsed.installsTotal : defaultStats.installsTotal,
+        uniqueInstallers: typeof parsed.uniqueInstallers === 'number' ? parsed.uniqueInstallers : defaultStats.uniqueInstallers,
+        lastInstallAt: typeof parsed.lastInstallAt === 'string' ? parsed.lastInstallAt : defaultStats.lastInstallAt,
+        trendScore: typeof parsed.trendScore === 'number' ? parsed.trendScore : defaultStats.trendScore,
+      };
     } catch {
-      return undefined;
+      return defaultStats;
     }
+  }
+
+  private resolveLinks(
+    links: ManifestLinks | undefined,
+    homepage: string | undefined,
+    baseRepoUrl: string,
+    manifestDirRel: string,
+  ): PackageLink[] {
+    const resolved = new Map<string, PackageLink>();
+    for (const link of links ?? []) {
+      const label = this.asString(link.label);
+      const url = this.asString(link.url);
+      if (label && url) {
+        resolved.set(label, { label, url });
+      }
+    }
+
+    if (homepage) {
+      resolved.set('Homepage', { label: 'Homepage', url: homepage });
+    }
+
+    if (baseRepoUrl && manifestDirRel) {
+      resolved.set('Repositório', {
+        label: 'Repositório',
+        url: `${baseRepoUrl.replace(/\.git$/i, '')}/tree/main/${manifestDirRel.replace(/\\/g, '/')}`,
+      });
+    }
+
+    return [...resolved.values()];
+  }
+
+  private loadBundles(rootDir: string, payload: CatalogIndex): Bundle[] {
+    const fromIndex = this.loadBundlesFromPayload(payload);
+    if (fromIndex.length > 0) { return fromIndex; }
+
+    const bundlesPath = path.join(rootDir, 'catalog', 'bundles.json');
+    if (!fs.existsSync(bundlesPath)) { return []; }
+
+    try {
+      const parsed = this.parseJsonWithComments(fs.readFileSync(bundlesPath, 'utf-8')) as { bundles?: unknown[] } | unknown[];
+      const rawBundles = Array.isArray(parsed) ? parsed : Array.isArray(parsed.bundles) ? parsed.bundles : [];
+      return rawBundles
+        .map(bundle => this.bundleFromManifest(bundle))
+        .filter((bundle): bundle is Bundle => Boolean(bundle));
+    } catch {
+      return [];
+    }
+  }
+
+  private loadBundlesFromPayload(payload: CatalogIndex): Bundle[] {
+    return (payload.bundles ?? [])
+      .map(bundle => this.bundleFromManifest(bundle))
+      .filter((bundle): bundle is Bundle => Boolean(bundle));
   }
 
   private bundleFromManifest(input: unknown): Bundle | undefined {
     if (!input || typeof input !== 'object') { return undefined; }
-
     const bundle = input as Record<string, unknown>;
     const packageIds = this.asStringArray(bundle.packageIds);
     if (packageIds.length === 0) { return undefined; }
 
+    return Bundle.create({
+      id: this.asString(bundle.id) || `bundle-${this.slugify(this.asString(bundle.name) || this.asString(bundle.displayName) || 'bundle')}`,
+      name: this.slugify(this.asString(bundle.name) || this.asString(bundle.displayName) || 'bundle'),
+      displayName: this.asString(bundle.displayName) || this.toDisplayName(this.asString(bundle.name) || 'bundle'),
+      description: this.asString(bundle.description) || 'Bundle do catálogo público',
+      version: this.asString(bundle.version) || '1.0.0',
+      packageIds,
+      icon: this.asString(bundle.icon) || '$(package)',
+      color: this.asString(bundle.color) || '#EC7000',
+    });
+  }
+
+  private async loadWorkspaceCustomPackages(): Promise<Package[]> {
+    const manifests = await this.readWorkspaceCustomPackageManifests();
+    return manifests
+      .map(manifest => this.packageFromManifestObject(manifest, undefined, '', {}))
+      .filter((pkg): pkg is Package => Boolean(pkg));
+  }
+
+  private async readWorkspaceCustomPackageManifests(): Promise<CatalogPackageManifest[]> {
+    const filePath = this.workspaceCustomCatalogPath;
+    if (!filePath || !fs.existsSync(filePath)) { return []; }
+
     try {
-      return Bundle.create({
-        id: this.asString(bundle.id) || `bundle-${this.slugify(this.asString(bundle.name) || this.asString(bundle.displayName) || 'bundle')}`,
-        name: this.slugify(this.asString(bundle.name) || this.asString(bundle.displayName) || 'bundle'),
-        displayName: this.asString(bundle.displayName) || this.toDisplayName(this.asString(bundle.name) || 'Bundle'),
-        description: this.asString(bundle.description) || 'Bundle remoto do registry',
-        version: this.asString(bundle.version) || '1.0.0',
-        packageIds,
-        color: this.asString(bundle.color) || '#EC7000',
-      });
+      const parsed = this.parseJsonWithComments(fs.readFileSync(filePath, 'utf-8'));
+      return Array.isArray(parsed) ? parsed as CatalogPackageManifest[] : [];
     } catch {
-      return undefined;
+      return [];
     }
   }
 
-  private asManifestFiles(input: unknown): Array<{ relativePath: string; content: string }> {
-    if (!Array.isArray(input)) { return []; }
-    return input.flatMap(file => {
-      if (!file || typeof file !== 'object') { return []; }
-      const item = file as Record<string, unknown>;
-      const relativePath = this.asString(item.relativePath);
-      const content = this.asString(item.content);
-      return relativePath && typeof content === 'string' ? [{ relativePath, content }] : [];
+  private serializePackage(pkg: Package): CatalogPackageManifest {
+    return {
+      id: pkg.id,
+      name: pkg.name,
+      displayName: pkg.displayName,
+      description: pkg.description,
+      type: pkg.type.value,
+      version: pkg.version.toString(),
+      tags: [...pkg.tags],
+      author: pkg.author,
+      dependencies: [...pkg.dependencies],
+      icon: pkg.icon,
+      files: pkg.files.map(file => ({ relativePath: file.relativePath, content: file.content })),
+      install: {
+        strategy: pkg.installStrategy.kind,
+        targets: pkg.installStrategy.targets.map(target => ({
+          source: target.sourcePath,
+          target: target.targetPath,
+          mergeStrategy: target.mergeStrategy,
+        })),
+      },
+      source: {
+        repoUrl: pkg.source.repoUrl,
+        packagePath: pkg.source.packagePath,
+        manifestPath: pkg.source.manifestPath,
+        readmePath: pkg.source.readmePath,
+        detailsPath: pkg.source.detailsPath,
+        homepage: pkg.source.homepage,
+        official: pkg.source.official,
+      },
+      ui: {
+        longDescription: pkg.ui.longDescription,
+        highlights: [...pkg.ui.highlights],
+        installNotes: [...pkg.ui.installNotes],
+        badges: [...pkg.ui.badges],
+        maturity: pkg.ui.maturity,
+        icon: pkg.ui.icon,
+        banner: pkg.ui.banner,
+      },
+      docs: {
+        readme: pkg.docs.readme,
+        details: pkg.docs.details,
+        links: pkg.docs.links.map(link => ({ label: link.label, url: link.url })),
+      },
+      stats: pkg.stats,
+      agentMeta: pkg.agentMeta ? {
+        category: pkg.agentMeta.category.value,
+        tools: [...pkg.agentMeta.tools],
+        delegatesTo: [...pkg.agentMeta.delegatesTo],
+        workflowPhase: pkg.agentMeta.workflowPhase,
+        userInvocable: pkg.agentMeta.userInvocable,
+        relatedSkills: [...pkg.agentMeta.relatedSkills],
+      } : undefined,
+    };
+  }
+
+  private readOptionalText(baseDir: string | undefined, relativePath: string): string | undefined {
+    if (!baseDir || !relativePath) { return undefined; }
+    const absolutePath = path.join(baseDir, relativePath);
+    if (!fs.existsSync(absolutePath)) { return undefined; }
+    return fs.readFileSync(absolutePath, 'utf-8');
+  }
+
+  private asInstallTargets(value: ManifestInstallTargets | undefined): PackageInstallTarget[] {
+    if (!Array.isArray(value)) { return []; }
+    return value.flatMap(item => {
+      const targetPath = this.asString(item?.target);
+      if (!targetPath) { return []; }
+      return [{
+        sourcePath: this.asString(item?.source) || undefined,
+        targetPath,
+        mergeStrategy: item?.mergeStrategy === 'merge-mcp-servers' ? 'merge-mcp-servers' : 'replace',
+      }];
     });
   }
 
   private collectFiles(baseDir: string, predicate: (filePath: string) => boolean): string[] {
     if (!fs.existsSync(baseDir)) { return []; }
-
     const results: string[] = [];
     for (const entry of fs.readdirSync(baseDir, { withFileTypes: true })) {
       const fullPath = path.join(baseDir, entry.name);
@@ -375,102 +563,19 @@ export class GitRegistry implements IPackageRepository {
     return results;
   }
 
-  private parseFrontmatter(content: string): Record<string, unknown> {
-    const lines = content.split(/\r?\n/);
-    if (lines[0]?.trim() !== '---') { return {}; }
-
-    const result: Record<string, unknown> = {};
-    let index = 1;
-
-    while (index < lines.length) {
-      const line = lines[index];
-      if (line.trim() === '---') {
-        break;
-      }
-
-      const match = /^([A-Za-z0-9_-]+):\s*(.*)$/.exec(line);
-      if (!match) {
-        index++;
-        continue;
-      }
-
-      const [, key, rawValue] = match;
-
-      if (rawValue === '>' || rawValue === '|') {
-        const parts: string[] = [];
-        index++;
-        while (index < lines.length && (lines[index].trim() === '' || /^\s+/.test(lines[index]))) {
-          parts.push(lines[index].replace(/^\s+/, ''));
-          index++;
-        }
-        result[key] = parts.join(rawValue === '>' ? ' ' : '\n').trim();
-        continue;
-      }
-
-      if (rawValue === '') {
-        const values: string[] = [];
-        index++;
-        while (index < lines.length) {
-          const current = lines[index].trim();
-          if (current === '') {
-            index++;
-            continue;
-          }
-          if (!current.startsWith('- ')) {
-            break;
-          }
-          values.push(this.unquote(current.slice(2).trim()));
-          index++;
-        }
-        result[key] = values;
-        continue;
-      }
-
-      result[key] = this.parseScalar(rawValue);
-      index++;
-    }
-
-    return result;
-  }
-
-  private parseScalar(value: string): unknown {
-    const trimmed = value.trim();
-    if (trimmed === 'true') { return true; }
-    if (trimmed === 'false') { return false; }
-    if (trimmed === '[]') { return []; }
-    if (/^\[(.*)\]$/.test(trimmed)) {
-      const inner = trimmed.slice(1, -1).trim();
-      if (!inner) { return []; }
-      return inner.split(',').map(item => this.unquote(item.trim())).filter(Boolean);
-    }
-    if (/^-?\d+(\.\d+)?$/.test(trimmed)) {
-      return Number(trimmed);
-    }
-    return this.unquote(trimmed);
-  }
-
-  private extractBodyExcerpt(content: string): string {
-    const withoutFrontmatter = content.replace(/^---[\s\S]*?---\s*/m, '');
-    const lines = withoutFrontmatter
-      .split(/\r?\n/)
-      .map(line => line.trim())
-      .filter(line => line && !line.startsWith('#'));
-    return lines[0] || '';
-  }
-
   private parseJsonWithComments(content: string): unknown {
     const sanitized = content
       .replace(/^\s*\/\/.*$/gm, '')
       .replace(/\/\*[\s\S]*?\*\//g, '')
       .trim();
-    return JSON.parse(sanitized);
+    return sanitized ? JSON.parse(sanitized) : {};
   }
 
   private async fetchJson(url: string): Promise<unknown> {
     return new Promise((resolve, reject) => {
-      https.get(url, (response) => {
+      https.get(url, response => {
         if (!response.statusCode || response.statusCode >= 400) {
-          reject(new Error(`Falha ao buscar registry remoto (${response.statusCode ?? 'sem status'}).`));
+          reject(new Error(`Falha ao buscar catálogo remoto (${response.statusCode ?? 'sem status'}).`));
           response.resume();
           return;
         }
@@ -489,24 +594,25 @@ export class GitRegistry implements IPackageRepository {
     });
   }
 
-  private get registryAuthor(): string {
-    const match = /github\.com[/:]([^/]+)\//i.exec(this.registryUrl);
-    return match?.[1] || 'External Registry';
-  }
-
-  private describeMcpServer(serverName: string, serverConfig: unknown): string {
-    if (!serverConfig || typeof serverConfig !== 'object') {
-      return `${this.toDisplayName(serverName)} MCP server`;
+  private async ensureLocalClone(url: string): Promise<void> {
+    if (!fs.existsSync(this.repoDir) || !fs.existsSync(path.join(this.repoDir, '.git'))) {
+      fs.rmSync(this.repoDir, { recursive: true, force: true });
+      await execAsync(`git clone --depth 1 ${this.quote(url)} ${this.quote(this.repoDir)}`);
+      return;
     }
 
-    const config = serverConfig as Record<string, unknown>;
-    if (typeof config.url === 'string') {
-      return `${this.toDisplayName(serverName)} MCP remoto em ${config.url}`;
+    try {
+      const { stdout } = await execAsync('git config --get remote.origin.url', { cwd: this.repoDir });
+      if (stdout.trim() !== url.trim()) {
+        fs.rmSync(this.repoDir, { recursive: true, force: true });
+        await execAsync(`git clone --depth 1 ${this.quote(url)} ${this.quote(this.repoDir)}`);
+        return;
+      }
+      await execAsync('git pull --ff-only', { cwd: this.repoDir });
+    } catch {
+      fs.rmSync(this.repoDir, { recursive: true, force: true });
+      await execAsync(`git clone --depth 1 ${this.quote(url)} ${this.quote(this.repoDir)}`);
     }
-    if (typeof config.command === 'string') {
-      return `${this.toDisplayName(serverName)} MCP via comando ${config.command}`;
-    }
-    return `${this.toDisplayName(serverName)} MCP server`;
   }
 
   private inferAgentCategory(name: string, description: string): AgentCategory {
@@ -529,55 +635,6 @@ export class GitRegistry implements IPackageRepository {
     return 'EXECUTION';
   }
 
-  private inferTags(text: string, kind: 'agent' | 'skill' | 'mcp' | 'instruction' | 'prompt'): PackageTag[] {
-    const lowered = text.toLowerCase();
-    const tags = new Set<PackageTag>();
-
-    if (kind === 'instruction') {
-      tags.add('core');
-      tags.add('workflow');
-    }
-    if (kind === 'prompt') {
-      tags.add('workflow');
-    }
-    if (kind === 'mcp') {
-      tags.add('core');
-    }
-
-    if (kind === 'agent') {
-      tags.add('workflow');
-    }
-
-    const keywordMap: Array<[PackageTag, RegExp]> = [
-      ['backend', /backend|api|node|server/],
-      ['frontend', /frontend|react|next|ui|css/],
-      ['database', /database|postgres|sql|redis|db/],
-      ['devops', /devops|docker|kubernetes|terraform|pipeline/],
-      ['cloud', /cloud|azure|aws|gcp/],
-      ['security', /security|review|auth|token|owasp/],
-      ['testing', /test|qa|validation/],
-      ['observability', /observability|monitor|logging|apm|metrics/],
-      ['architecture', /architect|design|adr/],
-      ['ai', /ai|copilot|agent|llm/],
-      ['memory', /memory|remember|recall/],
-      ['workflow', /workflow|plan|triage|prompt|instruction/],
-      ['core', /core|orchestr|catalog|registry/],
-      ['specialist', /specialist|expert/],
-    ];
-
-    for (const [tag, pattern] of keywordMap) {
-      if (pattern.test(lowered)) {
-        tags.add(tag);
-      }
-    }
-
-    if (tags.size === 0) {
-      tags.add('core');
-    }
-
-    return [...tags].slice(0, 5);
-  }
-
   private asString(value: unknown): string {
     return typeof value === 'string' ? value.trim() : '';
   }
@@ -592,17 +649,21 @@ export class GitRegistry implements IPackageRepository {
     return [];
   }
 
+  private asAuthor(value: CatalogPackageManifest['author']): string {
+    if (typeof value === 'string') { return value.trim(); }
+    if (value && typeof value === 'object' && typeof value.name === 'string') {
+      return value.name.trim();
+    }
+    return 'DescomplicAI Community';
+  }
+
   private asBoolean(value: unknown, fallback = false): boolean {
     return typeof value === 'boolean' ? value : fallback;
   }
 
-  private isPackageTag = (value: string): value is PackageTag => {
-    return [
-      'backend', 'frontend', 'database', 'devops', 'cloud',
-      'security', 'testing', 'observability', 'architecture',
-      'ai', 'memory', 'workflow', 'core', 'specialist',
-    ].includes(value);
-  };
+  private asMaturity(value: unknown): PackageMaturity {
+    return value === 'beta' || value === 'experimental' ? value : 'stable';
+  }
 
   private toRelativePath(rootDir: string, filePath: string): string {
     return path.relative(rootDir, filePath).replace(/\\/g, '/');
@@ -610,7 +671,6 @@ export class GitRegistry implements IPackageRepository {
 
   private toDisplayName(value: string): string {
     return value
-      .replace(/\.agent$|\.prompt$|\.instructions$/g, '')
       .replace(/[-_]+/g, ' ')
       .replace(/\s+/g, ' ')
       .trim()
@@ -625,8 +685,15 @@ export class GitRegistry implements IPackageRepository {
       .replace(/-{2,}/g, '-') || 'package';
   }
 
-  private unquote(value: string): string {
-    return value.replace(/^['"]|['"]$/g, '').trim();
+  private defaultInlineContent(type: PackageType): string {
+    if (type.equals(PackageType.MCP)) {
+      return '{\n  "servers": {}\n}';
+    }
+    return '';
+  }
+
+  private normalizeRepoUrl(value: string): string {
+    return value.replace(/\.git$/i, '');
   }
 
   private isJsonEndpoint(url: string): boolean {
@@ -641,36 +708,43 @@ export class GitRegistry implements IPackageRepository {
     if (!this._initialized) {
       await this.sync();
     }
-    return this._cache.length > 0 ? this._cache : this._fallbackRegistry.getAll();
+    return [...this._cache];
   }
 
   async findById(id: string): Promise<Package | undefined> {
-    const all = await this.getAll();
-    return all.find(p => p.id === id);
+    return (await this.getAll()).find(pkg => pkg.id === id);
   }
 
   async search(query: string): Promise<Package[]> {
-    const all = await this.getAll();
-    return all.filter(p => p.matchesQuery(query));
+    return (await this.getAll()).filter(pkg => pkg.matchesQuery(query));
   }
 
   async getAgentNetwork(agentId: string): Promise<Package[]> {
-    return this._fallbackRegistry.getAgentNetwork(agentId);
+    const pkg = await this.findById(agentId);
+    if (!pkg?.agentMeta) { return []; }
+    const all = await this.getAll();
+    return pkg.agentMeta.delegatesTo
+      .map(delegate => all.find(item => item.id === delegate || item.name === delegate || item.id === `agent-${delegate}`))
+      .filter((item): item is Package => Boolean(item));
   }
 
   async getRelatedSkills(agentId: string): Promise<Package[]> {
-    return this._fallbackRegistry.getRelatedSkills(agentId);
+    const pkg = await this.findById(agentId);
+    if (!pkg?.agentMeta) { return []; }
+    const all = await this.getAll();
+    return pkg.agentMeta.relatedSkills
+      .map(skill => all.find(item => item.id === skill || item.name === skill || item.id === `skill-${skill}`))
+      .filter((item): item is Package => Boolean(item));
   }
 
   async getAllBundles(): Promise<Bundle[]> {
     if (!this._initialized) {
       await this.sync();
     }
-    return this._bundlesCache.length > 0 ? this._bundlesCache : this._fallbackRegistry.getAllBundles();
+    return [...this._bundlesCache];
   }
 
   async findBundleById(id: string): Promise<Bundle | undefined> {
-    const all = await this.getAllBundles();
-    return all.find(b => b.id === id);
+    return (await this.getAllBundles()).find(bundle => bundle.id === id);
   }
 }

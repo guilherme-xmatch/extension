@@ -1,0 +1,8 @@
+{
+  "servers": {
+    "example-custom": {
+      "type": "http",
+      "url": "https://example.com/mcp"
+    }
+  }
+}
