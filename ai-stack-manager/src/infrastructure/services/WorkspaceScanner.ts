@@ -8,12 +8,15 @@ import * as vscode from 'vscode';
 import * as path from 'path';
 import { Package, InstallStatus } from '../../domain/entities/Package';
 import { IWorkspaceScanner } from '../../domain/interfaces';
+import { AppLogger } from './AppLogger';
 
 export class WorkspaceScanner implements IWorkspaceScanner {
   private static readonly BUNDLES = {
     architectureBackend: 'bundle-architecture-backend',
     awsPlatform: 'bundle-aws-platform',
   } as const;
+
+  private readonly logger = AppLogger.getInstance();
 
   private get workspaceRoot(): string | undefined {
     return vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
@@ -73,8 +76,8 @@ export class WorkspaceScanner implements IWorkspaceScanner {
         if (deps['express'] || deps['@nestjs/core'] || deps['fastify']) {
           recommendations.push({ profile: 'Backend API', bundleId: WorkspaceScanner.BUNDLES.architectureBackend, confidence: 0.9 });
         }
-      } catch {
-        // Ignore JSON parse errors
+      } catch (error) {
+        this.logger.debug('WORKSPACE_PROFILE_PACKAGE_JSON_UNREADABLE', { pkgJsonPath, error });
       }
     }
 
@@ -97,7 +100,8 @@ export class WorkspaceScanner implements IWorkspaceScanner {
     try {
       await vscode.workspace.fs.stat(vscode.Uri.file(filePath));
       return true;
-    } catch {
+    } catch (error) {
+      this.logger.debug('WORKSPACE_FILE_STAT_MISS', { filePath, error });
       return false;
     }
   }

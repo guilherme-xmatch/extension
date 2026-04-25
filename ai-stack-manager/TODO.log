@@ -1,0 +1,9 @@
+2026-04-24
+- Base P1 hardening implementada e validada localmente.
+- `npm run compile`, `npm run lint` e `npm run test` executando com sucesso.
+- `OperationCoordinator` expandido com histórico e métricas locais.
+- Health Check passou a exibir insights operacionais.
+- Repositório recebeu infraestrutura de testes, CI e controle documental mínimo (`README.md`, `tasks.md`, `TODO.log`).
+- Git root real (`4. Extensão`) foi protegido contra inclusão acidental do repositório irmão `DescomplicAI/`.
+- Mudanças locais do ciclo atual foram consolidadas para commit no Git root correto.
+- Branch protection remota continua dependente de configuração manual no GitHub.

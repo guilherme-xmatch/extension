@@ -1,0 +1,11 @@
+{
+  "schemaVersion": "1.0.0",
+  "repoUrl": "https://github.com/guilherme-xmatch/DescomplicAI",
+  "packages": [
+    "agents/backend-specialist/manifest.json",
+    "mcps/github/manifest.json"
+  ],
+  "stats": {
+    "packagesBasePath": "catalog/stats/packages"
+  }
+}

@@ -7,7 +7,8 @@
 import * as vscode from 'vscode';
 import { WebviewHelper } from '../webview/WebviewHelper';
 import { Package, InstallStatus } from '../../domain/entities/Package';
-import { IPackageRepository, IWorkspaceScanner, IInstaller } from '../../domain/interfaces';
+import { IPackageRepository, IWorkspaceScanner, IInstaller, IOperationCoordinator } from '../../domain/interfaces';
+import { AppLogger } from '../../infrastructure/services/AppLogger';
 
 type InstalledMessage =
   | { command: 'uninstall'; packageId: string }
@@ -26,13 +27,21 @@ export class InstalledViewProvider implements vscode.WebviewViewProvider {
   public static readonly viewType = 'dai-installed';
   private _view?: vscode.WebviewView;
   private _initialized = false;
+  private readonly _logger = AppLogger.getInstance();
 
   constructor(
     private readonly _extensionUri: vscode.Uri,
     private readonly _registry: IPackageRepository,
     private readonly _scanner: IWorkspaceScanner,
     private readonly _installer: IInstaller,
-  ) {}
+    private readonly _operations: IOperationCoordinator,
+  ) {
+    this._operations.onDidChangeCurrentOperation(() => {
+      if (this._view) {
+        void this.updateView();
+      }
+    });
+  }
 
   public resolveWebviewView(
     webviewView: vscode.WebviewView,
@@ -127,6 +136,7 @@ export class InstalledViewProvider implements vscode.WebviewViewProvider {
     }
 
     let html = /*html*/`<div class="dai-container">
+      ${this.renderOperationBanner()}
       <div class="dai-installed-summary ${this.animClass('animate-fade-in')}">
         <div class="dai-summary-stat">
           <span class="dai-summary-number">${installed.length}</span>
@@ -172,8 +182,17 @@ export class InstalledViewProvider implements vscode.WebviewViewProvider {
   private async handleUninstall(packageId: string): Promise<void> {
     const pkg = await this._registry.findById(packageId);
     if (!pkg) { return; }
-    await this._installer.uninstall(pkg);
-    await this.updateView();
+    await this._operations.run({
+      kind: 'package-uninstall',
+      label: `Removendo ${pkg.displayName}`,
+      targetId: pkg.id,
+      refreshTargets: ['catalog', 'installed'],
+    }, async (operation) => {
+      operation.setProgress(10, pkg.displayName);
+      await this._installer.uninstall(pkg, {
+        onProgress: () => operation.setProgress(100, pkg.displayName),
+      });
+    });
   }
 
   private async handleOpenFile(filePath: string): Promise<void> {
@@ -182,7 +201,8 @@ export class InstalledViewProvider implements vscode.WebviewViewProvider {
     const uri = vscode.Uri.file(`${root}/${filePath}`);
     try {
       await vscode.window.showTextDocument(uri);
-    } catch {
+    } catch (error) {
+      this._logger.warn('INSTALLED_OPEN_FILE_FAILED', { filePath, error });
       vscode.window.showWarningMessage(`Arquivo não encontrado: ${filePath}`);
     }
   }
@@ -230,8 +250,27 @@ export class InstalledViewProvider implements vscode.WebviewViewProvider {
     try {
       const url = new URL(value);
       return url.protocol === 'https:';
-    } catch {
+    } catch (error) {
+      this._logger.debug('INSTALLED_EXTERNAL_URL_REJECTED', { value, error });
       return false;
     }
+  }
+
+  private renderOperationBanner(): string {
+    const operation = this._operations.getCurrentOperation();
+    if (!operation) {
+      return '';
+    }
+
+    const message = operation.message ? ` — ${operation.message}` : '';
+    const progress = typeof operation.progress === 'number' ? `${operation.progress}%` : 'Em andamento';
+    return /*html*/`
+    <div class="dai-recommendation-banner">
+      <div class="dai-rec-icon">⏳</div>
+      <div class="dai-rec-content">
+        <p class="dai-rec-msg"><b>${operation.label}</b>${message}</p>
+        <span class="dai-tag">${progress}</span>
+      </div>
+    </div>`;
   }
 }

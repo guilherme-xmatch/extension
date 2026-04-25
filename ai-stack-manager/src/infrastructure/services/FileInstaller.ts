@@ -7,7 +7,7 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 import { Package } from '../../domain/entities/Package';
-import { IInstaller, IInstallTracker } from '../../domain/interfaces';
+import { IInstaller, IInstallTracker, InstallExecutionOptions } from '../../domain/interfaces';
 import { AppLogger } from './AppLogger';
 
 export class FileInstaller implements IInstaller {
@@ -22,15 +22,17 @@ export class FileInstaller implements IInstaller {
     return vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
   }
 
-  async install(pkg: Package): Promise<void> {
+  async install(pkg: Package, options?: InstallExecutionOptions): Promise<void> {
     return this.runExclusive(async () => {
       const root = this.workspaceRoot;
       if (!root) {
         throw new Error('No workspace folder open. Please open a folder first.');
       }
 
+      options?.onProgress?.({ current: 0, total: 1, packageId: pkg.id, label: pkg.displayName });
       await this.installPackage(root, pkg, 'prompt');
       await this._tracker?.trackInstall(pkg);
+      options?.onProgress?.({ current: 1, total: 1, packageId: pkg.id, label: pkg.displayName });
 
       vscode.window.showInformationMessage(
         `✅ Installed "${pkg.displayName}" successfully!`
@@ -38,7 +40,7 @@ export class FileInstaller implements IInstaller {
     });
   }
 
-  async uninstall(pkg: Package): Promise<void> {
+  async uninstall(pkg: Package, options?: InstallExecutionOptions): Promise<void> {
     return this.runExclusive(async () => {
       const root = this.workspaceRoot;
       if (!root) {
@@ -53,7 +55,9 @@ export class FileInstaller implements IInstaller {
       );
       if (confirm !== 'Remove') { return; }
 
+      options?.onProgress?.({ current: 0, total: 1, packageId: pkg.id, label: pkg.displayName });
       await this.uninstallPackage(root, pkg);
+      options?.onProgress?.({ current: 1, total: 1, packageId: pkg.id, label: pkg.displayName });
 
       vscode.window.showInformationMessage(
         `🗑️ Uninstalled "${pkg.displayName}".`
@@ -61,7 +65,7 @@ export class FileInstaller implements IInstaller {
     });
   }
 
-  async installMany(packages: Package[]): Promise<void> {
+  async installMany(packages: Package[], options?: InstallExecutionOptions): Promise<void> {
     return this.runExclusive(async () => {
       const root = this.workspaceRoot;
       if (!root) {
@@ -84,6 +88,7 @@ export class FileInstaller implements IInstaller {
               message: `${pkg.displayName} (${installed + 1}/${total})`,
               increment: (100 / total),
             });
+            options?.onProgress?.({ current: installed + 1, total, packageId: pkg.id, label: pkg.displayName });
 
             await this.installPackage(root, pkg, 'skip');
             await this._tracker?.trackInstall(pkg);
@@ -119,7 +124,7 @@ export class FileInstaller implements IInstaller {
         await this.removeEmptyParent(path.dirname(dirPath), rootPath);
       }
     } catch (error) {
-      this._logger.debug('Falha ao remover diretório pai vazio.', { dirPath, rootPath, error });
+      this._logger.debug('REMOVE_EMPTY_PARENT_SKIPPED', { dirPath, rootPath, error });
     }
   }
 
@@ -170,7 +175,7 @@ export class FileInstaller implements IInstaller {
         await vscode.workspace.fs.delete(uri);
         await this.removeEmptyParent(path.dirname(fullPath), root);
       } catch (error) {
-        this._logger.debug('Falha ao remover arquivo durante uninstall.', { fullPath, error });
+        this._logger.debug('UNINSTALL_FILE_DELETE_SKIPPED', { fullPath, error });
       }
     }
   }
@@ -252,7 +257,7 @@ export class FileInstaller implements IInstaller {
       const buffer = await vscode.workspace.fs.readFile(uri);
       return this.parseJsonWithComments(Buffer.from(buffer).toString('utf-8')) as T;
     } catch (error) {
-      this._logger.debug('Falha ao ler JSON com comentários. Usando fallback.', { uri: uri.toString(), error });
+      this._logger.debug('READ_JSON_FALLBACK_USED', { uri: uri.toString(), error });
       return fallback;
     }
   }

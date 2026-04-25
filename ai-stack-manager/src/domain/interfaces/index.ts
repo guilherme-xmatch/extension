@@ -4,9 +4,12 @@
  * Infrastructure implementations provide the concrete adapters.
  */
 
+import * as vscode from 'vscode';
+
 import { Package, InstallStatus } from '../entities/Package';
 import { Bundle } from '../entities/Bundle';
 import { HealthReport } from '../entities/HealthReport';
+import { OperationContext, OperationDefinition, OperationMetricsSnapshot, OperationSnapshot } from '../entities/Operation';
 
 /** Read-only access to the package catalog */
 export interface IPackageRepository {
@@ -38,11 +41,11 @@ export interface IWorkspaceScanner {
 /** Installs and uninstalls packages in the workspace */
 export interface IInstaller {
   /** Install a package into the workspace */
-  install(pkg: Package): Promise<void>;
+  install(pkg: Package, options?: InstallExecutionOptions): Promise<void>;
   /** Uninstall a package from the workspace */
-  uninstall(pkg: Package): Promise<void>;
+  uninstall(pkg: Package, options?: InstallExecutionOptions): Promise<void>;
   /** Install multiple packages (bundle) */
-  installMany(packages: Package[]): Promise<void>;
+  installMany(packages: Package[], options?: InstallExecutionOptions): Promise<void>;
 }
 
 /** Validates AI infrastructure integrity */
@@ -53,4 +56,24 @@ export interface IHealthChecker {
 
 export interface IInstallTracker {
   trackInstall(pkg: Package): Promise<void>;
+}
+
+export interface InstallExecutionProgress {
+  readonly current: number;
+  readonly total: number;
+  readonly packageId?: string;
+  readonly label?: string;
+}
+
+export interface InstallExecutionOptions {
+  readonly onProgress?: (progress: InstallExecutionProgress) => void;
+}
+
+export interface IOperationCoordinator {
+  getCurrentOperation(): OperationSnapshot | undefined;
+  getRecentOperations(limit?: number): ReadonlyArray<OperationSnapshot>;
+  getMetrics(): ReadonlyArray<OperationMetricsSnapshot>;
+  run<T>(definition: OperationDefinition, action: (context: OperationContext) => Promise<T>): Promise<T>;
+  readonly onDidChangeCurrentOperation: vscode.Event<OperationSnapshot | undefined>;
+  readonly onDidFinishOperation: vscode.Event<OperationSnapshot>;
 }

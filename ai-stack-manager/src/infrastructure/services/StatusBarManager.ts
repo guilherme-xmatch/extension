@@ -1,9 +1,12 @@
 import * as vscode from 'vscode';
+import { IOperationCoordinator } from '../../domain/interfaces';
+import { OperationSnapshot } from '../../domain/entities/Operation';
 
 export class StatusBarManager {
   private static instance?: StatusBarManager;
   private statusBarItem: vscode.StatusBarItem;
   private resetTimer?: ReturnType<typeof setTimeout>;
+  private operationSubscription?: vscode.Disposable;
 
   private constructor() {
     this.statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
@@ -42,11 +45,25 @@ export class StatusBarManager {
     this.scheduleReset(5000);
   }
 
+  public bindToCoordinator(coordinator: IOperationCoordinator): void {
+    this.operationSubscription?.dispose();
+    this.operationSubscription = coordinator.onDidChangeCurrentOperation(snapshot => {
+      if (!snapshot) {
+        this.setIdle();
+        return;
+      }
+
+      this.setWorking(this.describeOperation(snapshot));
+    });
+  }
+
   public dispose(): void {
     if (this.resetTimer) {
       clearTimeout(this.resetTimer);
       this.resetTimer = undefined;
     }
+    this.operationSubscription?.dispose();
+    this.operationSubscription = undefined;
     this.statusBarItem.dispose();
     StatusBarManager.instance = undefined;
   }
@@ -60,5 +77,11 @@ export class StatusBarManager {
       this.resetTimer = undefined;
       this.setIdle();
     }, delayMs);
+  }
+
+  private describeOperation(snapshot: OperationSnapshot): string {
+    const progressSuffix = typeof snapshot.progress === 'number' ? ` (${snapshot.progress}%)` : '';
+    const detail = snapshot.message ? ` — ${snapshot.message}` : '';
+    return `${snapshot.label}${progressSuffix}${detail}`;
   }
 }

@@ -5,7 +5,6 @@
  */
 
 import * as vscode from 'vscode';
-import { WebviewHelper } from '../webview/WebviewHelper';
 
 export class WorkflowPanel {
   public static currentPanel: WorkflowPanel | undefined;

@@ -16,6 +16,7 @@ import { FileInstaller } from './infrastructure/services/FileInstaller';
 import { HealthCheckerService } from './infrastructure/services/HealthChecker';
 import { PublishService } from './infrastructure/services/PublishService';
 import { GitHubMetricsService } from './infrastructure/services/GitHubMetricsService';
+import { OperationCoordinator } from './infrastructure/services/OperationCoordinator';
 
 // Presentation
 import { CatalogViewProvider } from './presentation/providers/CatalogViewProvider';
@@ -37,17 +38,33 @@ export function activate(context: vscode.ExtensionContext): void {
   const healthChecker = new HealthCheckerService(registry, scanner);
   const publishService = new PublishService();
   const insightsGenerator = new InsightsGenerator(registry, scanner);
+  const operations = new OperationCoordinator();
 
   void registry.sync().catch(error => {
     logger.error('Falha na sincronização inicial do catálogo.', { error });
   });
 
   // ─── Sidebar Providers ───────────────────────
-  const catalogProvider = new CatalogViewProvider(context.extensionUri, registry, scanner, installer);
-  const installedProvider = new InstalledViewProvider(context.extensionUri, registry, scanner, installer);
-  const healthProvider = new HealthViewProvider(context.extensionUri, healthChecker);
+  const catalogProvider = new CatalogViewProvider(context.extensionUri, registry, scanner, installer, operations);
+  const installedProvider = new InstalledViewProvider(context.extensionUri, registry, scanner, installer, operations);
+  const healthProvider = new HealthViewProvider(context.extensionUri, healthChecker, operations);
 
   const statusBar = StatusBarManager.getInstance();
+  statusBar.bindToCoordinator(operations);
+
+  operations.setRefreshHandler(async (targets) => {
+    for (const target of targets) {
+      if (target === 'catalog') {
+        await catalogProvider.refresh();
+      }
+      if (target === 'installed') {
+        await installedProvider.refresh();
+      }
+      if (target === 'health') {
+        await healthProvider.refresh();
+      }
+    }
+  });
 
   context.subscriptions.push(
     vscode.window.registerWebviewViewProvider(CatalogViewProvider.viewType, catalogProvider),
@@ -55,6 +72,7 @@ export function activate(context: vscode.ExtensionContext): void {
     vscode.window.registerWebviewViewProvider(HealthViewProvider.viewType, healthProvider),
     statusBar,
     logger,
+    operations,
   );
 
   const resolvePackagesForInstall = async (pkg: Package): Promise<Package[]> => {
@@ -114,15 +132,26 @@ export function activate(context: vscode.ExtensionContext): void {
         const pkg = await registry.findById(selected.id);
         if (pkg) { 
           const packagesToInstall = await resolvePackagesForInstall(pkg);
-          statusBar.setWorking(packagesToInstall.length > 1 ? `Instalando ${packagesToInstall.length} pacotes...` : `Instalando ${pkg.displayName}...`);
-          if (packagesToInstall.length > 1) {
-            await installer.installMany(packagesToInstall);
-          } else {
-            await installer.install(pkg);
-          }
-          catalogProvider.refresh(); 
-          installedProvider.refresh(); 
-          statusBar.setSuccess('Pronto');
+          await operations.run({
+            kind: packagesToInstall.length > 1 ? 'bundle-install' : 'package-install',
+            label: packagesToInstall.length > 1 ? `Instalando ${packagesToInstall.length} pacotes` : `Instalando ${pkg.displayName}`,
+            targetId: pkg.id,
+            refreshTargets: ['catalog', 'installed'],
+          }, async (operation) => {
+            if (packagesToInstall.length > 1) {
+              await installer.installMany(packagesToInstall, {
+                onProgress: (progress) => {
+                  operation.setProgress((progress.current / progress.total) * 100, progress.label);
+                },
+              });
+              return;
+            }
+
+            operation.setProgress(10, pkg.displayName);
+            await installer.install(pkg, {
+              onProgress: () => operation.setProgress(100, pkg.displayName),
+            });
+          });
         }
       }
     }),
@@ -140,17 +169,33 @@ export function activate(context: vscode.ExtensionContext): void {
       const selected = await vscode.window.showQuickPick(installed, { placeHolder: 'Selecione um pacote para desinstalar...' });
       if (selected) {
         const pkg = await registry.findById(selected.id);
-        if (pkg) { await installer.uninstall(pkg); catalogProvider.refresh(); installedProvider.refresh(); }
+        if (pkg) {
+          await operations.run({
+            kind: 'package-uninstall',
+            label: `Removendo ${pkg.displayName}`,
+            targetId: pkg.id,
+            refreshTargets: ['catalog', 'installed'],
+          }, async (operation) => {
+            operation.setProgress(10, pkg.displayName);
+            await installer.uninstall(pkg, {
+              onProgress: () => operation.setProgress(100, pkg.displayName),
+            });
+          });
+        }
       }
     }),
 
     vscode.commands.registerCommand('dai.healthCheck', async () => { await healthProvider.refresh(); }),
     vscode.commands.registerCommand('dai.refresh', async () => { 
-      statusBar.setWorking('Sincronizando com GitHub...');
-      await registry.sync();
-      await catalogProvider.refresh(); 
-      await installedProvider.refresh(); 
-      statusBar.setSuccess('Sincronizado');
+      await operations.run({
+        kind: 'catalog-sync',
+        label: 'Sincronizando catálogo',
+        refreshTargets: ['catalog', 'installed'],
+      }, async (operation) => {
+        operation.setProgress(25, 'Sincronizando catálogo');
+        await registry.sync();
+        operation.setProgress(100, 'Sincronização concluída');
+      });
     }),
 
     vscode.commands.registerCommand('dai.installBundle', async () => {
@@ -163,11 +208,18 @@ export function activate(context: vscode.ExtensionContext): void {
           const packages: import('./domain/entities/Package').Package[] = [];
           for (const pkgId of bundle.packageIds) { const pkg = await registry.findById(pkgId); if (pkg) { packages.push(pkg); } }
           if (packages.length > 0) { 
-            statusBar.setWorking(`Instalando rede: ${bundle.displayName}...`);
-            await installer.installMany(packages); 
-            catalogProvider.refresh(); 
-            installedProvider.refresh(); 
-            statusBar.setSuccess('Rede ativada');
+            await operations.run({
+              kind: 'bundle-install',
+              label: `Instalando bundle ${bundle.displayName}`,
+              targetId: bundle.id,
+              refreshTargets: ['catalog', 'installed'],
+            }, async (operation) => {
+              await installer.installMany(packages, {
+                onProgress: (progress) => {
+                  operation.setProgress((progress.current / progress.total) * 100, progress.label);
+                },
+              });
+            });
           }
         }
       }
@@ -206,7 +258,7 @@ export function activate(context: vscode.ExtensionContext): void {
       const doc = await vscode.workspace.openTextDocument(fullPath);
       await vscode.window.showTextDocument(doc);
       vscode.window.showInformationMessage(`✨ Criado ${typeChoice.value}: ${name}`);
-      catalogProvider.refresh(); installedProvider.refresh();
+      await catalogProvider.refresh(); await installedProvider.refresh();
     }),
 
     vscode.commands.registerCommand('dai.openWorkflow', async () => {
@@ -243,8 +295,16 @@ export function activate(context: vscode.ExtensionContext): void {
         }
       });
       if (uris && uris[0]) {
-        await publishService.publishPackage(uris[0]);
-        await catalogProvider.refresh();
+        await operations.run({
+          kind: 'package-publish',
+          label: 'Gerando artefato de contribuição',
+          targetId: uris[0].fsPath,
+          refreshTargets: ['catalog'],
+        }, async (operation) => {
+          operation.setProgress(15, 'Lendo MCP');
+          await publishService.publishPackage(uris[0]);
+          operation.setProgress(100, 'Artefato gerado');
+        });
       }
     }),
 
@@ -259,23 +319,35 @@ export function activate(context: vscode.ExtensionContext): void {
 
       if (!uris?.[0]) { return; }
 
-      const packages = await publishService.importCustomMcp(uris[0], registry);
-      if (packages.length === 0) { return; }
+      await operations.run({
+        kind: 'custom-mcp-import',
+        label: 'Importando MCP customizado',
+        targetId: uris[0].fsPath,
+        refreshTargets: ['catalog', 'installed'],
+      }, async (operation) => {
+        operation.setProgress(10, 'Lendo contribuição MCP');
+        const packages = await publishService.importCustomMcp(uris[0], registry);
+        if (packages.length === 0) { return; }
 
-      if (packages.length > 1) {
-        await installer.installMany(packages);
-      } else {
-        await installer.install(packages[0]);
-      }
+        if (packages.length > 1) {
+          await installer.installMany(packages, {
+            onProgress: (progress) => {
+              operation.setProgress((progress.current / progress.total) * 100, progress.label);
+            },
+          });
+          return;
+        }
 
-      await catalogProvider.refresh();
-      await installedProvider.refresh();
+        await installer.install(packages[0], {
+          onProgress: () => operation.setProgress(100, packages[0].displayName),
+        });
+      });
     }),
   );
 
   // ─── Chat Participant @stack ─────────────────
   try {
-    const handler: vscode.ChatRequestHandler = async (request, chatContext, stream, token) => {
+    const handler: vscode.ChatRequestHandler = async (request, _chatContext, stream, _token) => {
       const cmd = request.command;
       const prompt = request.prompt.trim();
 

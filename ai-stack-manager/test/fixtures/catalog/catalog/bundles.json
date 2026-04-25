@@ -1,0 +1,13 @@
+{
+  "bundles": [
+    {
+      "id": "bundle-architecture-backend",
+      "name": "architecture-backend",
+      "displayName": "Architecture Backend",
+      "description": "Bundle de backend e arquitetura",
+      "version": "1.0.0",
+      "packageIds": ["agent-backend-specialist", "mcp-github"],
+      "color": "#EC7000"
+    }
+  ]
+}

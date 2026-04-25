@@ -1,0 +1,39 @@
+{
+  "id": "agent-backend-specialist",
+  "name": "backend-specialist",
+  "displayName": "Backend Specialist",
+  "description": "Especialista em APIs e serviços de backend.",
+  "type": "agent",
+  "version": "1.0.0",
+  "tags": ["backend", "api"],
+  "author": "DescomplicAI Community",
+  "install": {
+    "strategy": "copy",
+    "targets": [
+      {
+        "source": "source.agent.md",
+        "target": ".github/agents/backend-specialist.agent.md",
+        "mergeStrategy": "replace"
+      }
+    ]
+  },
+  "source": {
+    "official": true,
+    "packagePath": "agents/backend-specialist"
+  },
+  "ui": {
+    "longDescription": "Especialista para tarefas de backend com foco em APIs.",
+    "highlights": ["APIs", "Node.js"],
+    "installNotes": ["Instala o agent em .github/agents"],
+    "badges": ["Official"],
+    "maturity": "stable"
+  },
+  "agentMeta": {
+    "category": "specialist",
+    "tools": ["read_file", "grep_search"],
+    "delegatesTo": [],
+    "workflowPhase": "EXECUTION",
+    "userInvocable": true,
+    "relatedSkills": []
+  }
+}

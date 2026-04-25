@@ -15,5 +15,6 @@
     "declaration": true,
     "declarationMap": true
   },
-  "exclude": ["node_modules", ".vscode-test", "out", "media"]
+  "include": ["src/**/*.ts"],
+  "exclude": ["node_modules", ".vscode-test", "out", "media", "test", "coverage", "vitest.config.ts"]
 }

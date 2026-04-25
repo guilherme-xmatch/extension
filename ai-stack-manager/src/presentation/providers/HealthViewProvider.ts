@@ -8,6 +8,8 @@ import * as vscode from 'vscode';
 import { WebviewHelper } from '../webview/WebviewHelper';
 import { HealthCheckerService } from '../../infrastructure/services/HealthChecker';
 import { HealthReport, HealthSeverity } from '../../domain/entities/HealthReport';
+import { IOperationCoordinator } from '../../domain/interfaces';
+import { OperationMetricsSnapshot, OperationSnapshot } from '../../domain/entities/Operation';
 
 type HealthMessage = { command: 'runCheck' };
 
@@ -21,11 +23,19 @@ export class HealthViewProvider implements vscode.WebviewViewProvider {
   public static readonly viewType = 'dai-health';
   private _view?: vscode.WebviewView;
   private _initialized = false;
+  private _lastReport?: HealthReport;
 
   constructor(
     private readonly _extensionUri: vscode.Uri,
     private readonly _healthChecker: HealthCheckerService,
-  ) {}
+    private readonly _operations: IOperationCoordinator,
+  ) {
+    this._operations.onDidChangeCurrentOperation(() => {
+      if (this._view) {
+        this.renderCurrentState();
+      }
+    });
+  }
 
   public resolveWebviewView(
     webviewView: vscode.WebviewView,
@@ -64,16 +74,38 @@ export class HealthViewProvider implements vscode.WebviewViewProvider {
     WebviewHelper.postState(this._view.webview, state);
   }
 
+  private renderCurrentState(): void {
+    if (!this._view) { return; }
+
+    if (this._lastReport) {
+      WebviewHelper.postState(this._view.webview, { html: this.renderReport(this._lastReport), loading: false });
+      return;
+    }
+
+    WebviewHelper.postState(this._view.webview, { html: this.renderHero(), loading: false });
+  }
+
   private async runAndRender(): Promise<void> {
     if (!this._view) { return; }
     WebviewHelper.postState(this._view.webview, { html: this.renderHero(true), loading: true });
-    const report = await this._healthChecker.check();
+    const report = await this._operations.run({
+      kind: 'health-check',
+      label: 'Executando health check',
+      refreshTargets: [],
+    }, async (operation) => {
+      operation.setProgress(20, 'Validando infraestrutura');
+      const value = await this._healthChecker.check();
+      operation.setProgress(100, 'Health check concluído');
+      return value;
+    });
+    this._lastReport = report;
     WebviewHelper.postState(this._view.webview, { html: this.renderReport(report), loading: false });
   }
 
   private renderHero(loading = false): string {
     return /*html*/`
     <div class="dai-container">
+      ${this.renderOperationBanner()}
       <div class="dai-health-hero ${this._initialized ? '' : 'animate-fade-in'}">
         <div class="dai-health-icon-large">🩺</div>
         <h3 class="dai-health-title">Health Check da Infraestrutura</h3>
@@ -95,6 +127,7 @@ export class HealthViewProvider implements vscode.WebviewViewProvider {
 
     return /*html*/`
     <div class="dai-container">
+      ${this.renderOperationBanner()}
       <!-- Score Ring -->
       <div class="dai-health-score ${this._initialized ? '' : 'animate-scale-in'}">
         <div class="dai-score-ring">
@@ -135,6 +168,8 @@ export class HealthViewProvider implements vscode.WebviewViewProvider {
           <span class="dai-stat-label">Tempo</span>
         </div>
       </div>
+
+      ${this.renderOperationInsights()}
 
       <!-- Findings -->
       <div class="dai-section">
@@ -177,5 +212,90 @@ export class HealthViewProvider implements vscode.WebviewViewProvider {
       });
     };
     `;
+  }
+
+  private renderOperationBanner(): string {
+    const operation = this._operations.getCurrentOperation();
+    if (!operation || operation.kind === 'health-check') {
+      return '';
+    }
+
+    const progress = typeof operation.progress === 'number' ? `${operation.progress}%` : 'Em andamento';
+    return /*html*/`
+    <div class="dai-recommendation-banner">
+      <div class="dai-rec-icon">⏳</div>
+      <div class="dai-rec-content">
+        <p class="dai-rec-msg"><b>${operation.label}</b>${operation.message ? ` — ${operation.message}` : ''}</p>
+        <span class="dai-tag">${progress}</span>
+      </div>
+    </div>`;
+  }
+
+  private renderOperationInsights(): string {
+    const metrics = this._operations.getMetrics();
+    const history = this._operations.getRecentOperations(5);
+
+    if (metrics.length === 0 && history.length === 0) {
+      return '';
+    }
+
+    const topMetrics = metrics
+      .slice()
+      .sort((left, right) => right.totalRuns - left.totalRuns)
+      .slice(0, 3);
+
+    return /*html*/`
+    <div class="dai-section">
+      <div class="dai-section-header">
+        <span class="dai-section-title">Operações Recentes</span>
+      </div>
+      <div class="dai-health-stats">
+        ${topMetrics.map(metric => this.renderMetricCard(metric)).join('')}
+      </div>
+      <div class="alert-list">
+        ${history.map(entry => this.renderHistoryEntry(entry)).join('')}
+      </div>
+    </div>`;
+  }
+
+  private renderMetricCard(metric: OperationMetricsSnapshot): string {
+    const successRate = metric.totalRuns > 0
+      ? Math.round((metric.completedRuns / metric.totalRuns) * 100)
+      : 0;
+
+    return /*html*/`
+    <div class="dai-stat" style="--stat-color: var(--itau-info)">
+      <span class="dai-stat-value">${metric.totalRuns}</span>
+      <span class="dai-stat-label">${this.toMetricLabel(metric.kind)}</span>
+      <span class="dai-form-hint">${successRate}% sucesso · avg ${metric.averageDurationMs}ms</span>
+    </div>`;
+  }
+
+  private renderHistoryEntry(entry: OperationSnapshot): string {
+    const isSuccess = entry.status === 'completed';
+    const duration = entry.finishedAt ? `${Math.max(0, entry.finishedAt - entry.startedAt)}ms` : 'em andamento';
+    const cssClass = isSuccess ? 'ok' : entry.status === 'failed' ? 'warning' : '';
+    const icon = isSuccess ? '🟢' : entry.status === 'failed' ? '🔴' : '🔵';
+    const detail = entry.errorMessage ?? entry.message ?? 'Sem detalhes adicionais';
+
+    return /*html*/`
+    <div class="alert-item ${cssClass}">
+      <span class="alert-title">${icon} ${entry.label}</span>
+      <span class="alert-desc">${this.toMetricLabel(entry.kind)} · ${entry.status} · ${duration} — ${detail}</span>
+    </div>`;
+  }
+
+  private toMetricLabel(kind: OperationSnapshot['kind']): string {
+    const labels: Record<OperationSnapshot['kind'], string> = {
+      'catalog-sync': 'Catálogo',
+      'package-install': 'Instalação',
+      'bundle-install': 'Bundles',
+      'package-uninstall': 'Remoção',
+      'health-check': 'Health',
+      'custom-mcp-import': 'Importação MCP',
+      'package-publish': 'Publicação',
+    };
+
+    return labels[kind];
   }
 }

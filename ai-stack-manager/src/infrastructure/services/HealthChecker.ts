@@ -9,8 +9,11 @@ import * as path from 'path';
 import { IHealthChecker, IPackageRepository, IWorkspaceScanner } from '../../domain/interfaces';
 import { InstallStatus } from '../../domain/entities/Package';
 import { HealthReport, HealthFinding, HealthSeverity } from '../../domain/entities/HealthReport';
+import { AppLogger } from './AppLogger';
 
 export class HealthCheckerService implements IHealthChecker {
+  private readonly _logger = AppLogger.getInstance();
+
   constructor(
     private readonly _registry?: IPackageRepository,
     private readonly _scanner?: IWorkspaceScanner,
@@ -153,12 +156,12 @@ export class HealthCheckerService implements IHealthChecker {
               autoFixable: false,
             });
           }
-        } catch {
-          // Can't read file
+        } catch (error) {
+          this._logger.warn('HEALTH_AGENT_FILE_READ_FAILED', { filePath, error });
         }
       }
-    } catch {
-      // Directory read error
+    } catch (error) {
+      this._logger.warn('HEALTH_AGENTS_SCAN_FAILED', { agentsDir, error });
     }
 
     return findings;
@@ -190,8 +193,8 @@ export class HealthCheckerService implements IHealthChecker {
           });
         }
       }
-    } catch {
-      // Directory read error
+    } catch (error) {
+      this._logger.warn('HEALTH_SKILLS_SCAN_FAILED', { skillsDir, error });
     }
 
     return findings;
@@ -221,7 +224,8 @@ export class HealthCheckerService implements IHealthChecker {
       const content = await this.readFile(mcpPath);
       // Basic JSON validation
       JSON.parse(content.replace(/\/\/.*$/gm, '').replace(/\/\*[\s\S]*?\*\//g, ''));
-    } catch {
+    } catch (error) {
+      this._logger.warn('HEALTH_MCP_JSON_INVALID', { mcpPath, error });
       findings.push({
         id: 'mcp-invalid-json',
         severity: HealthSeverity.Error,
@@ -261,12 +265,12 @@ export class HealthCheckerService implements IHealthChecker {
               autoFixable: false,
             });
           }
-        } catch {
-          // Can't read file
+        } catch (error) {
+          this._logger.warn('HEALTH_INSTRUCTION_FILE_READ_FAILED', { filePath, error });
         }
       }
-    } catch {
-      // Directory read error
+    } catch (error) {
+      this._logger.warn('HEALTH_INSTRUCTIONS_SCAN_FAILED', { instructionsDir, error });
     }
 
     return findings;
@@ -342,7 +346,8 @@ export class HealthCheckerService implements IHealthChecker {
     try {
       const stat = await vscode.workspace.fs.stat(vscode.Uri.file(filePath));
       return stat.type === vscode.FileType.File;
-    } catch {
+    } catch (error) {
+      this._logger.debug('HEALTH_FILE_NOT_FOUND', { filePath, error });
       return false;
     }
   }
@@ -351,7 +356,8 @@ export class HealthCheckerService implements IHealthChecker {
     try {
       const stat = await vscode.workspace.fs.stat(vscode.Uri.file(dirPath));
       return stat.type === vscode.FileType.Directory;
-    } catch {
+    } catch (error) {
+      this._logger.debug('HEALTH_DIR_NOT_FOUND', { dirPath, error });
       return false;
     }
   }

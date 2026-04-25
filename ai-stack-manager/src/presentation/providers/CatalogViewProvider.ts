@@ -7,11 +7,12 @@
 
 import * as vscode from 'vscode';
 import { Package, InstallStatus } from '../../domain/entities/Package';
-import { IPackageRepository, IWorkspaceScanner, IInstaller } from '../../domain/interfaces';
+import { IPackageRepository, IWorkspaceScanner, IInstaller, IOperationCoordinator } from '../../domain/interfaces';
 import { WebviewHelper } from '../webview/WebviewHelper';
 import { Bundle } from '../../domain/entities/Bundle';
 import { PackageType } from '../../domain/value-objects/PackageType';
 import { AgentCategory } from '../../domain/value-objects/AgentCategory';
+import { AppLogger } from '../../infrastructure/services/AppLogger';
 
 type CatalogMessage =
   | { command: 'install'; packageId: string }
@@ -33,13 +34,21 @@ export class CatalogViewProvider implements vscode.WebviewViewProvider {
   public static readonly viewType = 'dai-catalog';
   private _view?: vscode.WebviewView;
   private _initialized = false;
+  private readonly _logger = AppLogger.getInstance();
 
   constructor(
     private readonly _extensionUri: vscode.Uri,
     private readonly _registry: IPackageRepository,
     private readonly _scanner: IWorkspaceScanner,
     private readonly _installer: IInstaller,
-  ) {}
+    private readonly _operations: IOperationCoordinator,
+  ) {
+    this._operations.onDidChangeCurrentOperation(() => {
+      if (this._view) {
+        void this.updateView();
+      }
+    });
+  }
 
   public resolveWebviewView(
     webviewView: vscode.WebviewView,
@@ -159,6 +168,7 @@ export class CatalogViewProvider implements vscode.WebviewViewProvider {
 
     return /*html*/`
     <div class="dai-container">
+      ${this.renderOperationBanner()}
       <!-- Animated Logo Header -->
       <div class="dai-header ${this.animClass('animate-fade-in')}">
         <div class="dai-logo-animated">
@@ -210,7 +220,7 @@ export class CatalogViewProvider implements vscode.WebviewViewProvider {
       }).join('') : ''}
 
       <!-- Non-Agent pacotes -->
-      ${nonAgents.length > 0 ? this.renderNonAgentSection(nonAgents, statusMap, filterType) : ''}
+      ${nonAgents.length > 0 ? this.renderNonAgentSection(nonAgents, statusMap) : ''}
 
       ${packages.length === 0 ? `<div class="dai-empty ${this.animClass('animate-fade-in')}"><span class="dai-empty-icon">🔍</span><span class="dai-empty-text">Nenhum pacote encontrado</span></div>` : ''}
     </div>`;
@@ -349,7 +359,7 @@ export class CatalogViewProvider implements vscode.WebviewViewProvider {
     </div>`;
   }
 
-  private renderNonAgentSection(packages: Package[], statusMap: Map<string, InstallStatus>, filterType?: string): string {
+  private renderNonAgentSection(packages: Package[], statusMap: Map<string, InstallStatus>): string {
     // Group by type
     const groups = new Map<string, Package[]>();
     for (const pkg of packages) {
@@ -399,13 +409,25 @@ export class CatalogViewProvider implements vscode.WebviewViewProvider {
     if (!pkg) { return; }
 
     const packagesToInstall = await this.resolvePackagesForInstall(pkg);
-    if (packagesToInstall.length > 1) {
-      await this._installer.installMany(packagesToInstall);
-    } else {
-      await this._installer.install(pkg);
-    }
-
-    await this.updateView();
+    await this._operations.run({
+      kind: packagesToInstall.length > 1 ? 'bundle-install' : 'package-install',
+      label: packagesToInstall.length > 1 ? `Instalando ${packagesToInstall.length} pacotes` : `Instalando ${pkg.displayName}`,
+      targetId: pkg.id,
+      refreshTargets: ['catalog', 'installed'],
+    }, async (operation) => {
+      if (packagesToInstall.length > 1) {
+        await this._installer.installMany(packagesToInstall, {
+          onProgress: (progress) => {
+            operation.setProgress((progress.current / progress.total) * 100, progress.label);
+          },
+        });
+      } else {
+        operation.setProgress(10, pkg.displayName);
+        await this._installer.install(pkg, {
+          onProgress: () => operation.setProgress(100, pkg.displayName),
+        });
+      }
+    });
   }
 
   private async handleInstallNetwork(packageId: string): Promise<void> {
@@ -430,19 +452,47 @@ export class CatalogViewProvider implements vscode.WebviewViewProvider {
     );
 
     if (choice?.startsWith('Instalar Rede')) {
-      await this._installer.installMany(unique);
+      await this._operations.run({
+        kind: 'bundle-install',
+        label: `Instalando rede ${pkg.displayName}`,
+        targetId: pkg.id,
+        refreshTargets: ['catalog', 'installed'],
+      }, async (operation) => {
+        await this._installer.installMany(unique, {
+          onProgress: (progress) => {
+            operation.setProgress((progress.current / progress.total) * 100, progress.label);
+          },
+        });
+      });
     } else if (choice === 'Apenas este Agent') {
-      await this._installer.install(pkg);
+      await this._operations.run({
+        kind: 'package-install',
+        label: `Instalando ${pkg.displayName}`,
+        targetId: pkg.id,
+        refreshTargets: ['catalog', 'installed'],
+      }, async (operation) => {
+        operation.setProgress(10, pkg.displayName);
+        await this._installer.install(pkg, {
+          onProgress: () => operation.setProgress(100, pkg.displayName),
+        });
+      });
     }
-
-    await this.updateView();
   }
 
   private async handleUninstall(packageId: string): Promise<void> {
     const pkg = await this._registry.findById(packageId);
     if (!pkg) { return; }
-    await this._installer.uninstall(pkg);
-    await this.updateView();
+    await this._operations.run({
+      kind: 'package-uninstall',
+      label: `Removendo ${pkg.displayName}`,
+      targetId: pkg.id,
+      refreshTargets: ['catalog', 'installed'],
+    }, async (operation) => {
+      operation.setProgress(10, pkg.displayName);
+      await this._installer.uninstall(pkg, {
+        onProgress: () => operation.setProgress(100, pkg.displayName),
+      });
+    });
   }
 
   private async handleInstallBundle(bundleId: string): Promise<void> {
@@ -454,8 +504,18 @@ export class CatalogViewProvider implements vscode.WebviewViewProvider {
       if (pkg) { packages.push(pkg); }
     }
     if (packages.length > 0) {
-      await this._installer.installMany(packages);
-      await this.updateView();
+      await this._operations.run({
+        kind: 'bundle-install',
+        label: `Instalando bundle ${bundle.displayName}`,
+        targetId: bundle.id,
+        refreshTargets: ['catalog', 'installed'],
+      }, async (operation) => {
+        await this._installer.installMany(packages, {
+          onProgress: (progress) => {
+            operation.setProgress((progress.current / progress.total) * 100, progress.label);
+          },
+        });
+      });
     }
   }
 
@@ -558,9 +618,28 @@ export class CatalogViewProvider implements vscode.WebviewViewProvider {
     try {
       const url = new URL(value);
       return url.protocol === 'https:';
-    } catch {
+    } catch (error) {
+      this._logger.debug('CATALOG_EXTERNAL_URL_REJECTED', { value, error });
       return false;
     }
+  }
+
+  private renderOperationBanner(): string {
+    const operation = this._operations.getCurrentOperation();
+    if (!operation) {
+      return '';
+    }
+
+    const message = operation.message ? ` — ${this.esc(operation.message)}` : '';
+    const progress = typeof operation.progress === 'number' ? `${operation.progress}%` : 'Em andamento';
+    return /*html*/`
+    <div class="dai-recommendation-banner">
+      <div class="dai-rec-icon">⏳</div>
+      <div class="dai-rec-content">
+        <p class="dai-rec-msg"><b>${this.esc(operation.label)}</b>${message}</p>
+        <span class="dai-tag">${progress}</span>
+      </div>
+    </div>`;
   }
 
   private async resolvePackagesForInstall(pkg: Package): Promise<Package[]> {

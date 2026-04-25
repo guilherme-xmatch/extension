@@ -1,6 +1,15 @@
 import * as vscode from 'vscode';
 import { WebviewHelper } from '../webview/WebviewHelper';
 import { Package } from '../../domain/entities/Package';
+import { AppLogger } from '../../infrastructure/services/AppLogger';
+
+type ConfigPanelMessage = { command: 'saveConfig'; config: { llmProvider?: string; temperature?: string; tokenLimit?: string; autoApprove?: boolean; fsAccess?: boolean } };
+
+function isConfigPanelMessage(value: unknown): value is ConfigPanelMessage {
+  if (!value || typeof value !== 'object') { return false; }
+  const message = value as Record<string, unknown>;
+  return message.command === 'saveConfig';
+}
 
 export class ConfigPanel {
   public static currentPanel: ConfigPanel | undefined;
@@ -11,6 +20,7 @@ export class ConfigPanel {
   private _disposables: vscode.Disposable[] = [];
   private _pkg: Package;
   private _initialized = false;
+  private readonly _logger = AppLogger.getInstance();
 
   private constructor(panel: vscode.WebviewPanel, extensionUri: vscode.Uri, pkg: Package) {
     this._panel = panel;
@@ -21,7 +31,8 @@ export class ConfigPanel {
     this._panel.onDidDispose(() => this.dispose(), null, this._disposables);
 
     this._panel.webview.onDidReceiveMessage(
-      async (message) => {
+      async (message: unknown) => {
+        if (!isConfigPanelMessage(message)) { return; }
         switch (message.command) {
           case 'saveConfig':
             await this.saveConfig(message.config);
@@ -57,14 +68,15 @@ export class ConfigPanel {
     ConfigPanel.currentPanel = new ConfigPanel(panel, extensionUri, pkg);
   }
 
-  private async saveConfig(config: any) {
+  private async saveConfig(config: ConfigPanelMessage['config']) {
     try {
       const configuration = vscode.workspace.getConfiguration('descomplicai');
       await configuration.update('llmProvider', config.llmProvider, vscode.ConfigurationTarget.Global);
-      await configuration.update('temperature', parseFloat(config.temperature), vscode.ConfigurationTarget.Global);
+      await configuration.update('temperature', parseFloat(config.temperature ?? '0.2'), vscode.ConfigurationTarget.Global);
       
       vscode.window.showInformationMessage(`✅ Configurações salvas para ${this._pkg.displayName}!`);
-    } catch (e) {
+    } catch (error) {
+      this._logger.error('CONFIG_SAVE_FAILED', { packageId: this._pkg.id, error });
       vscode.window.showErrorMessage('Erro ao salvar as configurações.');
     }
   }

@@ -206,14 +206,26 @@
     "vscode:prepublish": "npm run compile",
     "compile": "tsc -p ./",
     "watch": "tsc -watch -p ./",
-    "lint": "eslint src --ext ts",
+    "lint": "eslint \"src/**/*.ts\" \"test/**/*.ts\"",
+    "test": "vitest run --coverage",
+    "test:unit": "vitest run test/domain test/infrastructure",
+    "test:integration": "vitest run test/extension",
+    "check": "npm run compile && npm run lint && npm run test",
     "clean": "rimraf out"
   },
   "devDependencies": {
+    "@eslint/js": "^9.20.0",
     "@types/adm-zip": "^0.5.8",
     "@types/node": "^20.0.0",
     "@types/vscode": "^1.100.0",
-    "typescript": "^5.7.0"
+    "@typescript-eslint/eslint-plugin": "^8.24.0",
+    "@typescript-eslint/parser": "^8.24.0",
+    "eslint": "^9.20.1",
+    "globals": "^15.15.0",
+    "rimraf": "^6.0.1",
+    "typescript": "^5.7.0",
+    "vitest": "^3.2.4",
+    "@vitest/coverage-v8": "^3.2.4"
   },
   "dependencies": {
     "adm-zip": "^0.5.17"

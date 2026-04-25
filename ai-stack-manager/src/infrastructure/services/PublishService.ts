@@ -5,6 +5,7 @@ import { StatusBarManager } from './StatusBarManager';
 import { GitRegistry } from '../repositories/GitRegistry';
 import { Package } from '../../domain/entities/Package';
 import { PackageType } from '../../domain/value-objects/PackageType';
+import { AppLogger } from './AppLogger';
 
 interface ParsedMcpDocument {
   servers: Record<string, unknown>;
@@ -12,6 +13,8 @@ interface ParsedMcpDocument {
 }
 
 export class PublishService {
+  private readonly logger = AppLogger.getInstance();
+
   private get contributionsDir(): string {
     const home = process.env.USERPROFILE || process.env.HOME || '';
     return path.join(home, '.descomplicai', 'contributions');
@@ -35,6 +38,7 @@ export class PublishService {
       return packages;
     } catch (error) {
       statusBar.setError('Falha ao importar MCP');
+      this.logger.error('CUSTOM_MCP_IMPORT_FAILED', { filePath: fileUri.fsPath, error });
       throw error;
     }
   }
@@ -108,6 +112,7 @@ export class PublishService {
       });
     } catch (error: any) {
       statusBar.setError('Falha ao publicar');
+      this.logger.error('PACKAGE_PUBLISH_FAILED', { filePath: fileUri.fsPath, error });
       vscode.window.showErrorMessage(`Falha na publicação: ${error.message}`);
     }
   }
