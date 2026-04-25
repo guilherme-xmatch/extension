@@ -19,6 +19,8 @@
 - [x] Validar a automação local de branch protection até o ponto de bloqueio externo (`gh auth` ausente)
 - [x] Adicionar preflight automatizado para validar `gh`, `origin` e autenticação antes da branch protection remota
 - [x] Corrigir interferência de artefatos `vitest.config.*` gerados e revalidar `compile`, `lint` e `test`
+- [x] Adicionar automação local para configurar `remote origin` no Git root correto
+- [x] Corrigir e validar o `DryRun` de `configure-git-origin.ps1`
 
 ### Em andamento
 
@@ -26,11 +28,11 @@
 
 ### Bloqueado / externo ao repositório
 
-- [ ] Aplicar branch protection remota no GitHub conforme `docs/implementation/branch-protection-manual-checklist.md` (bloqueado principalmente por ausência de `remote origin`; após configurar o remoto, autenticar `gh` se necessário)
+- [ ] Aplicar branch protection remota no GitHub conforme `docs/implementation/branch-protection-manual-checklist.md` (bloqueado principalmente por ausência de `remote origin` e, em seguida, `gh auth`)
 
 ## Próxima prioridade
 
-1. Configurar `remote origin` do repositório alvo no Git root correto.
+1. Rodar `npm run configure:origin -- -Owner <owner> -Repo <repo>` no Git root correto.
 2. Executar `gh auth login` no ambiente local.
 3. Rodar `npm run check:github-prereqs`.
 4. Rodar `npm run apply:branch-protection`.

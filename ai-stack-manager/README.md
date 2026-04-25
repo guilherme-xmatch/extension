@@ -17,6 +17,7 @@ npm run compile
 npm run lint
 npm run test
 npm run check
+npm run configure:origin -- -Owner <owner> -Repo <repo>
 npm run check:github-prereqs
 npm run apply:branch-protection
 ```
@@ -36,5 +37,6 @@ A única etapa relevante ainda externa ao repositório é a aplicação da branc
 Antes disso, valide as pré-condições locais com:
 
 ```bash
+npm run configure:origin -- -Owner <owner> -Repo <repo>
 npm run check:github-prereqs
 ```

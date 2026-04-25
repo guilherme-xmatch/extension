@@ -15,6 +15,12 @@ Enquanto essas pré-condições não forem resolvidas, a branch protection não 
 Foi adicionado o script:
 
 ```powershell
+./scripts/configure-git-origin.ps1 -Owner <owner> -Repo <repo>
+```
+
+Depois disso:
+
+```powershell
 ./scripts/apply-branch-protection.ps1 -Owner <owner> -Repo <repo> -Branch main
 ```
 
@@ -33,6 +39,7 @@ Para validar previamente o ambiente:
 Ou via npm:
 
 ```bash
+npm run configure:origin -- -Owner <owner> -Repo <repo>
 npm run check:github-prereqs
 npm run apply:branch-protection
 ```

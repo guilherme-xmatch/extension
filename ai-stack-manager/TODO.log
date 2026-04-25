@@ -11,3 +11,6 @@
 - O projeto agora possui também um preflight automatizado (`scripts/check-github-prereqs.ps1`) e atalhos npm para validar o ambiente antes da aplicação remota.
 - Durante a validação do novo preflight, a suíte voltou a falhar por causa de artefatos locais `vitest.config.*` compilados; esses arquivos foram removidos e o script `clean` foi reforçado.
 - Estado atual revalidado: `npm run compile`, `npm run lint` e `npm run test` verdes; o preflight agora bloqueia primeiro por ausência de `remote origin`, que é a próxima dependência externa real.
+- O projeto agora também possui automação local para configurar o `remote origin` com segurança antes da aplicação da branch protection.
+- Corrigido o `DryRun` de `configure-git-origin.ps1` para não falhar com erro nativo quando o `origin` ainda não existe.
+- Validação confirmada: `npm run configure:origin -- -Owner example -Repo demo -DryRun` agora responde com o comando esperado, e `compile`, `lint` e `test` seguem verdes.

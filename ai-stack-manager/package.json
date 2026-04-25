@@ -211,6 +211,7 @@
     "test:unit": "vitest run test/domain test/infrastructure",
     "test:integration": "vitest run test/extension",
     "check": "npm run compile && npm run lint && npm run test",
+    "configure:origin": "powershell -ExecutionPolicy Bypass -File ./scripts/configure-git-origin.ps1",
     "check:github-prereqs": "powershell -ExecutionPolicy Bypass -File ./scripts/check-github-prereqs.ps1",
     "apply:branch-protection": "powershell -ExecutionPolicy Bypass -File ./scripts/apply-branch-protection.ps1",
     "clean": "rimraf out coverage vitest.config.js vitest.config.js.map vitest.config.d.ts vitest.config.d.ts.map"
