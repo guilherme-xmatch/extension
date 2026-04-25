@@ -66,11 +66,7 @@ $payload = @{
 
 Write-Host "Aplicando branch protection em $($repository.owner)/$($repository.repo) na branch '$Branch'..."
 
-$payload | gh api \
-  --method PUT \
-  -H 'Accept: application/vnd.github+json' \
-  "/repos/$($repository.owner)/$($repository.repo)/branches/$Branch/protection" \
-  --input - | Out-Null
+$payload | gh api --method PUT -H 'Accept: application/vnd.github+json' "/repos/$($repository.owner)/$($repository.repo)/branches/$Branch/protection" --input - | Out-Null
 
 if ($LASTEXITCODE -ne 0) {
   throw 'Falha ao aplicar branch protection via GitHub API.'
