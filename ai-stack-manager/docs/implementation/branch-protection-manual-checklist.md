@@ -2,6 +2,28 @@
 
 Este repositório agora possui pipeline CI em `.github/workflows/ci.yml`.
 
+## Pré-condições observadas no ambiente atual
+
+- o Git root atual não possui `remote origin` configurado;
+- o GitHub CLI (`gh`) está instalado;
+- o GitHub CLI **não está autenticado** no ambiente atual.
+
+Enquanto essas pré-condições não forem resolvidas, a branch protection não pode ser aplicada automaticamente a partir deste workspace.
+
+## Automação disponível
+
+Foi adicionado o script:
+
+```powershell
+./scripts/apply-branch-protection.ps1 -Owner <owner> -Repo <repo> -Branch main
+```
+
+Ou, se o `origin` estiver configurado para GitHub e o `gh` autenticado:
+
+```powershell
+./scripts/apply-branch-protection.ps1
+```
+
 ## Passos manuais ainda necessários no GitHub
 
 1. Abrir **Settings → Branches** no repositório.

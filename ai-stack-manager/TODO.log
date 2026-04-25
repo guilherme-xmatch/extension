@@ -6,4 +6,4 @@
 - Repositório recebeu infraestrutura de testes, CI e controle documental mínimo (`README.md`, `tasks.md`, `TODO.log`).
 - Git root real (`4. Extensão`) foi protegido contra inclusão acidental do repositório irmão `DescomplicAI/`.
 - Mudanças locais do ciclo atual foram consolidadas para commit no Git root correto.
-- Branch protection remota continua dependente de configuração manual no GitHub.
+- Branch protection remota segue pendente por ausência de `remote origin` e `gh auth`, mas agora existe automação local via `scripts/apply-branch-protection.ps1`.
