@@ -9,6 +9,19 @@ import { WebviewHelper } from '../webview/WebviewHelper';
 import { Package, InstallStatus } from '../../domain/entities/Package';
 import { IPackageRepository, IWorkspaceScanner, IInstaller } from '../../domain/interfaces';
 
+type InstalledMessage =
+  | { command: 'uninstall'; packageId: string }
+  | { command: 'openFile'; filePath: string }
+  | { command: 'configure'; packageId: string }
+  | { command: 'refresh' }
+  | { command: 'openExternal'; url?: string };
+
+function isInstalledMessage(value: unknown): value is InstalledMessage {
+  if (!value || typeof value !== 'object') { return false; }
+  const message = value as Record<string, unknown>;
+  return typeof message.command === 'string';
+}
+
 export class InstalledViewProvider implements vscode.WebviewViewProvider {
   public static readonly viewType = 'dai-installed';
   private _view?: vscode.WebviewView;
@@ -29,7 +42,9 @@ export class InstalledViewProvider implements vscode.WebviewViewProvider {
     this._view = webviewView;
     webviewView.webview.options = { enableScripts: true, localResourceRoots: [this._extensionUri] };
 
-    webviewView.webview.onDidReceiveMessage(async (message) => {
+    webviewView.webview.onDidReceiveMessage(async (message: unknown) => {
+      if (!isInstalledMessage(message)) { return; }
+
       switch (message.command) {
         case 'uninstall':
           await this.handleUninstall(message.packageId);
@@ -42,7 +57,7 @@ export class InstalledViewProvider implements vscode.WebviewViewProvider {
           break;
         case 'refresh': await this.updateView(); break;
         case 'openExternal':
-          if (message.url) {
+          if (message.url && this.isSafeExternalUrl(message.url)) {
             await vscode.env.openExternal(vscode.Uri.parse(message.url));
           }
           break;
@@ -209,5 +224,14 @@ export class InstalledViewProvider implements vscode.WebviewViewProvider {
 
   private animClass(className: string): string {
     return this._initialized ? '' : className;
+  }
+
+  private isSafeExternalUrl(value: string): boolean {
+    try {
+      const url = new URL(value);
+      return url.protocol === 'https:';
+    } catch {
+      return false;
+    }
   }
 }

@@ -13,6 +13,22 @@ import { Bundle } from '../../domain/entities/Bundle';
 import { PackageType } from '../../domain/value-objects/PackageType';
 import { AgentCategory } from '../../domain/value-objects/AgentCategory';
 
+type CatalogMessage =
+  | { command: 'install'; packageId: string }
+  | { command: 'installNetwork'; packageId: string }
+  | { command: 'uninstall'; packageId: string }
+  | { command: 'installBundle'; bundleId: string }
+  | { command: 'search'; query?: string; filterType?: string }
+  | { command: 'filter'; query?: string; type?: string }
+  | { command: 'openExternal'; url?: string }
+  | { command: 'refresh' };
+
+function isCatalogMessage(value: unknown): value is CatalogMessage {
+  if (!value || typeof value !== 'object') { return false; }
+  const message = value as Record<string, unknown>;
+  return typeof message.command === 'string';
+}
+
 export class CatalogViewProvider implements vscode.WebviewViewProvider {
   public static readonly viewType = 'dai-catalog';
   private _view?: vscode.WebviewView;
@@ -33,7 +49,9 @@ export class CatalogViewProvider implements vscode.WebviewViewProvider {
     this._view = webviewView;
     webviewView.webview.options = { enableScripts: true, localResourceRoots: [this._extensionUri] };
 
-    webviewView.webview.onDidReceiveMessage(async (message) => {
+    webviewView.webview.onDidReceiveMessage(async (message: unknown) => {
+      if (!isCatalogMessage(message)) { return; }
+
       switch (message.command) {
         case 'install': await this.handleInstall(message.packageId); break;
         case 'installNetwork': await this.handleInstallNetwork(message.packageId); break;
@@ -42,7 +60,7 @@ export class CatalogViewProvider implements vscode.WebviewViewProvider {
         case 'search': await this.updateView(message.query, message.filterType); break;
         case 'filter': await this.updateView(message.query ?? '', message.type); break;
         case 'openExternal':
-          if (message.url) {
+          if (message.url && this.isSafeExternalUrl(message.url)) {
             await vscode.env.openExternal(vscode.Uri.parse(message.url));
           }
           break;
@@ -534,6 +552,15 @@ export class CatalogViewProvider implements vscode.WebviewViewProvider {
 
   private animClass(className: string): string {
     return this._initialized ? '' : className;
+  }
+
+  private isSafeExternalUrl(value: string): boolean {
+    try {
+      const url = new URL(value);
+      return url.protocol === 'https:';
+    } catch {
+      return false;
+    }
   }
 
   private async resolvePackagesForInstall(pkg: Package): Promise<Package[]> {

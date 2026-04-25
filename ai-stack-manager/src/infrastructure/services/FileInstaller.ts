@@ -8,8 +8,12 @@ import * as vscode from 'vscode';
 import * as path from 'path';
 import { Package } from '../../domain/entities/Package';
 import { IInstaller, IInstallTracker } from '../../domain/interfaces';
+import { AppLogger } from './AppLogger';
 
 export class FileInstaller implements IInstaller {
+  private _operationQueue: Promise<unknown> = Promise.resolve();
+  private readonly _logger = AppLogger.getInstance();
+
   constructor(
     private readonly _tracker?: IInstallTracker,
   ) {}
@@ -19,73 +23,80 @@ export class FileInstaller implements IInstaller {
   }
 
   async install(pkg: Package): Promise<void> {
-    const root = this.workspaceRoot;
-    if (!root) {
-      throw new Error('No workspace folder open. Please open a folder first.');
-    }
+    return this.runExclusive(async () => {
+      const root = this.workspaceRoot;
+      if (!root) {
+        throw new Error('No workspace folder open. Please open a folder first.');
+      }
 
-    await this.installPackage(root, pkg, 'prompt');
-    await this._tracker?.trackInstall(pkg);
+      await this.installPackage(root, pkg, 'prompt');
+      await this._tracker?.trackInstall(pkg);
 
-    vscode.window.showInformationMessage(
-      `✅ Installed "${pkg.displayName}" successfully!`
-    );
+      vscode.window.showInformationMessage(
+        `✅ Installed "${pkg.displayName}" successfully!`
+      );
+    });
   }
 
   async uninstall(pkg: Package): Promise<void> {
-    const root = this.workspaceRoot;
-    if (!root) {
-      throw new Error('No workspace folder open.');
-    }
+    return this.runExclusive(async () => {
+      const root = this.workspaceRoot;
+      if (!root) {
+        throw new Error('No workspace folder open.');
+      }
 
-    const confirm = await vscode.window.showWarningMessage(
-      `Remove "${pkg.displayName}" and all its files?`,
-      { modal: true },
-      'Remove',
-      'Cancel',
-    );
-    if (confirm !== 'Remove') { return; }
+      const confirm = await vscode.window.showWarningMessage(
+        `Remove "${pkg.displayName}" and all its files?`,
+        { modal: true },
+        'Remove',
+        'Cancel',
+      );
+      if (confirm !== 'Remove') { return; }
 
-    await this.uninstallPackage(root, pkg);
+      await this.uninstallPackage(root, pkg);
 
-    vscode.window.showInformationMessage(
-      `🗑️ Uninstalled "${pkg.displayName}".`
-    );
+      vscode.window.showInformationMessage(
+        `🗑️ Uninstalled "${pkg.displayName}".`
+      );
+    });
   }
 
   async installMany(packages: Package[]): Promise<void> {
-    const root = this.workspaceRoot;
-    if (!root) {
-      throw new Error('No workspace folder open.');
-    }
-
-    let installed = 0;
-    const total = packages.length;
-
-    await vscode.window.withProgress(
-      {
-        location: vscode.ProgressLocation.Notification,
-        title: `Installing bundle (${total} packages)...`,
-        cancellable: false,
-      },
-      async (progress) => {
-        for (const pkg of packages) {
-          progress.report({
-            message: `${pkg.displayName} (${installed + 1}/${total})`,
-            increment: (100 / total),
-          });
-
-          await this.installPackage(root, pkg, 'skip');
-          await this._tracker?.trackInstall(pkg);
-
-          installed++;
-        }
+    return this.runExclusive(async () => {
+      const root = this.workspaceRoot;
+      if (!root) {
+        throw new Error('No workspace folder open.');
       }
-    );
 
-    vscode.window.showInformationMessage(
-      `✅ Bundle installed! ${installed} packages ready.`
-    );
+      const uniquePackages = [...new Map(packages.map(pkg => [pkg.id, pkg])).values()];
+      let installed = 0;
+      const total = uniquePackages.length;
+
+      await vscode.window.withProgress(
+        {
+          location: vscode.ProgressLocation.Notification,
+          title: `Installing bundle (${total} packages)...`,
+          cancellable: false,
+        },
+        async (progress) => {
+          for (const pkg of uniquePackages) {
+            progress.report({
+              message: `${pkg.displayName} (${installed + 1}/${total})`,
+              increment: (100 / total),
+            });
+
+            await this.installPackage(root, pkg, 'skip');
+            await this._tracker?.trackInstall(pkg);
+
+            installed++;
+          }
+        }
+      );
+
+      vscode.window.showInformationMessage(
+        `✅ Bundle installed! ${installed} packages ready.`
+      );
+    });
   }
 
   private async fileExists(uri: vscode.Uri): Promise<boolean> {
@@ -107,8 +118,8 @@ export class FileInstaller implements IInstaller {
         await vscode.workspace.fs.delete(uri);
         await this.removeEmptyParent(path.dirname(dirPath), rootPath);
       }
-    } catch {
-      // Directory doesn't exist or can't be deleted
+    } catch (error) {
+      this._logger.debug('Falha ao remover diretório pai vazio.', { dirPath, rootPath, error });
     }
   }
 
@@ -158,8 +169,8 @@ export class FileInstaller implements IInstaller {
       try {
         await vscode.workspace.fs.delete(uri);
         await this.removeEmptyParent(path.dirname(fullPath), root);
-      } catch {
-        // File may not exist, that's ok
+      } catch (error) {
+        this._logger.debug('Falha ao remover arquivo durante uninstall.', { fullPath, error });
       }
     }
   }
@@ -240,7 +251,8 @@ export class FileInstaller implements IInstaller {
     try {
       const buffer = await vscode.workspace.fs.readFile(uri);
       return this.parseJsonWithComments(Buffer.from(buffer).toString('utf-8')) as T;
-    } catch {
+    } catch (error) {
+      this._logger.debug('Falha ao ler JSON com comentários. Usando fallback.', { uri: uri.toString(), error });
       return fallback;
     }
   }
@@ -256,5 +268,11 @@ export class FileInstaller implements IInstaller {
     }
 
     return JSON.parse(sanitized);
+  }
+
+  private runExclusive<T>(operation: () => Promise<T>): Promise<T> {
+    const run = this._operationQueue.then(operation, operation);
+    this._operationQueue = run.then(() => undefined, () => undefined);
+    return run;
   }
 }

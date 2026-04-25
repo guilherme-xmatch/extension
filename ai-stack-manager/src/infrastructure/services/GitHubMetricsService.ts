@@ -1,7 +1,9 @@
 import * as vscode from 'vscode';
 import * as https from 'https';
+import { createHash } from 'crypto';
 import { Package } from '../../domain/entities/Package';
 import { IInstallTracker } from '../../domain/interfaces';
+import { AppLogger } from './AppLogger';
 
 interface GitHubUser {
   login?: string;
@@ -9,6 +11,7 @@ interface GitHubUser {
 
 export class GitHubMetricsService implements IInstallTracker {
   private readonly authProviderId = 'github';
+  private readonly logger = AppLogger.getInstance();
 
   async trackInstall(pkg: Package): Promise<void> {
     const config = vscode.workspace.getConfiguration('descomplicai');
@@ -29,9 +32,9 @@ export class GitHubMetricsService implements IInstallTracker {
         packageName: pkg.name,
         version: pkg.version.toString(),
         type: pkg.type.value,
-        source: pkg.source,
+        sourceOfficial: pkg.source.official,
         installedAt: new Date().toISOString(),
-        installer: user.login,
+        installerHash: this.hashValue(user.login || 'anonymous-installer'),
       };
 
       await this.requestJson(
@@ -51,8 +54,12 @@ export class GitHubMetricsService implements IInstallTracker {
         },
       );
     } catch (error) {
-      console.warn('Falha ao registrar métrica no GitHub:', error);
+      this.logger.warn('Falha ao registrar métrica no GitHub.', { packageId: pkg.id, error });
     }
+  }
+
+  private hashValue(value: string): string {
+    return createHash('sha256').update(value).digest('hex').slice(0, 16);
   }
 
   private async fetchJson<T>(url: string, token: string): Promise<T> {

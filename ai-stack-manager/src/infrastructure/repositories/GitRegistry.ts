@@ -16,6 +16,7 @@ import { Bundle } from '../../domain/entities/Bundle';
 import { IPackageRepository } from '../../domain/interfaces';
 import { PackageType } from '../../domain/value-objects/PackageType';
 import { AgentCategory } from '../../domain/value-objects/AgentCategory';
+import { AppLogger } from '../services/AppLogger';
 
 const execAsync = promisify(exec);
 
@@ -97,6 +98,13 @@ export class GitRegistry implements IPackageRepository {
   private _cache: Package[] = [];
   private _bundlesCache: Bundle[] = [];
   private _initialized = false;
+  private _syncPromise?: Promise<void>;
+  private readonly _logger = AppLogger.getInstance();
+
+  private static readonly TRUSTED_REGISTRY_PREFIXES = [
+    'https://github.com/guilherme-xmatch/DescomplicAI',
+    'https://raw.githubusercontent.com/guilherme-xmatch/DescomplicAI',
+  ];
 
   private get cacheDir(): string {
     const home = process.env.USERPROFILE || process.env.HOME || '';
@@ -112,6 +120,11 @@ export class GitRegistry implements IPackageRepository {
     return (config.get<string>('registryUrl') || '').trim();
   }
 
+  private get allowUnsafeRegistryUrls(): boolean {
+    const config = vscode.workspace.getConfiguration('descomplicai');
+    return config.get<boolean>('allowUnsafeRegistryUrls', false);
+  }
+
   private get workspaceRoot(): string | undefined {
     return vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
   }
@@ -122,6 +135,18 @@ export class GitRegistry implements IPackageRepository {
   }
 
   public async sync(): Promise<void> {
+    if (this._syncPromise) {
+      return this._syncPromise;
+    }
+
+    this._syncPromise = this.performSync().finally(() => {
+      this._syncPromise = undefined;
+    });
+
+    return this._syncPromise;
+  }
+
+  private async performSync(): Promise<void> {
     const url = this.registryUrl;
 
     try {
@@ -134,6 +159,15 @@ export class GitRegistry implements IPackageRepository {
         return;
       }
 
+      if (this.isLocalPath(url)) {
+        await this.loadFromLocalPath(url);
+        this._initialized = true;
+        this._logger.info('Catálogo carregado de origem local.', { url });
+        return;
+      }
+
+      this.assertTrustedRegistryUrl(url);
+
       if (this.isJsonEndpoint(url)) {
         await this.loadFromJsonEndpoint(url);
       } else {
@@ -142,11 +176,15 @@ export class GitRegistry implements IPackageRepository {
       }
 
       this._initialized = true;
+      this._logger.info('Catálogo sincronizado com sucesso.', { url, packages: this._cache.length, bundles: this._bundlesCache.length });
     } catch (error) {
-      console.error('Falha ao sincronizar o catálogo manifest-driven.', error);
+      this._logger.error('Falha ao sincronizar o catálogo manifest-driven.', { url, error });
       this._cache = await this.loadWorkspaceCustomPackages();
       this._bundlesCache = [];
       this._initialized = true;
+      if (url) {
+        void vscode.window.showWarningMessage('Falha ao sincronizar o catálogo remoto. Usando apenas pacotes locais/customizados.');
+      }
     }
   }
 
@@ -190,6 +228,27 @@ export class GitRegistry implements IPackageRepository {
     await this.loadFromCatalogPayload(index, rootDir);
   }
 
+  private async loadFromLocalPath(rawPath: string): Promise<void> {
+    const normalizedPath = this.normalizeLocalPath(rawPath);
+    const stat = fs.statSync(normalizedPath);
+
+    if (stat.isDirectory()) {
+      await this.loadFromDisk(normalizedPath);
+      return;
+    }
+
+    if (!stat.isFile() || !normalizedPath.toLowerCase().endsWith('.json')) {
+      throw new Error('A origem local do catálogo deve ser uma pasta do repositório ou um arquivo JSON.');
+    }
+
+    const payload = this.parseJsonWithComments(fs.readFileSync(normalizedPath, 'utf-8'));
+    const catalog = Array.isArray(payload)
+      ? { packages: payload }
+      : (payload && typeof payload === 'object' ? payload as CatalogIndex : {});
+
+    await this.loadFromCatalogPayload(catalog, path.dirname(normalizedPath));
+  }
+
   private async loadFromCatalogPayload(payload: CatalogIndex, rootDir?: string): Promise<void> {
     const baseRepoUrl = this.normalizeRepoUrl(payload.repoUrl || this.registryUrl);
     const packageRefs = Array.isArray(payload.packages) && payload.packages.length > 0
@@ -222,7 +281,10 @@ export class GitRegistry implements IPackageRepository {
   private loadPackageFromManifestFile(rootDir: string | undefined, manifestPath: string, baseRepoUrl: string, index: CatalogIndex): Package | undefined {
     if (!rootDir) { return undefined; }
     const absoluteManifestPath = path.isAbsolute(manifestPath) ? manifestPath : path.join(rootDir, manifestPath);
-    if (!fs.existsSync(absoluteManifestPath)) { return undefined; }
+    if (!fs.existsSync(absoluteManifestPath)) {
+      this._logger.warn('Manifest referenciado não foi encontrado.', { manifestPath, rootDir });
+      return undefined;
+    }
 
     const manifest = this.parseJsonWithComments(fs.readFileSync(absoluteManifestPath, 'utf-8')) as CatalogPackageManifest;
     return this.packageFromManifestObject(
@@ -241,6 +303,13 @@ export class GitRegistry implements IPackageRepository {
     index: CatalogIndex,
     manifestPathHint?: string,
   ): Package | undefined {
+    const manifestSource = manifestPathHint || this.asString(manifest.source?.manifestPath) || '[inline-manifest]';
+    const validatedManifest = this.validateManifest(manifest, manifestSource);
+    if (!validatedManifest) {
+      return undefined;
+    }
+
+    manifest = validatedManifest;
     const typeValue = this.asString(manifest.type);
     if (!typeValue) { return undefined; }
 
@@ -378,7 +447,8 @@ export class GitRegistry implements IPackageRepository {
         lastInstallAt: typeof parsed.lastInstallAt === 'string' ? parsed.lastInstallAt : defaultStats.lastInstallAt,
         trendScore: typeof parsed.trendScore === 'number' ? parsed.trendScore : defaultStats.trendScore,
       };
-    } catch {
+    } catch (error) {
+      this._logger.warn('Falha ao carregar estatísticas públicas do pacote.', { packageId, error });
       return defaultStats;
     }
   }
@@ -425,7 +495,8 @@ export class GitRegistry implements IPackageRepository {
       return rawBundles
         .map(bundle => this.bundleFromManifest(bundle))
         .filter((bundle): bundle is Bundle => Boolean(bundle));
-    } catch {
+    } catch (error) {
+      this._logger.warn('Falha ao carregar bundles do catálogo.', { bundlesPath, error });
       return [];
     }
   }
@@ -468,7 +539,8 @@ export class GitRegistry implements IPackageRepository {
     try {
       const parsed = this.parseJsonWithComments(fs.readFileSync(filePath, 'utf-8'));
       return Array.isArray(parsed) ? parsed as CatalogPackageManifest[] : [];
-    } catch {
+    } catch (error) {
+      this._logger.warn('Falha ao carregar catálogo local customizado.', { filePath, error });
       return [];
     }
   }
@@ -572,6 +644,10 @@ export class GitRegistry implements IPackageRepository {
   }
 
   private async fetchJson(url: string): Promise<unknown> {
+    if (!this.isSafeRemoteUrl(url)) {
+      throw new Error(`URL remota não confiável ou sem HTTPS: ${url}`);
+    }
+
     return new Promise((resolve, reject) => {
       https.get(url, response => {
         if (!response.statusCode || response.statusCode >= 400) {
@@ -609,10 +685,59 @@ export class GitRegistry implements IPackageRepository {
         return;
       }
       await execAsync('git pull --ff-only', { cwd: this.repoDir });
-    } catch {
+    } catch (error) {
+      this._logger.warn('Falha ao atualizar clone local do catálogo. Recriando cache local.', { url, error });
       fs.rmSync(this.repoDir, { recursive: true, force: true });
       await execAsync(`git clone --depth 1 ${this.quote(url)} ${this.quote(this.repoDir)}`);
     }
+  }
+
+  private validateManifest(manifest: CatalogPackageManifest, source: string): CatalogPackageManifest | undefined {
+    const type = this.asString(manifest.type);
+    const id = this.asString(manifest.id);
+
+    if (!type || !['agent', 'skill', 'mcp', 'instruction', 'prompt'].includes(type)) {
+      this._logger.warn('Manifest ignorado por tipo inválido.', { source, type });
+      return undefined;
+    }
+
+    if (id && !/^[a-z0-9-]+$/.test(id)) {
+      this._logger.warn('Manifest ignorado por ID inválido.', { source, id });
+      return undefined;
+    }
+
+    const safePaths = [
+      this.asString(manifest.source?.packagePath),
+      this.asString(manifest.source?.manifestPath),
+      this.asString(manifest.source?.readmePath),
+      this.asString(manifest.source?.detailsPath),
+      this.asString(manifest.docs?.readmePath),
+      this.asString(manifest.docs?.detailsPath),
+      ...((manifest.install?.targets ?? []).flatMap(target => [this.asString(target.source), this.asString(target.target)])),
+      ...((manifest.files ?? []).map(file => this.asString(file.relativePath))),
+    ].filter(Boolean);
+
+    for (const candidatePath of safePaths) {
+      if (!this.isSafeRelativePath(candidatePath)) {
+        this._logger.warn('Manifest ignorado por caminho potencialmente inseguro.', { source, candidatePath });
+        return undefined;
+      }
+    }
+
+    const candidateUrls = [
+      this.asString(manifest.source?.repoUrl),
+      this.asString(manifest.source?.homepage),
+      ...((manifest.docs?.links ?? []).map(link => this.asString(link.url))),
+    ].filter(Boolean);
+
+    for (const candidateUrl of candidateUrls) {
+      if (!this.isSafeRemoteUrl(candidateUrl)) {
+        this._logger.warn('Manifest ignorado por URL insegura.', { source, candidateUrl });
+        return undefined;
+      }
+    }
+
+    return manifest;
   }
 
   private inferAgentCategory(name: string, description: string): AgentCategory {
@@ -694,6 +819,52 @@ export class GitRegistry implements IPackageRepository {
 
   private normalizeRepoUrl(value: string): string {
     return value.replace(/\.git$/i, '');
+  }
+
+  private normalizeLocalPath(value: string): string {
+    if (value.startsWith('file://')) {
+      return decodeURIComponent(new URL(value).pathname).replace(/^\//, process.platform === 'win32' ? '' : '/');
+    }
+
+    return value;
+  }
+
+  private isLocalPath(value: string): boolean {
+    if (!value) { return false; }
+    if (value.startsWith('file://')) { return true; }
+    return path.isAbsolute(value) || fs.existsSync(value);
+  }
+
+  private isSafeRelativePath(value: string): boolean {
+    const normalized = value.replace(/\\/g, '/').trim();
+    if (!normalized) { return false; }
+    if (path.posix.isAbsolute(normalized)) { return false; }
+    if (normalized.includes('\0')) { return false; }
+    return !normalized.split('/').some(segment => segment === '..');
+  }
+
+  private isSafeRemoteUrl(value: string): boolean {
+    try {
+      const url = new URL(value);
+      if (url.protocol !== 'https:') {
+        return false;
+      }
+
+      if (this.allowUnsafeRegistryUrls) {
+        return true;
+      }
+
+      const normalized = this.normalizeRepoUrl(`${url.origin}${url.pathname}`);
+      return GitRegistry.TRUSTED_REGISTRY_PREFIXES.some(prefix => normalized.startsWith(this.normalizeRepoUrl(prefix)));
+    } catch {
+      return false;
+    }
+  }
+
+  private assertTrustedRegistryUrl(url: string): void {
+    if (!this.isSafeRemoteUrl(url)) {
+      throw new Error('A URL do catálogo não é confiável. Ative "descomplicai.allowUnsafeRegistryUrls" apenas se souber o que está fazendo.');
+    }
   }
 
   private isJsonEndpoint(url: string): boolean {

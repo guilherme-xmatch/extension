@@ -26,8 +26,10 @@ import { InsightsPanel } from './presentation/panels/InsightsPanel';
 import { ConfigPanel } from './presentation/panels/ConfigPanel';
 import { InsightsGenerator } from './infrastructure/services/InsightsGenerator';
 import { StatusBarManager } from './infrastructure/services/StatusBarManager';
+import { AppLogger } from './infrastructure/services/AppLogger';
 
 export function activate(context: vscode.ExtensionContext): void {
+  const logger = AppLogger.getInstance();
   const registry = new GitRegistry();
   const scanner = new WorkspaceScanner();
   const metricsService = new GitHubMetricsService();
@@ -36,7 +38,9 @@ export function activate(context: vscode.ExtensionContext): void {
   const publishService = new PublishService();
   const insightsGenerator = new InsightsGenerator(registry, scanner);
 
-  void registry.sync();
+  void registry.sync().catch(error => {
+    logger.error('Falha na sincronização inicial do catálogo.', { error });
+  });
 
   // ─── Sidebar Providers ───────────────────────
   const catalogProvider = new CatalogViewProvider(context.extensionUri, registry, scanner, installer);
@@ -49,7 +53,8 @@ export function activate(context: vscode.ExtensionContext): void {
     vscode.window.registerWebviewViewProvider(CatalogViewProvider.viewType, catalogProvider),
     vscode.window.registerWebviewViewProvider(InstalledViewProvider.viewType, installedProvider),
     vscode.window.registerWebviewViewProvider(HealthViewProvider.viewType, healthProvider),
-    statusBar
+    statusBar,
+    logger,
   );
 
   const resolvePackagesForInstall = async (pkg: Package): Promise<Package[]> => {
@@ -368,14 +373,19 @@ export function activate(context: vscode.ExtensionContext): void {
     const participant = vscode.chat.createChatParticipant('dai.stack', handler);
     participant.iconPath = vscode.Uri.joinPath(context.extensionUri, 'media', 'icons', 'sidebar-icon.svg');
     context.subscriptions.push(participant);
-  } catch {
+  } catch (error) {
+    logger.warn('API de chat não disponível nesta versão do VS Code.', { error });
     // Chat API may not be available in all VS Code versions
   }
 
   // ─── Auto Health Check ───────────────────────
   const config = vscode.workspace.getConfiguration('descomplicai');
   if (config.get<boolean>('autoHealthCheck', true)) {
-    setTimeout(() => healthProvider.refresh(), 3000);
+    setTimeout(() => {
+      void healthProvider.refresh().catch(error => {
+        logger.warn('Falha no auto health check.', { error });
+      });
+    }, 3000);
   }
 
   const hasShownWelcome = context.globalState.get<boolean>('descomplicai.welcomeShown', false);

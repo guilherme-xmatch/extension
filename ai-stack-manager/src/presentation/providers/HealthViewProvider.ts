@@ -9,6 +9,14 @@ import { WebviewHelper } from '../webview/WebviewHelper';
 import { HealthCheckerService } from '../../infrastructure/services/HealthChecker';
 import { HealthReport, HealthSeverity } from '../../domain/entities/HealthReport';
 
+type HealthMessage = { command: 'runCheck' };
+
+function isHealthMessage(value: unknown): value is HealthMessage {
+  if (!value || typeof value !== 'object') { return false; }
+  const message = value as Record<string, unknown>;
+  return message.command === 'runCheck';
+}
+
 export class HealthViewProvider implements vscode.WebviewViewProvider {
   public static readonly viewType = 'dai-health';
   private _view?: vscode.WebviewView;
@@ -27,7 +35,8 @@ export class HealthViewProvider implements vscode.WebviewViewProvider {
     this._view = webviewView;
     webviewView.webview.options = { enableScripts: true, localResourceRoots: [this._extensionUri] };
 
-    webviewView.webview.onDidReceiveMessage(async (message) => {
+    webviewView.webview.onDidReceiveMessage(async (message: unknown) => {
+      if (!isHealthMessage(message)) { return; }
       if (message.command === 'runCheck') { await this.runAndRender(); }
     });
 

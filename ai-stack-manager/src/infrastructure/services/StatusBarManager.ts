@@ -1,8 +1,9 @@
 import * as vscode from 'vscode';
 
 export class StatusBarManager {
-  private static instance: StatusBarManager;
+  private static instance?: StatusBarManager;
   private statusBarItem: vscode.StatusBarItem;
+  private resetTimer?: ReturnType<typeof setTimeout>;
 
   private constructor() {
     this.statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
@@ -32,16 +33,32 @@ export class StatusBarManager {
   public setSuccess(message: string): void {
     this.statusBarItem.text = `$(check) ZM1: ${message}`;
     this.statusBarItem.backgroundColor = undefined;
-    setTimeout(() => this.setIdle(), 3000);
+    this.scheduleReset(3000);
   }
 
   public setError(message: string): void {
     this.statusBarItem.text = `$(error) ZM1: ${message}`;
     this.statusBarItem.backgroundColor = new vscode.ThemeColor('statusBarItem.errorBackground');
-    setTimeout(() => this.setIdle(), 5000);
+    this.scheduleReset(5000);
   }
 
   public dispose(): void {
+    if (this.resetTimer) {
+      clearTimeout(this.resetTimer);
+      this.resetTimer = undefined;
+    }
     this.statusBarItem.dispose();
+    StatusBarManager.instance = undefined;
+  }
+
+  private scheduleReset(delayMs: number): void {
+    if (this.resetTimer) {
+      clearTimeout(this.resetTimer);
+    }
+
+    this.resetTimer = setTimeout(() => {
+      this.resetTimer = undefined;
+      this.setIdle();
+    }, delayMs);
   }
 }

@@ -10,6 +10,10 @@ import { Package, InstallStatus } from '../../domain/entities/Package';
 import { IWorkspaceScanner } from '../../domain/interfaces';
 
 export class WorkspaceScanner implements IWorkspaceScanner {
+  private static readonly BUNDLES = {
+    architectureBackend: 'bundle-architecture-backend',
+    awsPlatform: 'bundle-aws-platform',
+  } as const;
 
   private get workspaceRoot(): string | undefined {
     return vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
@@ -62,12 +66,12 @@ export class WorkspaceScanner implements IWorkspaceScanner {
 
         // Frontend heuristics
         if (deps['react'] || deps['next'] || deps['vue'] || deps['@angular/core']) {
-          recommendations.push({ profile: 'Frontend App', bundleId: 'bundle-frontend-starter', confidence: 0.9 });
+          recommendations.push({ profile: 'Frontend App', bundleId: WorkspaceScanner.BUNDLES.architectureBackend, confidence: 0.65 });
         }
 
         // Backend heuristics
         if (deps['express'] || deps['@nestjs/core'] || deps['fastify']) {
-          recommendations.push({ profile: 'Backend API', bundleId: 'bundle-backend-starter', confidence: 0.9 });
+          recommendations.push({ profile: 'Backend API', bundleId: WorkspaceScanner.BUNDLES.architectureBackend, confidence: 0.9 });
         }
       } catch {
         // Ignore JSON parse errors
@@ -78,12 +82,12 @@ export class WorkspaceScanner implements IWorkspaceScanner {
     const hasDocker = await this.fileExists(path.join(root, 'Dockerfile')) || await this.fileExists(path.join(root, 'docker-compose.yml'));
     const hasTerraform = await this.fileExists(path.join(root, 'main.tf'));
     if (hasDocker || hasTerraform) {
-      recommendations.push({ profile: 'Infra & Cloud', bundleId: 'bundle-devops-starter', confidence: 0.8 });
+      recommendations.push({ profile: 'Infra & Cloud', bundleId: WorkspaceScanner.BUNDLES.awsPlatform, confidence: 0.8 });
     }
 
     // Default recommendation if empty or full stack
     if (recommendations.length > 1) {
-      recommendations.push({ profile: 'Full Stack', bundleId: 'bundle-zm1-full', confidence: 0.7 });
+      recommendations.push({ profile: 'Full Stack', bundleId: WorkspaceScanner.BUNDLES.architectureBackend, confidence: 0.7 });
     }
 
     return recommendations;

@@ -149,6 +149,11 @@
           "default": "https://github.com/guilherme-xmatch/DescomplicAI.git",
           "description": "URL do catálogo oficial manifest-driven (repositório Git ou index.json)."
         },
+        "descomplicai.allowUnsafeRegistryUrls": {
+          "type": "boolean",
+          "default": false,
+          "description": "Permite usar catálogos remotos fora da lista confiável. Ative apenas para desenvolvimento ou quando confiar explicitamente na origem."
+        },
         "descomplicai.autoHealthCheck": {
           "type": "boolean",
           "default": true,
