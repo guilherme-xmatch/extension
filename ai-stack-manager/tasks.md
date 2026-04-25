@@ -16,6 +16,7 @@
 - [x] Ignorar artefatos gerados locais (`coverage/`, `vitest.config.*` gerados)
 - [x] Isolar o repositório irmão `DescomplicAI/` no Git root real para evitar commits acidentais cruzados
 - [x] Preparar automação local para aplicar branch protection via GitHub CLI quando houver remote e autenticação
+- [x] Validar a automação local de branch protection até o ponto de bloqueio externo (`gh auth` ausente)
 
 ### Em andamento
 
@@ -23,7 +24,7 @@
 
 ### Bloqueado / externo ao repositório
 
-- [ ] Aplicar branch protection remota no GitHub conforme `docs/implementation/branch-protection-manual-checklist.md` (bloqueado por ausência de `remote origin` e `gh auth`)
+- [ ] Aplicar branch protection remota no GitHub conforme `docs/implementation/branch-protection-manual-checklist.md` (bloqueado por ausência de `remote origin` e `gh auth`; script local já validado)
 
 ## Próxima prioridade
 

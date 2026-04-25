@@ -7,3 +7,4 @@
 - Git root real (`4. Extensão`) foi protegido contra inclusão acidental do repositório irmão `DescomplicAI/`.
 - Mudanças locais do ciclo atual foram consolidadas para commit no Git root correto.
 - Branch protection remota segue pendente por ausência de `remote origin` e `gh auth`, mas agora existe automação local via `scripts/apply-branch-protection.ps1`.
+- A automação de branch protection foi validada localmente e agora falha apenas pelo motivo esperado: ausência de autenticação no GitHub CLI.
