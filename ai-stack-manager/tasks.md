@@ -17,6 +17,8 @@
 - [x] Isolar o repositório irmão `DescomplicAI/` no Git root real para evitar commits acidentais cruzados
 - [x] Preparar automação local para aplicar branch protection via GitHub CLI quando houver remote e autenticação
 - [x] Validar a automação local de branch protection até o ponto de bloqueio externo (`gh auth` ausente)
+- [x] Adicionar preflight automatizado para validar `gh`, `origin` e autenticação antes da branch protection remota
+- [x] Corrigir interferência de artefatos `vitest.config.*` gerados e revalidar `compile`, `lint` e `test`
 
 ### Em andamento
 
@@ -24,11 +26,12 @@
 
 ### Bloqueado / externo ao repositório
 
-- [ ] Aplicar branch protection remota no GitHub conforme `docs/implementation/branch-protection-manual-checklist.md` (bloqueado por ausência de `remote origin` e `gh auth`; script local já validado)
+- [ ] Aplicar branch protection remota no GitHub conforme `docs/implementation/branch-protection-manual-checklist.md` (bloqueado principalmente por ausência de `remote origin`; após configurar o remoto, autenticar `gh` se necessário)
 
 ## Próxima prioridade
 
 1. Configurar `remote origin` do repositório alvo no Git root correto.
 2. Executar `gh auth login` no ambiente local.
-3. Rodar `./scripts/apply-branch-protection.ps1`.
-4. Reexecutar diagnóstico para decidir entre novo Modo Execução ou entrada em Modo Evolução.
+3. Rodar `npm run check:github-prereqs`.
+4. Rodar `npm run apply:branch-protection`.
+5. Reexecutar diagnóstico para decidir entre novo Modo Execução ou entrada em Modo Evolução.

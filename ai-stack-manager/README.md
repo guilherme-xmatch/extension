@@ -17,6 +17,8 @@ npm run compile
 npm run lint
 npm run test
 npm run check
+npm run check:github-prereqs
+npm run apply:branch-protection
 ```
 
 ## Documentação principal
@@ -30,3 +32,9 @@ npm run check
 ## Observação operacional
 
 A única etapa relevante ainda externa ao repositório é a aplicação da branch protection remota no GitHub, documentada no checklist manual.
+
+Antes disso, valide as pré-condições locais com:
+
+```bash
+npm run check:github-prereqs
+```

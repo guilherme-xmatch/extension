@@ -24,6 +24,19 @@ Ou, se o `origin` estiver configurado para GitHub e o `gh` autenticado:
 ./scripts/apply-branch-protection.ps1
 ```
 
+Para validar previamente o ambiente:
+
+```powershell
+./scripts/check-github-prereqs.ps1
+```
+
+Ou via npm:
+
+```bash
+npm run check:github-prereqs
+npm run apply:branch-protection
+```
+
 ## Passos manuais ainda necessários no GitHub
 
 1. Abrir **Settings → Branches** no repositório.
