@@ -19,8 +19,25 @@ type InstalledMessage =
 
 function isInstalledMessage(value: unknown): value is InstalledMessage {
   if (!value || typeof value !== 'object') { return false; }
-  const message = value as Record<string, unknown>;
-  return typeof message.command === 'string';
+  const msg = value as Record<string, unknown>;
+  if (typeof msg.command !== 'string') { return false; }
+  switch (msg.command) {
+    case 'uninstall':
+    case 'configure':
+      return typeof msg.packageId === 'string' && msg.packageId.length > 0;
+    case 'openFile':
+      return typeof msg.filePath === 'string' && msg.filePath.length > 0 &&
+             !msg.filePath.includes('..') && !msg.filePath.startsWith('/');
+    case 'refresh':
+      return true;
+    case 'openExternal': {
+      if (msg.url === undefined) { return true; }
+      if (typeof msg.url !== 'string') { return false; }
+      try { return new URL(msg.url).protocol === 'https:'; } catch { return false; }
+    }
+    default:
+      return false;
+  }
 }
 
 export class InstalledViewProvider implements vscode.WebviewViewProvider {

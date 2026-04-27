@@ -26,8 +26,28 @@ type CatalogMessage =
 
 function isCatalogMessage(value: unknown): value is CatalogMessage {
   if (!value || typeof value !== 'object') { return false; }
-  const message = value as Record<string, unknown>;
-  return typeof message.command === 'string';
+  const msg = value as Record<string, unknown>;
+  if (typeof msg.command !== 'string') { return false; }
+  switch (msg.command) {
+    case 'install':
+    case 'uninstall':
+    case 'installNetwork':
+      return typeof msg.packageId === 'string' && msg.packageId.length > 0;
+    case 'installBundle':
+      return typeof msg.bundleId === 'string' && msg.bundleId.length > 0;
+    case 'search':
+    case 'filter':
+      return msg.query === undefined || (typeof msg.query === 'string' && msg.query.length <= 500);
+    case 'openExternal': {
+      if (msg.url === undefined) { return true; }
+      if (typeof msg.url !== 'string') { return false; }
+      try { return new URL(msg.url).protocol === 'https:'; } catch { return false; }
+    }
+    case 'refresh':
+      return true;
+    default:
+      return false;
+  }
 }
 
 export class CatalogViewProvider implements vscode.WebviewViewProvider {
@@ -113,7 +133,7 @@ export class CatalogViewProvider implements vscode.WebviewViewProvider {
         }
         if (!isFullyInstalled) {
           recommendedBundleId = recommendedBundle.id;
-          recommendationMsg = `Detectamos um projeto <b>${bestProfile.profile}</b>. O Bundle <b>${recommendedBundle.displayName}</b> é ideal para você.`;
+          recommendationMsg = `Detectamos um projeto <b>${this.esc(bestProfile.profile)}</b>. O Bundle <b>${this.esc(recommendedBundle.displayName)}</b> é ideal para você.`;
         }
       }
     }

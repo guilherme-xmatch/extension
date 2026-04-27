@@ -9,6 +9,7 @@ import * as path from 'path';
 import { Package, InstallStatus } from '../../domain/entities/Package';
 import { IWorkspaceScanner } from '../../domain/interfaces';
 import { AppLogger } from './AppLogger';
+import { LockFileService } from './LockFileService';
 
 export class WorkspaceScanner implements IWorkspaceScanner {
   private static readonly BUNDLES = {
@@ -33,13 +34,25 @@ export class WorkspaceScanner implements IWorkspaceScanner {
     const existCount = results.filter(Boolean).length;
 
     if (existCount === 0) { return InstallStatus.NotInstalled; }
-    if (existCount === pkg.files.length) { return InstallStatus.Installed; }
+    if (existCount === pkg.files.length) {
+      // All files present — check if the lock file records a different version (Outdated)
+      const lockEntry = new LockFileService(root).findById(pkg.id);
+      if (lockEntry && lockEntry.version !== pkg.version.toString()) {
+        return InstallStatus.Outdated;
+      }
+      return InstallStatus.Installed;
+    }
     return InstallStatus.Partial;
   }
 
   async getInstalledPackageIds(): Promise<string[]> {
-    // This is called less frequently, so we can afford broader scanning
-    return [];
+    const root = this.workspaceRoot;
+    if (!root) { return []; }
+    try {
+      return new LockFileService(root).read().packages.map(entry => entry.id);
+    } catch {
+      return [];
+    }
   }
 
   async hasGitHubDirectory(): Promise<boolean> {

@@ -6,11 +6,7 @@ import { GitRegistry } from '../repositories/GitRegistry';
 import { Package } from '../../domain/entities/Package';
 import { PackageType } from '../../domain/value-objects/PackageType';
 import { AppLogger } from './AppLogger';
-
-interface ParsedMcpDocument {
-  servers: Record<string, unknown>;
-  inputs: Array<{ id: string; [key: string]: unknown }>;
-}
+import { McpDocumentAdapter, NormalizedMcpDocument } from './McpDocumentAdapter';
 
 export class PublishService {
   private readonly logger = AppLogger.getInstance();
@@ -26,6 +22,13 @@ export class PublishService {
 
     try {
       const document = this.readMcpDocument(fileUri.fsPath);
+
+      if (document.format !== 'copilot') {
+        void vscode.window.showInformationMessage(
+          `Formato detectado: ${document.format === 'claude-desktop' ? 'Claude Desktop / Cursor' : document.format}. Convertendo para formato Copilot/VS Code.`
+        );
+      }
+
       const packages = Object.entries(document.servers).map(([serverName, serverConfig]) =>
         this.buildCustomMcpPackage(serverName, serverConfig, document.inputs)
       );
@@ -161,7 +164,7 @@ export class PublishService {
     };
   }
 
-  private buildCustomMcpPackage(serverName: string, serverConfig: unknown, inputs: ParsedMcpDocument['inputs']): Package {
+  private buildCustomMcpPackage(serverName: string, serverConfig: unknown, inputs: NormalizedMcpDocument['inputs']): Package {
     const slug = this.slugify(serverName);
     const description = this.describeServer(serverName, serverConfig);
     const content = JSON.stringify({ servers: { [serverName]: serverConfig }, inputs }, null, 2);
@@ -209,34 +212,10 @@ export class PublishService {
     });
   }
 
-  private readMcpDocument(filePath: string): ParsedMcpDocument {
+  private readMcpDocument(filePath: string): NormalizedMcpDocument {
     const content = fs.readFileSync(filePath, 'utf-8');
-    const parsed = this.parseJsonWithComments(content) as {
-      servers?: Record<string, unknown>;
-      mcpServers?: Record<string, unknown>;
-      inputs?: Array<{ id: string; [key: string]: unknown }>;
-    };
-
-    const servers = parsed.servers || parsed.mcpServers || {};
-    if (Object.keys(servers).length === 0) {
-      throw new Error('O arquivo mcp.json não possui servidores válidos.');
-    }
-
-    return {
-      servers,
-      inputs: Array.isArray(parsed.inputs)
-        ? parsed.inputs.filter((input): input is { id: string; [key: string]: unknown } => Boolean(input) && typeof input.id === 'string')
-        : [],
-    };
-  }
-
-  private parseJsonWithComments(content: string): unknown {
-    const sanitized = content
-      .replace(/^\s*\/\/.*$/gm, '')
-      .replace(/\/\*[\s\S]*?\*\//g, '')
-      .trim();
-
-    return sanitized ? JSON.parse(sanitized) : {};
+    const rawJson = McpDocumentAdapter.parseJsonFile(content);
+    return McpDocumentAdapter.normalize(rawJson);
   }
 
   private describeServer(serverName: string, serverConfig: unknown): string {

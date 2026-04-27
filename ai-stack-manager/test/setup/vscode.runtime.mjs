@@ -139,12 +139,20 @@ vi.mock('vscode', () => {
     createWebviewPanel: vi.fn((_viewType, title) => {
       const webview = createWebview();
       const disposeEmitter = new MockEventEmitter();
+      let disposed = false;
       return {
         title,
         webview,
         reveal: vi.fn(),
         onDidDispose: disposeEmitter.event,
-        dispose: vi.fn(() => disposeEmitter.fire()),
+        // Idempotent — mirrors real VS Code: calling dispose() a second time
+        // (e.g. triggered by onDidDispose re-entry) is a no-op and does NOT
+        // re-fire the event, preventing infinite recursion in panel.dispose().
+        dispose: vi.fn(() => {
+          if (disposed) { return; }
+          disposed = true;
+          disposeEmitter.fire();
+        }),
       };
     }),
     showInformationMessage: vi.fn(async () => state.infoResponses.shift()),

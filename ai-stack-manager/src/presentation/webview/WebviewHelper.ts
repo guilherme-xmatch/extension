@@ -62,11 +62,11 @@ export class WebviewHelper {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource} 'unsafe-inline'; script-src 'nonce-${nonce}'; font-src ${webview.cspSource};">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource} 'nonce-${nonce}'; script-src 'nonce-${nonce}'; font-src ${webview.cspSource};">
   <title>${title}</title>
   <link rel="stylesheet" href="${styleUri}">
   <link rel="stylesheet" href="${animationsUri}">
-  <style>
+  <style nonce="${nonce}">
     :root {
       --itau-primary: ${ITAU_TOKENS.colors.primary};
       --itau-primary-light: ${ITAU_TOKENS.colors.primaryLight};
@@ -114,18 +114,19 @@ export class WebviewHelper {
       vscode.Uri.joinPath(extensionUri, 'media', 'webview', 'animations.css')
     );
 
-    const serializedState = JSON.stringify(initialState ?? {}).replace(/</g, '\\u003c');
+    // Encode state as base64(encodeURIComponent(JSON)) — safe for data-attribute, no script injection
+    const safeState = Buffer.from(encodeURIComponent(JSON.stringify(initialState ?? {}))).toString('base64');
 
     return /*html*/`<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource} 'unsafe-inline'; script-src 'nonce-${nonce}'; font-src ${webview.cspSource}; img-src ${webview.cspSource} https: data:;">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource} 'nonce-${nonce}'; script-src 'nonce-${nonce}'; font-src ${webview.cspSource}; img-src ${webview.cspSource} https: data:;">
   <title>${title}</title>
   <link rel="stylesheet" href="${styleUri}">
   <link rel="stylesheet" href="${animationsUri}">
-  <style>
+  <style nonce="${nonce}">
     :root {
       --itau-primary: ${ITAU_TOKENS.colors.primary};
       --itau-primary-light: ${ITAU_TOKENS.colors.primaryLight};
@@ -146,10 +147,12 @@ export class WebviewHelper {
   </style>
 </head>
 <body class="${bodyClassName ?? ''}">
-  <div id="app-root" class="dai-shell-root"></div>
+  <div id="app-root" class="dai-shell-root" data-state="${safeState}"></div>
   <script nonce="${nonce}">
     const vscode = acquireVsCodeApi();
-    const initialState = ${serializedState};
+    const _stateRoot = document.getElementById('app-root');
+    // Decode state from data-attribute: base64 → encodeURIComponent(JSON) → JSON
+    const initialState = JSON.parse(decodeURIComponent(atob(_stateRoot ? (_stateRoot.dataset.state || 'JTdCJTdE') : 'JTdCJTdE')));
     const persistedState = vscode.getState() || {};
     const app = {
       root: document.getElementById('app-root'),

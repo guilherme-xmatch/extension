@@ -4,12 +4,19 @@
  * Infrastructure implementations provide the concrete adapters.
  */
 
-import * as vscode from 'vscode';
-
 import { Package, InstallStatus } from '../entities/Package';
 import { Bundle } from '../entities/Bundle';
 import { HealthReport } from '../entities/HealthReport';
 import { OperationContext, OperationDefinition, OperationMetricsSnapshot, OperationSnapshot } from '../entities/Operation';
+
+/**
+ * Generic event interface — decoupled from VS Code SDK.
+ * Structurally compatible with vscode.Event<T>: any vscode.EventEmitter<T>.event
+ * can be assigned to IEvent<T> without modification.
+ */
+export interface IEvent<T> {
+  (listener: (e: T) => void): { dispose(): void };
+}
 
 /** Read-only access to the package catalog */
 export interface IPackageRepository {
@@ -74,6 +81,6 @@ export interface IOperationCoordinator {
   getRecentOperations(limit?: number): ReadonlyArray<OperationSnapshot>;
   getMetrics(): ReadonlyArray<OperationMetricsSnapshot>;
   run<T>(definition: OperationDefinition, action: (context: OperationContext) => Promise<T>): Promise<T>;
-  readonly onDidChangeCurrentOperation: vscode.Event<OperationSnapshot | undefined>;
-  readonly onDidFinishOperation: vscode.Event<OperationSnapshot>;
+  readonly onDidChangeCurrentOperation: IEvent<OperationSnapshot | undefined>;
+  readonly onDidFinishOperation: IEvent<OperationSnapshot>;
 }

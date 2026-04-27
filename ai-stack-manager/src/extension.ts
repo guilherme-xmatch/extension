@@ -17,6 +17,7 @@ import { HealthCheckerService } from './infrastructure/services/HealthChecker';
 import { PublishService } from './infrastructure/services/PublishService';
 import { GitHubMetricsService } from './infrastructure/services/GitHubMetricsService';
 import { OperationCoordinator } from './infrastructure/services/OperationCoordinator';
+import { ServiceContainer, TOKENS } from './infrastructure/ServiceContainer';
 
 // Presentation
 import { CatalogViewProvider } from './presentation/providers/CatalogViewProvider';
@@ -31,14 +32,28 @@ import { AppLogger } from './infrastructure/services/AppLogger';
 
 export function activate(context: vscode.ExtensionContext): void {
   const logger = AppLogger.getInstance();
-  const registry = new GitRegistry();
-  const scanner = new WorkspaceScanner();
-  const metricsService = new GitHubMetricsService();
-  const installer = new FileInstaller(metricsService);
-  const healthChecker = new HealthCheckerService(registry, scanner);
-  const publishService = new PublishService();
-  const insightsGenerator = new InsightsGenerator(registry, scanner);
-  const operations = new OperationCoordinator();
+
+  // ─── Dependency Injection ────────────────────
+  const container = new ServiceContainer()
+    .register(TOKENS.Metrics,       () => new GitHubMetricsService())
+    .register(TOKENS.Registry,      () => new GitRegistry())
+    .register(TOKENS.Scanner,       () => new WorkspaceScanner())
+    .register(TOKENS.Installer,     c  => new FileInstaller(c.resolve<GitHubMetricsService>(TOKENS.Metrics)))
+    .register(TOKENS.HealthChecker, c  => new HealthCheckerService(c.resolve<GitRegistry>(TOKENS.Registry), c.resolve<WorkspaceScanner>(TOKENS.Scanner)))
+    .register(TOKENS.Publish,       () => new PublishService())
+    .register(TOKENS.Insights,      c  => new InsightsGenerator(c.resolve<GitRegistry>(TOKENS.Registry), c.resolve<WorkspaceScanner>(TOKENS.Scanner)))
+    .register(TOKENS.Operations,    () => new OperationCoordinator());
+
+  context.subscriptions.push({ dispose: () => container.dispose() });
+
+  const registry         = container.resolve<GitRegistry>(TOKENS.Registry);
+  const scanner          = container.resolve<WorkspaceScanner>(TOKENS.Scanner);
+  const installer        = container.resolve<FileInstaller>(TOKENS.Installer);
+  const healthChecker    = container.resolve<HealthCheckerService>(TOKENS.HealthChecker);
+  const publishService   = container.resolve<PublishService>(TOKENS.Publish);
+  const insightsGenerator = container.resolve<InsightsGenerator>(TOKENS.Insights);
+  const operations       = container.resolve<OperationCoordinator>(TOKENS.Operations);
+  operations.initializePersistence(context);
 
   void registry.sync().catch(error => {
     logger.error('Falha na sincronização inicial do catálogo.', { error });
@@ -449,6 +464,71 @@ export function activate(context: vscode.ExtensionContext): void {
     logger.warn('API de chat não disponível nesta versão do VS Code.', { error });
     // Chat API may not be available in all VS Code versions
   }
+
+  // ─── URI Handler (Deep Link) ─────────────────
+  // Handles: vscode://itau-engineering.descomplicai/install?packageId=<id>
+  // Handles: vscode://itau-engineering.descomplicai/install?bundleId=<id>
+  context.subscriptions.push(
+    vscode.window.registerUriHandler({
+      handleUri: async (uri: vscode.Uri): Promise<void> => {
+        if (uri.path !== '/install') { return; }
+
+        const params = new URLSearchParams(uri.query);
+        const packageId = params.get('packageId');
+        const bundleId = params.get('bundleId');
+
+        if (packageId) {
+          const pkg = await registry.findById(packageId);
+          if (!pkg) {
+            vscode.window.showErrorMessage(`Pacote "${packageId}" não encontrado no catálogo.`);
+            return;
+          }
+          const packagesToInstall = await resolvePackagesForInstall(pkg);
+          await operations.run({
+            kind: packagesToInstall.length > 1 ? 'bundle-install' : 'package-install',
+            label: `Instalando ${pkg.displayName} (deep link)`,
+            targetId: pkg.id,
+            refreshTargets: ['catalog', 'installed'],
+          }, async (operation) => {
+            if (packagesToInstall.length > 1) {
+              await installer.installMany(packagesToInstall, {
+                onProgress: (p) => operation.setProgress((p.current / p.total) * 100, p.label),
+              });
+              return;
+            }
+            operation.setProgress(10, pkg.displayName);
+            await installer.install(pkg, { onProgress: () => operation.setProgress(100, pkg.displayName) });
+          });
+          return;
+        }
+
+        if (bundleId) {
+          const bundle = await registry.findBundleById(bundleId);
+          if (!bundle) {
+            vscode.window.showErrorMessage(`Bundle "${bundleId}" não encontrado no catálogo.`);
+            return;
+          }
+          const packages: Package[] = [];
+          for (const pkgId of bundle.packageIds) {
+            const pkg = await registry.findById(pkgId);
+            if (pkg) { packages.push(pkg); }
+          }
+          if (packages.length > 0) {
+            await operations.run({
+              kind: 'bundle-install',
+              label: `Instalando bundle ${bundle.displayName} (deep link)`,
+              targetId: bundle.id,
+              refreshTargets: ['catalog', 'installed'],
+            }, async (operation) => {
+              await installer.installMany(packages, {
+                onProgress: (p) => operation.setProgress((p.current / p.total) * 100, p.label),
+              });
+            });
+          }
+        }
+      },
+    })
+  );
 
   // ─── Auto Health Check ───────────────────────
   const config = vscode.workspace.getConfiguration('descomplicai');

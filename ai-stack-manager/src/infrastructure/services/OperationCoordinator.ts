@@ -4,6 +4,7 @@ import { AppLogger } from './AppLogger';
 
 export class OperationCoordinator implements vscode.Disposable {
   private static readonly HISTORY_LIMIT = 20;
+  private static readonly STORAGE_KEY = 'dai.operationHistory';
 
   private readonly _onDidChangeCurrentOperation = new vscode.EventEmitter<OperationSnapshot | undefined>();
   private readonly _onDidFinishOperation = new vscode.EventEmitter<OperationSnapshot>();
@@ -13,6 +14,7 @@ export class OperationCoordinator implements vscode.Disposable {
   private _queue: Promise<unknown> = Promise.resolve();
   private _refreshHandler?: (targets: ReadonlyArray<OperationRefreshTarget>) => Promise<void>;
   private _history: OperationSnapshot[] = [];
+  private _context?: vscode.ExtensionContext;
   private _metrics = new Map<OperationSnapshot['kind'], {
     totalRuns: number;
     completedRuns: number;
@@ -49,6 +51,16 @@ export class OperationCoordinator implements vscode.Disposable {
 
   public setRefreshHandler(handler: (targets: ReadonlyArray<OperationRefreshTarget>) => Promise<void>): void {
     this._refreshHandler = handler;
+  }
+
+  public initializePersistence(context: vscode.ExtensionContext): void {
+    this._context = context;
+    // Restore persisted history
+    const stored = context.globalState.get<OperationSnapshot[]>(OperationCoordinator.STORAGE_KEY, []);
+    // Merge stored (older) with current in-memory history, keeping most recent HISTORY_LIMIT
+    this._history = [...this._history, ...stored]
+      .sort((a, b) => (b.startedAt ?? 0) - (a.startedAt ?? 0))
+      .slice(0, OperationCoordinator.HISTORY_LIMIT);
   }
 
   public async run<T>(definition: OperationDefinition, action: (context: OperationContext) => Promise<T>): Promise<T> {
@@ -149,6 +161,9 @@ export class OperationCoordinator implements vscode.Disposable {
 
   private finish(snapshot: OperationSnapshot): void {
     this.pushHistory(snapshot);
+    if (this._context) {
+      void this._context.globalState.update(OperationCoordinator.STORAGE_KEY, this._history.slice(0, OperationCoordinator.HISTORY_LIMIT));
+    }
     this.updateMetrics(snapshot);
     this._currentOperation = undefined;
     this._onDidFinishOperation.fire(snapshot);
