@@ -1,15 +1,15 @@
-/**
+﻿/**
  * @module infrastructure/services/WorkflowGraphBuilder
- * @description Builds a serializable workflow graph from the set of packages
- * currently installed in the workspace.
+ * @description Constrói um grafo de workflow serializável a partir do conjunto de pacotes
+ * instalados no workspace.
  *
- * The graph is composed of:
- * - **Phases** — canonical pipeline stages (triage → plan → execute → …)
- * - **Agent nodes** — installed agents placed inside their declared phase
- * - **Edges** — delegation links between agents (`agentMeta.delegatesTo`)
+ * O grafo é composto por:
+ * - **Phases** — estágios canônicos do pipeline (triagem → planejamento → execução → …)
+ * - **Agent nodes** — agents instalados posicionados na fase declarada
+ * - **Edges** — links de delegação entre agents (`agentMeta.delegatesTo`)
  *
- * All output types are plain JSON-serializable objects so they can be
- * embedded directly in a Webview HTML template.
+ * Todos os tipos de saída são objetos JSON-serializáveis para que possam ser
+ * embutidos diretamente em um template HTML de Webview.
  */
 
 import { Package } from '../../domain/entities/Package';
@@ -19,74 +19,74 @@ import { Package } from '../../domain/entities/Package';
 export interface AgentNodeData {
   id: string;
   displayName: string;
-  /** Short description of the agent */
+  /** Descrição curta do agente. */
   description: string;
-  /** Value string of AgentCategory (e.g. "specialist") */
+  /** String de valor do AgentCategory (ex.: "specialist"). */
   categoryValue: string;
-  /** Single emoji representing the category */
+  /** Emoji único representando a categoria. */
   categoryEmoji: string;
-  /** Human-readable category label in PT-BR */
+  /** Rótulo legível da categoria em PT-BR. */
   categoryLabel: string;
-  /** Hex color for the category (from AgentCategory.color) */
+  /** Cor hexadecimal da categoria (de AgentCategory.color). */
   categoryColor: string;
-  /** Whether the user can invoke this agent directly via @agent syntax */
+  /** Indica se o usuário pode invocar este agente diretamente via sintaxe @agent. */
   userInvocable: boolean;
-  /** The declared workflow phase, normalised to lowercase */
+  /** A fase do workflow declarada, normalizada para minúsculas. */
   workflowPhase: string;
-  /** IDs of agents this agent delegates to */
+  /** IDs dos agents para os quais este agente delega. */
   delegatesTo: string[];
-  /** Tools this agent uses */
+  /** Ferramentas que este agente utiliza. */
   tools: string[];
 }
 
 export interface WorkflowEdgeData {
-  /** Source agent ID */
+  /** ID do agente de origem. */
   fromId: string;
-  /** Target agent ID */
+  /** ID do agente de destino. */
   toId: string;
 }
 
-/** A skill node visible in the workflow visualizer */
+/** Nó de skill visível no visualizador de workflow. */
 export interface SkillNodeData {
   id: string;
   displayName: string;
-  /** Whether the skill is currently installed in the workspace */
+  /** Indica se a skill está instalada no workspace. */
   installed: boolean;
 }
 
-/** A directed edge from an agent to a skill it uses */
+/** Aresta direcionada de um agente para uma skill que ele utiliza. */
 export interface SkillEdgeData {
-  /** Source agent ID */
+  /** ID do agente de origem. */
   agentId: string;
-  /** Target skill ID */
+  /** ID da skill de destino. */
   skillId: string;
 }
 
 export interface WorkflowPhaseData {
-  /** Canonical phase identifier (e.g. "execute") */
+  /** Identificador canônico da fase (ex.: "execute"). */
   id: string;
-  /** Human-readable phase label in PT-BR */
+  /** Rótulo legível da fase em PT-BR. */
   label: string;
-  /** Phase emoji */
+  /** Emoji da fase. */
   emoji: string;
-  /** Agents placed in this phase */
+  /** Agents posicionados nesta fase. */
   agents: AgentNodeData[];
 }
 
 export interface WorkflowGraphData {
   phases: WorkflowPhaseData[];
   edges: WorkflowEdgeData[];
-  /** Installed skill nodes referenced by at least one installed agent */
+  /** Nós de skill instalados referenciados por pelo menos um agente instalado. */
   skills: SkillNodeData[];
-  /** Edges from agent nodes to skill nodes (dashed lines) */
+  /** Arestas dos nós de agente para os nós de skill (linhas tracejadas). */
   skillEdges: SkillEdgeData[];
-  /** Total number of installed agents represented in the graph */
+  /** Total de agents instalados representados no grafo. */
   totalAgents: number;
 }
 
 // ─── Canonical phase ordering ─────────────────────────────────────────────────
 
-/** Ordered pipeline phases.  Unknown phases are appended at the end. */
+/** Fases do pipeline na ordem canônica. Fases desconhecidas são acrescentadas ao final. */
 const CANONICAL_PHASES: ReadonlyArray<{ id: string; label: string; emoji: string }> = [
   { id: 'triage',   label: 'Triagem',          emoji: '🔀' },
   { id: 'plan',     label: 'Planejamento',      emoji: '📐' },
@@ -119,12 +119,12 @@ export class WorkflowGraphBuilder {
   buildGraph(allPackages: Package[], installedIds: string[]): WorkflowGraphData {
     const installedSet = new Set(installedIds);
 
-    // Only installed agents with agent metadata
+    // Somente agents instalados com metadados de agente
     const installedAgents = allPackages.filter(
       p => p.type.value === 'agent' && p.agentMeta !== undefined && installedSet.has(p.id),
     );
 
-    // ── Build node map ────────────────────────────────────────────────────────
+    // ── Constrói o mapa de nós ────────────────────────────────────────────────────────
     const nodeMap = new Map<string, AgentNodeData>();
     const phaseMap = new Map<string, AgentNodeData[]>();
 
@@ -155,7 +155,7 @@ export class WorkflowGraphBuilder {
       phaseMap.get(phase)!.push(node);
     }
 
-    // ── Build phase list (canonical order first, unknowns appended) ───────────
+    // ── Constrói a lista de fases (ordem canônica primeiro, desconhecidas ao final) ───────────
     const phases: WorkflowPhaseData[] = [];
 
     for (const phaseDef of CANONICAL_PHASES) {
@@ -175,7 +175,7 @@ export class WorkflowGraphBuilder {
       }
     }
 
-    // ── Build edges (only between installed agents) ───────────────────────────
+    // ── Constrói as arestas (somente entre agents instalados) ───────────────────────────
     const edges: WorkflowEdgeData[] = [];
     for (const node of nodeMap.values()) {
       for (const delegateId of node.delegatesTo) {
@@ -185,8 +185,8 @@ export class WorkflowGraphBuilder {
       }
     }
 
-    // ── Build skill nodes ─────────────────────────────────────────────────────
-    // Collect all skill IDs referenced by installed agents
+    // ── Constrói os nós de skill ─────────────────────────────────────────────────────
+    // Coleta todos os IDs de skill referenciados pelos agents instalados
     const referencedSkillIds = new Set<string>();
     for (const agent of installedAgents) {
       for (const skillId of agent.agentMeta!.relatedSkills) {
@@ -194,7 +194,7 @@ export class WorkflowGraphBuilder {
       }
     }
 
-    // Build a map of skill ID → Package for quick lookup
+    // Constrói um mapa de skill ID → Package para busca rápida
     const skillPkgMap = new Map<string, Package>();
     for (const pkg of allPackages) {
       if (pkg.type.value === 'skill') {
@@ -211,10 +211,10 @@ export class WorkflowGraphBuilder {
         installed:   installedSet.has(skillId),
       });
     }
-    // Sort skills alphabetically for stable rendering
+    // Ordena as skills alfabeticamente para renderização estável
     skills.sort((a, b) => a.displayName.localeCompare(b.displayName));
 
-    // Build skill edges (agent → skill)
+    // Constrói as arestas de skill (agente → skill)
     const skillEdges: SkillEdgeData[] = [];
     for (const agent of installedAgents) {
       for (const skillId of agent.agentMeta!.relatedSkills) {

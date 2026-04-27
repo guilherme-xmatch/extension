@@ -1,29 +1,29 @@
-/**
+﻿/**
  * @module presentation/panels/StackDiffPanel
- * @description Webview panel that shows a visual diff between the packages
- * currently installed in the workspace and a chosen target bundle.
+ * @description Painel webview que exibe um diff visual entre os pacotes instalados
+ * no workspace e um bundle-alvo escolhido.
  *
- * Data flow:
- *  1. `createOrShow()` receives the package registry, workspace scanner,
- *     and an optional `targetBundleId` (pre-selected from command palette or
- *     chat participant).
- *  2. `update()` fetches all packages, all bundles, and installed IDs in
- *     parallel, then calls `StackDiffBuilder.build()` to produce a `StackDiff`.
- *  3. The diff is serialised as JSON and embedded directly into the HTML.
- *  4. Client-side JavaScript renders three card groups:
- *     ✅ Installed  •  🆕 Missing  •  🔄 Extra
+ * Fluxo de dados:
+ *  1. `createOrShow()` recebe o registry de pacotes, o scanner de workspace
+ *     e um `targetBundleId` opcional (pré-selecionado via command palette ou
+ *     participante de chat).
+ *  2. `update()` busca todos os pacotes, todos os bundles e IDs instalados em
+ *     paralelo, depois chama `StackDiffBuilder.build()` para produzir um `StackDiff`.
+ *  3. O diff é serializado como JSON e embutido diretamente no HTML.
+ *  4. O JavaScript client-side renderiza três grupos de cards:
+ *     ✅ Instalados  •  🆕 Pendentes  •  🔄 Extras
  *
- * No external CDN libraries — all rendering is pure HTML/CSS/JS.
+ * Sem bibliotecas CDN externas — toda a renderização é HTML/CSS/JS puro.
  */
 
 import * as vscode from 'vscode';
 import { IPackageRepository, IWorkspaceScanner } from '../../domain/interfaces';
 import { StackDiffBuilder, StackDiff, PackageDiffEntry } from '../../infrastructure/services/StackDiffBuilder';
 
-// ─── Pure helpers ──────────────────────────────────────────────────────────────
+// ─── Auxiliares puros ──────────────────────────────────────────────────────────────
 
-/** Generates a Markdown report from a `StackDiff` snapshot.
- *  Exported so it can be unit-tested independently of the VS Code API.
+/** Gera um relatório Markdown a partir de um snapshot de StackDiff.
+ *  Exportada para permitir testes unitários independentes da API do VS Code.
  */
 export function generateMarkdown(diff: StackDiff): string {
   const { targetBundle, installed, missing, extras, coveragePercent } = diff;
@@ -118,7 +118,7 @@ export class StackDiffPanel {
     }, null, this._disposables);
   }
 
-  // ─── Public API ────────────────────────────────────────────────────────────
+  // ─── API Pública ──────────────────────────────────────────────────────────────────────────
 
   public static createOrShow(
     extensionUri:   vscode.Uri,
@@ -164,7 +164,7 @@ export class StackDiffPanel {
     }
   }
 
-  // ─── Data loading ──────────────────────────────────────────────────────────
+  // ─── Carregamento de dados ──────────────────────────────────────────────────────────────────────
 
   public async update(): Promise<void> {
     try {
@@ -179,7 +179,7 @@ export class StackDiffPanel {
         return;
       }
 
-      // If no target bundle pre-selected, pick the first one
+      // Se nenhum bundle foi pré-selecionado, usa o primeiro
       let targetBundle = bundles.find(b => b.id === this._targetBundleId) ?? bundles[0];
       this._targetBundleId = targetBundle.id;
 
@@ -196,7 +196,7 @@ export class StackDiffPanel {
     }
   }
 
-  // ─── HTML generation ───────────────────────────────────────────────────────
+  // ─── Geração de HTML ────────────────────────────────────────────────────────────────────────
 
   private _getHtmlForWebview(
     webview:   vscode.Webview,

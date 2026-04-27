@@ -1,7 +1,7 @@
 /**
  * @module presentation/panels/InsightsPanel
- * @description Webview panel for the AI Stack Insights Engine.
- * Displays the coverage map, security inventory, and dependency health.
+ * @description Painel webview para o Insights Engine do AI Stack.
+ * Exibe o mapa de cobertura do workflow, inventário de segurança e saúde das dependências.
  */
 
 import * as vscode from 'vscode';
@@ -118,38 +118,38 @@ export class InsightsPanel {
 
   <div class="dashboard-grid">
     
-    <!-- Coverage Map -->
+    <!-- Mapa de Cobertura -->
     <div class="dashboard-card ${this._initialized ? '' : 'animate-slide-in'}" style="--delay: 0.1s; grid-column: span 2;">
-      <div class="card-title">🗺️ Workflow Coverage Map</div>
+      <div class="card-title">🗺️ Mapa de Cobertura do Workflow</div>
       <p style="font-size: 0.85rem; color: var(--vscode-descriptionForeground); margin-bottom: 24px;">
         Visualiza em quais etapas do fluxo de desenvolvimento você possui agentes instalados. Uma cobertura alta significa maior automação.
       </p>
       
       <div class="coverage-grid">
         <div class="coverage-node ${report.coverage.triage ? 'active' : ''}">
-          <span class="node-icon">🧠</span><span class="node-label">Triage</span>
+          <span class="node-icon">🧠</span><span class="node-label">Triagem</span>
         </div>
         <div class="coverage-node ${report.coverage.plan ? 'active' : ''}">
-          <span class="node-icon">📐</span><span class="node-label">Plan</span>
+          <span class="node-icon">📐</span><span class="node-label">Planejamento</span>
         </div>
         <div class="coverage-node ${report.coverage.design ? 'active' : ''}">
           <span class="node-icon">🏛️</span><span class="node-label">Design</span>
         </div>
         <div class="coverage-node ${report.coverage.execute ? 'active' : ''}">
-          <span class="node-icon">⚡</span><span class="node-label">Execute</span>
+          <span class="node-icon">⚡</span><span class="node-label">Execução</span>
         </div>
         <div class="coverage-node ${report.coverage.validate ? 'active' : ''}">
-          <span class="node-icon">🧪</span><span class="node-label">Validate</span>
+          <span class="node-icon">🧪</span><span class="node-label">Validação</span>
         </div>
         <div class="coverage-node ${report.coverage.critic ? 'active' : ''}">
-          <span class="node-icon">🛡️</span><span class="node-label">Critic</span>
+          <span class="node-icon">🛡️</span><span class="node-label">Revisão Crítica</span>
         </div>
       </div>
     </div>
 
-    <!-- Health Score -->
+    <!-- Pontuação do Ecossistema -->
     <div class="dashboard-card ${this._initialized ? '' : 'animate-slide-in'}" style="--delay: 0.2s">
-      <div class="card-title">📊 Ecosystem Score</div>
+      <div class="card-title">📊 Pontuação do Ecossistema</div>
       <div class="score-circle">
         ${report.coverageScore}%
         <span class="score-label">Cobertura</span>
@@ -159,9 +159,9 @@ export class InsightsPanel {
       </div>
     </div>
 
-    <!-- Tool Inventory & Security -->
+    <!-- Segurança e Inventário de Ferramentas -->
     <div class="dashboard-card ${this._initialized ? '' : 'animate-slide-in'}" style="--delay: 0.3s; grid-column: span 2;">
-      <div class="card-title">🔐 Security & Tool Inventory</div>
+      <div class="card-title">🔐 Segurança e Inventário de Ferramentas</div>
       <div class="alert-list">
         ${report.securityAlerts.length === 0 ? '<div class="alert-item ok"><span class="alert-title">🟢 Seguro</span><span class="alert-desc">Nenhum agente com permissões de terminal detectado.</span></div>' : ''}
         
@@ -179,15 +179,15 @@ export class InsightsPanel {
       </div>
     </div>
 
-    <!-- Dependency Health -->
+    <!-- Saúde das Dependências -->
     <div class="dashboard-card ${this._initialized ? '' : 'animate-slide-in'}" style="--delay: 0.4s">
-      <div class="card-title">🔗 Dependency Health</div>
+      <div class="card-title">🔗 Saúde das Dependências</div>
       <div class="alert-list">
         ${report.missingDependencies.length === 0 ? '<div class="alert-item ok"><span class="alert-title">🟢 Saudável</span><span class="alert-desc">Nenhum gap na rede de agents detectado.</span></div>' : ''}
         
         ${report.missingDependencies.map(d => `
           <div class="alert-item">
-            <span class="alert-title">🟡 Missing Specialist</span>
+            <span class="alert-title">🟡 Especialista Ausente</span>
             <span class="alert-desc">O Orchestrator delegará para <b>${d}</b>, mas ele não está instalado. O Orchestrator fará fallback para LLM puro.</span>
           </div>
         `).join('')}

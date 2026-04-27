@@ -1,22 +1,22 @@
 /**
  * @module domain/entities/HealthReport
- * @description Result of a health check validation on the workspace's AI infrastructure.
- * Contains individual check results with severity, message, and actionable fix.
+ * @description Resultado de uma verificação de saúde na infraestrutura de AI do workspace.
+ * Contém resultados individuais de verificação com severidade, mensagem e correção acionável.
  */
 
-/** Severity levels for health check findings */
+/** Níveis de severidade para os resultados de verificação de saúde. */
 export enum HealthSeverity {
-  /** Everything is fine */
+  /** Tudo está bem. */
   Ok = 'ok',
-  /** Non-critical recommendation */
+  /** Recomendação não crítica. */
   Info = 'info',
-  /** Potential issue that may cause problems */
+  /** Problema potencial que pode causar falhas. */
   Warning = 'warning',
-  /** Critical problem that will cause failures */
+  /** Problema crítico que causará falhas. */
   Error = 'error',
 }
 
-/** A single health check finding */
+/** Um único resultado de verificação de saúde. */
 export interface HealthFinding {
   readonly id: string;
   readonly severity: HealthSeverity;
@@ -28,7 +28,7 @@ export interface HealthFinding {
   readonly autoFixable: boolean;
 }
 
-/** Aggregate health report for the workspace */
+/** Relatório agregado de saúde do workspace. */
 export class HealthReport {
   private constructor(
     public readonly findings: ReadonlyArray<HealthFinding>,
@@ -47,7 +47,7 @@ export class HealthReport {
     );
   }
 
-  /** Overall health score (0-100) */
+  /** Pontuação geral de saúde (0–100). */
   get score(): number {
     if (this.findings.length === 0) { return 100; }
     const errorCount = this.errors.length;
@@ -56,18 +56,18 @@ export class HealthReport {
     return Math.max(0, 100 - penalty);
   }
 
-  /** Overall status emoji */
+  /** Emoji do status geral. */
   get statusEmoji(): string {
     if (this.score >= 90) { return '🟢'; }
     if (this.score >= 60) { return '🟡'; }
     return '🔴';
   }
 
-  /** Overall status label */
+  /** Rótulo do status geral. */
   get statusLabel(): string {
-    if (this.score >= 90) { return 'Healthy'; }
-    if (this.score >= 60) { return 'Needs Attention'; }
-    return 'Critical Issues';
+    if (this.score >= 90) { return 'Saudável'; }
+    if (this.score >= 60) { return 'Precisa de Atenção'; }
+    return 'Problemas Críticos';
   }
 
   get errors(): ReadonlyArray<HealthFinding> {

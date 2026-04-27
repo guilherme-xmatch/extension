@@ -1,23 +1,23 @@
 /**
  * @module domain/entities/Package
- * @description Core entity representing an installable AI infrastructure package.
- * Packages can be agents, skills, MCPs, instructions, or prompts.
- * This is a pure domain entity — no VS Code or infrastructure dependencies.
+ * @description Entidade central que representa um pacote de infraestrutura de AI instalável.
+ * Pacotes podem ser agents, skills, MCPs, instructions ou prompts.
+ * Entidade de domínio pura — sem dependências de VS Code ou infraestrutura.
  */
 
 import { PackageType } from '../value-objects/PackageType';
 import { Version } from '../value-objects/Version';
 import { AgentCategory } from '../value-objects/AgentCategory';
 
-/** Metadata for a single file that belongs to a package */
+/** Metadados de um único arquivo pertencente ao pacote. */
 export interface PackageFile {
-  /** Relative path from workspace root (e.g. ".github/agents/backend-specialist.agent.md") */
+  /** Caminho relativo a partir da raiz do workspace (ex.: ".github/agents/backend-specialist.agent.md") */
   readonly relativePath: string;
-  /** File content template. Supports {{variable}} placeholders. */
+  /** Template do conteúdo do arquivo. Suporta placeholders {{variável}}. */
   readonly content: string;
 }
 
-/** Tag for categorization and search */
+/** Tag para categorização e busca. */
 export type PackageTag = string;
 
 export type PackageMaturity = 'stable' | 'beta' | 'experimental';
@@ -71,7 +71,7 @@ export interface PackageStats {
   readonly trendScore?: number;
 }
 
-/** Installation status of a package in the workspace */
+/** Status de instalação de um pacote no workspace. */
 export enum InstallStatus {
   NotInstalled = 'not-installed',
   Installed = 'installed',
@@ -79,29 +79,29 @@ export enum InstallStatus {
   Partial = 'partial',
 }
 
-/** Agent-specific metadata for workflow positioning */
+/** Metadados específicos de agente para posicionamento no workflow. */
 export interface AgentMeta {
-  /** Functional category: orchestrator, planner, specialist, guardian, memory */
+  /** Categoria funcional: orchestrator, planner, specialist, guardian, memory. */
   readonly category: AgentCategory;
-  /** Tools this agent has access to */
+  /** Ferramentas a que este agente tem acesso. */
   readonly tools: ReadonlyArray<string>;
-  /** Other agents this agent can delegate to */
+  /** Outros agentes para os quais este agente pode delegar. */
   readonly delegatesTo: ReadonlyArray<string>;
-  /** Phase in the workflow pipeline where this agent operates */
+  /** Fase do pipeline de workflow em que este agente opera. */
   readonly workflowPhase: string;
-  /** Whether the user can invoke this agent directly */
+  /** Indica se o usuário pode invocar este agente diretamente. */
   readonly userInvocable: boolean;
-  /** Skills this agent typically uses */
+  /** Skills que este agente normalmente utiliza. */
   readonly relatedSkills: ReadonlyArray<string>;
 }
 
 /**
- * Package — The core entity of AI Stack Manager.
+ * Package — Entidade central do AI Stack Manager.
  *
- * Represents a single installable unit: an agent definition, a skill file,
- * an MCP server configuration, an instruction, or a prompt template.
+ * Representa uma unidade instalável: uma definição de agente, um arquivo de skill,
+ * uma configuração de servidor MCP, uma instruction ou um template de prompt.
  *
- * Immutable by design. Use factory methods to create instances.
+ * Imutável por design. Use métodos de fábrica para criar instâncias.
  */
 export class Package {
   private constructor(
@@ -121,11 +121,11 @@ export class Package {
     public readonly ui: PackageUiMetadata,
     public readonly docs: PackageDocs,
     public readonly stats: PackageStats,
-    /** Agent-specific metadata — only present for type=Agent */
+    /** Metadados específicos de agente — presente somente para type=Agent. */
     public readonly agentMeta?: AgentMeta,
   ) {}
 
-  /** Factory method to create a Package from raw data */
+  /** Método de fábrica para criar um Package a partir de dados brutos. */
   static create(props: {
     id: string;
     name: string;
@@ -218,22 +218,22 @@ export class Package {
     );
   }
 
-  /** Check if this is an agent package */
+  /** Verifica se este é um pacote do tipo agent. */
   get isAgent(): boolean {
     return this.type.equals(PackageType.Agent);
   }
 
-  /** Get the agent category (only for agents) */
+  /** Retorna a categoria do agente (somente para agents). */
   get category(): AgentCategory | undefined {
     return this.agentMeta?.category;
   }
 
-  /** Get the category emoji (for agents) or type codicon (for others) */
+  /** Retorna o emoji de categoria (para agents) ou o codicon do tipo (para outros). */
   get categoryEmoji(): string {
     return this.agentMeta?.category.emoji ?? '';
   }
 
-  /** Complexity score based on tools, delegations, and skills */
+  /** Pontuação de complexidade baseada em ferramentas, delegações e skills. */
   get complexityScore(): number {
     if (!this.agentMeta) { return 0; }
     const toolScore = this.agentMeta.tools.length * 10;
@@ -243,7 +243,7 @@ export class Package {
     return Math.min(100, toolScore + delegateScore + skillScore + invocableBonus);
   }
 
-  /** Check if this package matches a search query */
+  /** Verifica se o pacote corresponde a uma query de busca. */
   matchesQuery(query: string): boolean {
     const q = query.toLowerCase().trim();
     if (q === '') { return true; }
@@ -257,7 +257,7 @@ export class Package {
     );
   }
 
-  /** Get the primary file path (first file in the package) */
+  /** Retorna o caminho do arquivo principal (primeiro arquivo do pacote). */
   get primaryFilePath(): string {
     return this.files[0]?.relativePath ?? '';
   }

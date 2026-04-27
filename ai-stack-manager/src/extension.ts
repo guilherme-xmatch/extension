@@ -1,6 +1,6 @@
-/**
+﻿/**
  * @module extension
- * @description Entry point for DescomplicAI VS Code extension.
+ * @description Ponto de entrada da extensão DescomplicAI para VS Code.
  */
 
 import * as vscode from 'vscode';
@@ -37,7 +37,7 @@ import { AppLogger } from './infrastructure/services/AppLogger';
 export function activate(context: vscode.ExtensionContext): void {
   const logger = AppLogger.getInstance();
 
-  // ─── Dependency Injection ────────────────────
+  // ─── Injeção de Dependências ──────────────────
   const container = new ServiceContainer()
     .register(TOKENS.Metrics,       () => new GitHubMetricsService())
     .register(TOKENS.Registry,      () => new GitRegistry())
@@ -63,7 +63,7 @@ export function activate(context: vscode.ExtensionContext): void {
     logger.error('Falha na sincronização inicial do catálogo.', { error });
   });
 
-  // ─── Sidebar Providers ───────────────────────
+  // ─── Provedores da Barra Lateral ──────────────
   const catalogProvider = new CatalogViewProvider(context.extensionUri, registry, scanner, installer, operations);
   const installedProvider = new InstalledViewProvider(context.extensionUri, registry, scanner, installer, operations);
   const healthProvider = new HealthViewProvider(context.extensionUri, healthChecker, operations);
@@ -147,7 +147,7 @@ export function activate(context: vscode.ExtensionContext): void {
     return [pkg];
   };
 
-  // ─── Commands ────────────────────────────────
+  // ─── Comandos ─────────────────────────────────
   context.subscriptions.push(
     vscode.commands.registerCommand('dai.install', async () => {
       const packages = await registry.getAll();

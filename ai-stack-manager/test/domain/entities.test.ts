@@ -105,25 +105,25 @@ describe('HealthReport', () => {
     expect(report.statusEmoji).toContain('🔴');
   });
 
-  it('statusLabel: Healthy quando score >= 90', () => {
+  it('statusLabel: Saudável quando score >= 90', () => {
     const report = HealthReport.create([], 0);
-    expect(report.statusLabel).toBe('Healthy');
+    expect(report.statusLabel).toBe('Saudável');
   });
 
-  it('statusLabel: Needs Attention quando 60 <= score < 90', () => {
+  it('statusLabel: Precisa de Atenção quando 60 <= score < 90', () => {
     const report = HealthReport.create(
       [errFinding('e1'), warnFinding('w1'), warnFinding('w2'), warnFinding('w3')],
       0,
     );
-    expect(report.statusLabel).toBe('Needs Attention');
+    expect(report.statusLabel).toBe('Precisa de Atenção');
   });
 
-  it('statusLabel: Critical Issues quando score < 60', () => {
+  it('statusLabel: Problemas Críticos quando score < 60', () => {
     const report = HealthReport.create(
       [errFinding('e1'), errFinding('e2'), errFinding('e3')],
       0,
     );
-    expect(report.statusLabel).toBe('Critical Issues');
+    expect(report.statusLabel).toBe('Problemas Críticos');
   });
 
   it('filtra erros, warnings e infos corretamente', () => {

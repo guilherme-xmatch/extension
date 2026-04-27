@@ -1,12 +1,12 @@
 /**
  * @module domain/entities/Bundle
- * @description A Bundle is a composite package that installs multiple packages at once.
- * Example: "Backend Starter" = api-design skill + security skill + backend-specialist agent.
+ * @description Um Bundle é um pacote composto que instala múltiplos pacotes de uma só vez.
+ * Exemplo: "Backend Starter" = skill api-design + skill security + agente backend-specialist.
  */
 
 import { Version } from '../value-objects/Version';
 
-/** A bundle groups multiple package IDs for one-click installation */
+/** Um bundle agrupa múltiplos IDs de pacote para instalação com um clique. */
 export class Bundle {
   private constructor(
     public readonly id: string,
@@ -41,17 +41,17 @@ export class Bundle {
     );
   }
 
-  /** Number of packages in the bundle */
+  /** Número de pacotes no bundle. */
   get packageCount(): number {
     return this.packageIds.length;
   }
 
-  /** Check if bundle contains a specific package */
+  /** Verifica se o bundle contém um pacote específico. */
   containsPackage(packageId: string): boolean {
     return this.packageIds.includes(packageId);
   }
 
-  /** Check if this bundle matches a search query */
+  /** Verifica se o bundle corresponde a uma query de busca. */
   matchesQuery(query: string): boolean {
     const q = query.toLowerCase().trim();
     if (q === '') { return true; }

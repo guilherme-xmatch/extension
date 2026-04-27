@@ -1,6 +1,6 @@
 /**
  * @module domain/entities/InsightsReport
- * @description Entities and types for the Insights Engine (Phase 2).
+ * @description Entidades e tipos para o Insights Engine (Fase 2).
  */
 
 export interface CoverageMap {
@@ -22,7 +22,7 @@ export interface SecurityAlert {
 export interface InsightsReport {
   installedAgentsCount: number;
   coverage: CoverageMap;
-  coverageScore: number; // 0 to 100
+  coverageScore: number; // 0 a 100
   securityAlerts: SecurityAlert[];
   missingDependencies: string[];
 }

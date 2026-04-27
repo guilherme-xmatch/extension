@@ -1,7 +1,7 @@
 /**
  * @module presentation/providers/InstalledViewProvider
- * @description WebviewViewProvider for the Installed packages sidebar panel.
- * Shows packages currently installed in the workspace with manage actions.
+ * @description WebviewViewProvider para o painel lateral de pacotes instalados.
+ * Exibe os pacotes instalados no workspace com ações de gerenciamento.
  */
 
 import * as vscode from 'vscode';

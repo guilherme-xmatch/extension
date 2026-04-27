@@ -1,8 +1,8 @@
 ﻿/**
  * @module infrastructure/repositories/GitRegistry
- * @description Orchestrates catalog loading from remote Git repositories, local paths,
- * and JSON endpoints. Delegates network operations to CatalogFetcher and data parsing
- * to CatalogManifestParser, keeping this class focused on coordination and caching.
+ * @description Orquestra o carregamento do catálogo a partir de repositórios Git remotos, caminhos
+ * locais e endpoints JSON. Delega operações de rede ao CatalogFetcher e a análise de dados ao
+ * CatalogManifestParser, mantendo esta classe focada em coordenação e cache.
  */
 
 import * as vscode from 'vscode';
@@ -55,7 +55,7 @@ export class GitRegistry implements IPackageRepository {
     return path.join(this.workspaceRoot, '.descomplicai', 'custom-packages.json');
   }
 
-  // ─── Sync ────────────────────────────────────────────────────────────────
+  // ─── Sincronização ────────────────────────────────────────────────────────────────────
 
   public async sync(): Promise<void> {
     if (this._syncPromise) { return this._syncPromise; }
@@ -104,7 +104,7 @@ export class GitRegistry implements IPackageRepository {
     }
   }
 
-  // ─── Persistence ─────────────────────────────────────────────────────────
+  // ─── Persistência ──────────────────────────────────────────────────────────────────────
 
   public async saveWorkspaceCustomPackage(pkg: Package): Promise<void> {
     const filePath = this.workspaceCustomCatalogPath;
@@ -122,7 +122,7 @@ export class GitRegistry implements IPackageRepository {
     if (idx >= 0) { this._cache.splice(idx, 1, pkg); } else { this._cache.push(pkg); }
   }
 
-  // ─── Loading ─────────────────────────────────────────────────────────────
+  // ─── Carregamento ─────────────────────────────────────────────────────────────────────
 
   private async loadFromJsonEndpoint(url: string): Promise<void> {
     const payload = await this._fetcher.fetchJson(url);
@@ -172,7 +172,7 @@ export class GitRegistry implements IPackageRepository {
     this._bundlesCache = rootDir ? this.loadBundles(rootDir, payload) : this.loadBundlesFromPayload(payload);
   }
 
-  // ─── Package Hydration ───────────────────────────────────────────────────
+  // ─── Hidratação de pacotes ────────────────────────────────────────────────────────────────
 
   private discoverManifestFiles(rootDir: string): string[] {
     return ['agents', 'skills', 'mcps', 'prompts', 'instructions']

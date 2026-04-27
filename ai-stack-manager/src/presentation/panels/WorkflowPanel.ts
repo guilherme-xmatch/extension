@@ -1,21 +1,21 @@
 /**
  * @module presentation/panels/WorkflowPanel
- * @description Webview panel for the interactive agent workflow visualizer.
+ * @description Painel webview para o visualizador interativo de workflow de agentes.
  *
- * Renders a dynamic, data-driven pipeline board that reflects the agents
- * currently installed in the workspace.  When no agents are installed, an
- * empty-state card prompts the user to explore the catalog.
+ * Renderiza um quadro de pipeline dinâmico e orientado a dados que reflete os agentes
+ * instalados no workspace. Quando nenhum agente está instalado, um card de estado vazio
+ * orienta o usuário a explorar o catálogo.
  *
- * Data flow:
- *  1. `createOrShow()` receives the package registry and workspace scanner
- *  2. `update()` fetches installed agent IDs + all packages, then calls
- *     `WorkflowGraphBuilder.buildGraph()` to produce a `WorkflowGraphData`
- *  3. The graph is serialised as JSON and embedded directly into the HTML
- *  4. Client-side JavaScript renders the pipeline lanes and draws SVG
- *     bezier arrows for delegation edges after DOM layout is complete
+ * Fluxo de dados:
+ *  1. `createOrShow()` recebe o registry de pacotes e o scanner de workspace
+ *  2. `update()` busca os IDs de agentes instalados + todos os pacotes, depois chama
+ *     `WorkflowGraphBuilder.buildGraph()` para produzir um `WorkflowGraphData`
+ *  3. O grafo é serializado como JSON e embutido diretamente no HTML
+ *  4. O JavaScript client-side renderiza as raias de pipeline e desenha setas
+ *     Bezier em SVG para as arestas de delegação após o layout do DOM ser concluído
  *
- * No external CDN libraries are used — all rendering is pure HTML/CSS/JS,
- * fully compatible with the VS Code webview sandboxed environment.
+ * Sem bibliotecas CDN externas — toda a renderização é HTML/CSS/JS puro,
+ * totalmente compatível com o ambiente sandboxado do webview do VS Code.
  */
 
 import * as vscode from 'vscode';
@@ -47,17 +47,17 @@ export class WorkflowPanel {
 
     this._panel.onDidDispose(() => this.dispose(), null, this._disposables);
 
-    // Allow the webview to request a refresh or to open the catalog sidebar
+    // Permite que o webview solicite um refresh ou abra a barra lateral do catálogo
     this._panel.webview.onDidReceiveMessage(async (e: { type: string }) => {
       if (e.type === 'refresh') { await this.update(); }
       if (e.type === 'openCatalog') {
         void vscode.commands.executeCommand('workbench.view.extension.descomplicai-sidebar');
       }
-      // 'saveZoom' is handled entirely on the client via vscode.setState() — no server action needed
+      // 'saveZoom' é tratado inteiramente no cliente via vscode.setState() — nenhuma ação no servidor necessária
     }, null, this._disposables);
   }
 
-  // ─── Public API ────────────────────────────────────────────────────────────
+  // ─── API Pública ──────────────────────────────────────────────────────────────────────────
 
   public static createOrShow(
     extensionUri: vscode.Uri,
@@ -70,7 +70,7 @@ export class WorkflowPanel {
 
     if (WorkflowPanel.currentPanel) {
       WorkflowPanel.currentPanel._panel.reveal(column);
-      void WorkflowPanel.currentPanel.update();   // refresh on re-reveal
+      void WorkflowPanel.currentPanel.update();   // atualiza ao revelar novamente
       return;
     }
 
@@ -97,7 +97,7 @@ export class WorkflowPanel {
     }
   }
 
-  // ─── Data loading ──────────────────────────────────────────────────────────
+  // ─── Carregamento de dados ────────────────────────────────────────────────────────────────────
 
   private async update(): Promise<void> {
     try {
@@ -827,7 +827,7 @@ export class WorkflowPanel {
 </html>`;
   }
 
-  // ─── Error HTML ────────────────────────────────────────────────────────────
+  // ─── HTML de erro ────────────────────────────────────────────────────────────────────────
 
   private _getErrorHtml(message: string): string {
     return /* html */`<!DOCTYPE html>

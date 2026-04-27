@@ -7,11 +7,11 @@
 export type McpClientFormat = 'copilot' | 'claude-desktop' | 'cursor' | 'unknown';
 
 export interface NormalizedMcpDocument {
-  /** Detected source format */
+  /** Formato de origem detectado. */
   readonly format: McpClientFormat;
-  /** Normalized servers map (Copilot format) */
+  /** Mapa de servidores normalizado (formato Copilot). */
   readonly servers: Record<string, unknown>;
-  /** Input variable definitions (only present in Copilot format) */
+  /** Definições de variáveis de entrada (somente no formato Copilot). */
   readonly inputs: Array<{ id: string; [key: string]: unknown }>;
 }
 
@@ -65,7 +65,7 @@ export class McpDocumentAdapter {
             'Nenhum servidor MCP encontrado no documento (formato Claude Desktop/Cursor).'
           );
         }
-        // Claude Desktop and Cursor share the same server schema; normalize to 'servers'
+        // Claude Desktop e Cursor compartilham o mesmo schema de servidor; normaliza para 'servers'
         return { format, servers: mcpServers, inputs: [] };
       }
 

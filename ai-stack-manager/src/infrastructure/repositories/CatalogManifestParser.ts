@@ -12,7 +12,7 @@ import {
 } from '../../domain/entities/Package';
 import { AppLogger } from '../services/AppLogger';
 
-// ─── Catalog Schema Types ──────────────────────────────────────────────────
+// ─── Tipos do Schema do Catálogo ──────────────────────────────────────────────────
 
 export interface CatalogIndex {
   schemaVersion?: string;
@@ -83,8 +83,8 @@ export type ManifestLinks = Array<{ label?: string; url?: string }>;
 // ─── Parser ────────────────────────────────────────────────────────────────
 
 /**
- * Static utility class for parsing and validating catalog manifests.
- * All methods are side-effect-free and independently testable.
+ * Classe utilitária estática para análise e validação de manifestos de catálogo.
+ * Todos os métodos são livres de efeitos colaterais e testáveis de forma independente.
  */
 export class CatalogManifestParser {
 
@@ -212,7 +212,7 @@ export class CatalogManifestParser {
       .split(' ')
       .map(word => {
         if (!word) { return word; }
-        // Preserve all-uppercase words (acronyms like API, AWS, MCP)
+        // Preserva palavras totalmente em maiúsculas (acrônimos como API, AWS, MCP)
         if (word.length > 1 && word === word.toUpperCase()) { return word; }
         return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
       })

@@ -1,8 +1,8 @@
 ﻿/**
  * @module infrastructure/repositories/LocalRegistry
- * @description Thin wrapper around local catalog data implementing IPackageRepository.
- * Used as a built-in fallback when the remote registry is unavailable.
- * Accepts optional package/bundle data for dependency injection in tests.
+ * @description Involuçro leve em torno dos dados do catálogo local implementando IPackageRepository.
+ * Usado como fallback interno quando o registry remoto está indisponível.
+ * Aceita dados opcionais de pacotes/bundles para injeção de dependências em testes.
  */
 
 import { Package } from '../../domain/entities/Package';

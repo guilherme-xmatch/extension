@@ -1,7 +1,7 @@
-/**
+﻿/**
  * @module infrastructure/services/WorkspaceScanner
- * @description Scans the current VS Code workspace to detect installed packages.
- * Uses filesystem checks to determine installation status of each package.
+ * @description Escaneia o workspace atual do VS Code para detectar pacotes instalados.
+ * Usa verificações no sistema de arquivos para determinar o status de instalação de cada pacote.
  */
 
 import * as vscode from 'vscode';
@@ -35,7 +35,7 @@ export class WorkspaceScanner implements IWorkspaceScanner {
 
     if (existCount === 0) { return InstallStatus.NotInstalled; }
     if (existCount === pkg.files.length) {
-      // All files present — check if the lock file records a different version (Outdated)
+      // Todos os arquivos presentes — verifica se o lock file registra uma versão diferente (Outdated)
       const lockEntry = new LockFileService(root).findById(pkg.id);
       if (lockEntry && lockEntry.version !== pkg.version.toString()) {
         return InstallStatus.Outdated;
@@ -62,27 +62,27 @@ export class WorkspaceScanner implements IWorkspaceScanner {
   }
 
   /**
-   * Smart Workspace Analyzer
+   * Analisador Inteligente de Workspace
    *
-   * Inspects the workspace for well-known files (manifests, lock files, config
-   * files) and infers a project profile along with the best-matching catalog
-   * bundle to recommend.
+   * Inspeciona o workspace em busca de arquivos conhecidos (manifests, lock files, arquivos
+   * de configuração) e infere um perfil de projeto junto com o bundle de catálogo
+   * que melhor se encaixa para recomendação.
    *
-   * Heuristics covered:
-   * - Node.js Frontend  (React, Next, Vue, Angular)
-   * - Node.js Backend   (Express, NestJS, Fastify)
+   * Heurísticas cobertas:
+   * - Frontend Node.js  (React, Next, Vue, Angular)
+   * - Backend Node.js   (Express, NestJS, Fastify)
    * - Python            (pyproject.toml, requirements.txt, Pipfile)
    * - Go                (go.mod)
    * - Rust              (Cargo.toml)
    * - Java / JVM        (pom.xml, build.gradle)
-   * - .NET              (*.csproj, *.sln at root)
+   * - .NET              (*.csproj, *.sln na raiz)
    * - AWS Cloud         (cdk.json, serverless.yml, samconfig.toml)
    * - Docker / Infra    (Dockerfile, docker-compose.yml, main.tf)
-   * - Kubernetes        (k8s/ directory, helm/)
+   * - Kubernetes        (diretório k8s/, helm/)
    *
-   * Each result now includes:
-   *  - `reason`          — one-line explanation of what triggered detection
-   *  - `detectedSignals` — list of file/dependency names that were found
+   * Cada resultado agora inclui:
+   *  - `reason`          — explicação de uma linha sobre o que ativou a detecção
+   *  - `detectedSignals` — lista de nomes de arquivos/dependências que foram encontrados
    */
   async detectProjectProfile(): Promise<Array<{
     profile: string;
@@ -97,7 +97,7 @@ export class WorkspaceScanner implements IWorkspaceScanner {
     type Rec = { profile: string; bundleId: string; confidence: number; reason: string; detectedSignals: string[] };
     const recommendations: Rec[] = [];
 
-    // ── Helpers ──────────────────────────────────────────────────────────────
+    // ── Auxiliares ──────────────────────────────────────────────────────────────
     const exists = (rel: string) => this.fileExists(path.join(root, rel));
 
     const push = (rec: Rec) => recommendations.push(rec);
@@ -223,13 +223,13 @@ export class WorkspaceScanner implements IWorkspaceScanner {
       });
     }
 
-    // ── Docker / Terraform (generic infra) ────────────────────────────────────
+    // ── Docker / Terraform (infra genérica) ────────────────────────────────────
     const infraSignals: string[] = [];
     for (const f of ['Dockerfile', 'docker-compose.yml', 'docker-compose.yaml', 'main.tf', '.terraform.lock.hcl']) {
       if (await exists(f)) { infraSignals.push(f); }
     }
     if (infraSignals.length > 0 && awsSignals.length === 0) {
-      // Only add if we haven't already covered it via AWS heuristic
+      // Adiciona apenas se ainda não coberto pela heurística AWS
       push({
         profile:          'Infra & Cloud',
         bundleId:         WorkspaceScanner.BUNDLES.awsPlatform,
@@ -254,7 +254,7 @@ export class WorkspaceScanner implements IWorkspaceScanner {
       });
     }
 
-    // ── Full Stack bonus when multiple profiles hit ───────────────────────────
+    // ── Full Stack: bônus quando múltiplos perfis são detectados ───────────────────────────
     if (recommendations.length > 1) {
       const allSignals = recommendations.flatMap(r => r.detectedSignals);
       recommendations.push({

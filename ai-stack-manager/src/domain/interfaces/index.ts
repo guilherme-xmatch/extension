@@ -1,7 +1,7 @@
 /**
  * @module domain/interfaces
- * @description Repository and service interfaces (ports) for the domain layer.
- * Infrastructure implementations provide the concrete adapters.
+ * @description Interfaces de repositório e serviço (portas) para a camada de domínio.
+ * As implementações de infraestrutura fornecem os adaptadores concretos.
  */
 
 import { Package, InstallStatus } from '../entities/Package';
@@ -10,45 +10,45 @@ import { HealthReport } from '../entities/HealthReport';
 import { OperationContext, OperationDefinition, OperationMetricsSnapshot, OperationSnapshot } from '../entities/Operation';
 
 /**
- * Generic event interface — decoupled from VS Code SDK.
- * Structurally compatible with vscode.Event<T>: any vscode.EventEmitter<T>.event
- * can be assigned to IEvent<T> without modification.
+ * Interface de evento genérico — desacoplada do SDK do VS Code.
+ * Estruturalmente compatível com vscode.Event<T>: qualquer vscode.EventEmitter<T>.event
+ * pode ser atribuído a IEvent<T> sem modificação.
  */
 export interface IEvent<T> {
   (listener: (e: T) => void): { dispose(): void };
 }
 
-/** Read-only access to the package catalog */
+/** Acesso somente leitura ao catálogo de pacotes. */
 export interface IPackageRepository {
-  /** Get all available packages */
+  /** Retorna todos os pacotes disponíveis. */
   getAll(): Promise<Package[]>;
-  /** Find a package by ID */
+  /** Busca um pacote pelo ID. */
   findById(id: string): Promise<Package | undefined>;
-  /** Search packages by query */
+  /** Busca pacotes por query. */
   search(query: string): Promise<Package[]>;
-  /** Get all bundles */
+  /** Retorna todos os bundles. */
   getAllBundles(): Promise<Bundle[]>;
-  /** Find a bundle by ID */
+  /** Busca um bundle pelo ID. */
   findBundleById(id: string): Promise<Bundle | undefined>;
   getAgentNetwork(agentId: string): Promise<Package[]>;
   getRelatedSkills(agentId: string): Promise<Package[]>;
 }
 
-/** Detects what's installed in the current workspace */
+/** Detecta o que está instalado no workspace atual. */
 export interface IWorkspaceScanner {
-  /** Get the installation status of a specific package */
+  /** Retorna o status de instalação de um pacote específico. */
   getInstallStatus(pkg: Package): Promise<InstallStatus>;
-  /** Get all installed package IDs */
+  /** Retorna os IDs de todos os pacotes instalados. */
   getInstalledPackageIds(): Promise<string[]>;
-  /** Check if workspace has a .github directory */
+  /** Verifica se o workspace possui um diretório .github. */
   hasGitHubDirectory(): Promise<boolean>;
   /**
-   * Detects the project profile from workspace files and recommends bundle IDs.
-   * - `profile`          — Human-readable project type (e.g. "Backend API", "Python Service")
-   * - `bundleId`         — Catalog bundle that best matches this profile
-   * - `confidence`       — 0–1 match certainty; higher = stronger signal
-   * - `reason`           — One-line explanation of why the profile was detected
-   * - `detectedSignals`  — List of file/dependency names that triggered the detection
+   * Detecta o perfil do projeto a partir dos arquivos do workspace e recomenda IDs de bundle.
+   * - `profile`          — Tipo do projeto (ex.: "Backend API", "Python Service")
+   * - `bundleId`         — Bundle do catálogo que melhor se encaixa no perfil
+   * - `confidence`       — Certeza da correspondência (0–1); maior = sinal mais forte
+   * - `reason`           — Explicação de uma linha sobre por que o perfil foi detectado
+   * - `detectedSignals`  — Lista de nomes de arquivos/dependências que ativaram a detecção
    */
   detectProjectProfile(): Promise<Array<{
     profile: string;
@@ -59,19 +59,19 @@ export interface IWorkspaceScanner {
   }>>;
 }
 
-/** Installs and uninstalls packages in the workspace */
+/** Instala e desinstala pacotes no workspace. */
 export interface IInstaller {
-  /** Install a package into the workspace */
+  /** Instala um pacote no workspace. */
   install(pkg: Package, options?: InstallExecutionOptions): Promise<void>;
-  /** Uninstall a package from the workspace */
+  /** Desinstala um pacote do workspace. */
   uninstall(pkg: Package, options?: InstallExecutionOptions): Promise<void>;
-  /** Install multiple packages (bundle) */
+  /** Instala múltiplos pacotes (bundle). */
   installMany(packages: Package[], options?: InstallExecutionOptions): Promise<void>;
 }
 
-/** Validates AI infrastructure integrity */
+/** Valida a integridade da infraestrutura de AI. */
 export interface IHealthChecker {
-  /** Run a full health check on the workspace */
+  /** Executa uma verificação completa de saúde no workspace. */
   check(): Promise<HealthReport>;
 }
 

@@ -1,15 +1,15 @@
 /**
  * @module domain/value-objects/AgentCategory
- * @description Value object representing the functional category of an agent.
- * Agents are NOT all the same — they have fundamentally different roles
- * in the multi-agent workflow.
- * 
- * Categories:
- * - Orchestrator: Hub/control plane, routes work to specialists
- * - Planner: Strategy, decomposition, DAG generation
- * - Specialist: Domain-specific execution (backend, frontend, etc.)
- * - Guardian: Quality gates, validation, security review
- * - Memory: Knowledge persistence, recall, episodic memory
+ * @description Value object que representa a categoria funcional de um agente.
+ * Agents NÃO são todos iguais — têm papéis fundamentalmente diferentes
+ * no workflow multi-agente.
+ *
+ * Categorias:
+ * - Orchestrator: Hub/plano de controle, roteia trabalho para especialistas
+ * - Planner: Estratégia, decomposição, geração de DAG
+ * - Specialist: Execução domínio-específica (backend, frontend, etc.)
+ * - Guardian: Gates de qualidade, validação, revisão de segurança
+ * - Memory: Persistência de conhecimento, recall, memória episódica
  */
 
 export class AgentCategory {
@@ -65,7 +65,7 @@ export class AgentCategory {
     ];
   }
 
-  /** CSS class for styling */
+  /** Classe CSS para estilização. */
   get cssClass(): string {
     return `category-${this.value}`;
   }

@@ -1,50 +1,50 @@
-/**
+﻿/**
  * @module presentation/panels/ScaffoldWizardPanel
- * @description Multi-step webview wizard for creating new AI infrastructure packages.
+ * @description Wizard webview de múltiplas etapas para criar novos pacotes de infraestrutura de AI.
  *
- * The wizard walks the user through 3 steps:
- *  1. **Type** — select package type (agent, skill, instruction, prompt)
- *  2. **Details** — name, displayName, description + type-specific fields
- *  3. **Preview** — shows generated file content before writing to disk
+ * O wizard guia o usuário por 3 etapas:
+ *  1. **Tipo** — seleciona o tipo de pacote (agent, skill, instruction, prompt)
+ *  2. **Detalhes** — nome, displayName, descrição + campos específicos do tipo
+ *  3. **Preview** — exibe o conteúdo gerado antes de gravar no disco
  *
- * When the user confirms, the extension:
- *  - Creates the target directory
- *  - Writes the generated file(s)
- *  - Opens the new file in the editor
+ * Ao confirmar, a extensão:
+ *  - Cria o diretório de destino
+ *  - Grava o(s) arquivo(s) gerado(s)
+ *  - Abre o novo arquivo no editor
  *
- * No external CDN libraries — all rendering is pure HTML/CSS/JS.
+ * Sem bibliotecas CDN externas — toda a renderização é HTML/CSS/JS puro.
  */
 
 import * as path from 'path';
 import * as vscode from 'vscode';
 
-/** All possible fields the wizard can collect */
+/** Todos os campos possíveis que o wizard pode coletar. */
 export interface ScaffoldFormData {
   type:         'agent' | 'skill' | 'instruction' | 'prompt';
-  name:         string;            // slug: lowercase letters and hyphens
+  name:         string;            // slug: letras minúsculas e hifens
   displayName:  string;
   description:  string;
   author:       string;
-  tags:         string;            // comma-separated
+  tags:         string;            // separadas por vírgula
 
-  // Agent-specific
+  // Específico de agent
   workflowPhase?:  string;
-  tools?:          string;         // comma-separated
+  tools?:          string;         // separadas por vírgula
   userInvocable?:  boolean;
-  delegatesTo?:    string;         // comma-separated
-  relatedSkills?:  string;         // comma-separated
+  delegatesTo?:    string;         // separadas por vírgula
+  relatedSkills?:  string;         // separadas por vírgula
 
-  // Skill-specific
-  applyToAudience?: string;        // target description
+  // Específico de skill
+  applyToAudience?: string;        // descrição do público-alvo
 
-  // Instruction-specific
-  applyTo?: string;                // glob pattern
+  // Específico de instruction
+  applyTo?: string;                // padrão glob
 
-  // Prompt-specific
-  promptMode?: string;             // e.g. "agent", "chat"
+  // Específico de prompt
+  promptMode?: string;             // ex.: "agent", "chat"
 }
 
-// ─── Template generators ──────────────────────────────────────────────────────
+// ─── Geradores de template ───────────────────────────────────────────────────
 
 function generateContent(data: ScaffoldFormData): { filePath: string; content: string } {
   const { type, name, displayName, description, author, tags } = data;
@@ -205,7 +205,7 @@ Descreva aqui o formato e o conteúdo esperado na saída.
   }
 }
 
-// ─── Panel ───────────────────────────────────────────────────────────────────
+// ─── Painel ─────────────────────────────────────────────────────────────────────────────
 
 export class ScaffoldWizardPanel {
   public static currentPanel: ScaffoldWizardPanel | undefined;
@@ -243,7 +243,7 @@ export class ScaffoldWizardPanel {
     }, null, this._disposables);
   }
 
-  // ─── Public API ──────────────────────────────────────────────────────────────
+  // ─── API Pública ────────────────────────────────────────────────────────────────────────────
 
   public static createOrShow(extensionUri: vscode.Uri): void {
     const column = vscode.window.activeTextEditor
@@ -277,7 +277,7 @@ export class ScaffoldWizardPanel {
     }
   }
 
-  // ─── File creation ───────────────────────────────────────────────────────────
+  // ─── Criação de arquivo ────────────────────────────────────────────────────────────────────────
 
   private async _createPackage(data: ScaffoldFormData): Promise<void> {
     const root = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
@@ -305,7 +305,7 @@ export class ScaffoldWizardPanel {
     }
   }
 
-  // ─── HTML generation ─────────────────────────────────────────────────────────
+  // ─── Geração de HTML ─────────────────────────────────────────────────────────
 
   private _getHtmlForWebview(webview: vscode.Webview): string {
     const mainCssUri = webview.asWebviewUri(

@@ -1,12 +1,12 @@
 /**
  * @module presentation/webview/WebviewHelper
- * @description Shared utility for generating webview HTML with Itaú design system.
- * Handles theme-aware CSS, nonce generation, and resource URI resolution.
+ * @description Utilitário compartilhado para geração de HTML de webview com o design system Itaú.
+ * Gerencia CSS com suporte a tema, geração de nonce e resolução de URIs de recursos.
  */
 
 import * as vscode from 'vscode';
 
-/** Itaú Design Tokens */
+/** Tokens de Design Itaú */
 export const ITAU_TOKENS = {
   colors: {
     primary: '#EC7000',
@@ -29,7 +29,7 @@ export const ITAU_TOKENS = {
 
 export class WebviewHelper {
 
-  /** Generate a cryptographic nonce for Content Security Policy */
+  /** Gera um nonce criptográfico para a Content Security Policy. */
   static getNonce(): string {
     let text = '';
     const possible = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
@@ -39,7 +39,7 @@ export class WebviewHelper {
     return text;
   }
 
-  /** Build the full HTML document for a webview */
+  /** Constrói o documento HTML completo para um webview. */
   static buildHtml(params: {
     webview: vscode.Webview;
     extensionUri: vscode.Uri;

@@ -51,7 +51,7 @@ export class PackageType {
     return `type-${this.value}`;
   }
 
-  /** Color associated with this type (Itaú palette) */
+  /** Cor associada a este tipo (paleta Itaú). */
   get color(): string {
     const colors: Record<string, string> = {
       'agent': '#EC7000',
