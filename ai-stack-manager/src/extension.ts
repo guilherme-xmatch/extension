@@ -578,7 +578,7 @@ export function activate(context: vscode.ExtensionContext): void {
         const phaseMap = new Map<string, string[]>();
         for (const pkg of allPkgs) {
           if (pkg.type.value !== 'agent' || !pkg.agentMeta || !installedSet.has(pkg.id)) { continue; }
-          const phase = pkg.agentMeta.workflowPhase.toLowerCase().split(/\s/)[0]; // take first word
+          const phase = pkg.agentMeta.workflowPhase.toLowerCase().split(/\s/)[0]; // pega a primeira palavra
           if (!phaseMap.has(phase)) { phaseMap.set(phase, []); }
           phaseMap.get(phase)!.push(`${pkg.agentMeta.category.emoji ?? ''} ${pkg.displayName}`.trim());
         }

@@ -1,9 +1,9 @@
 /**
  * @module infrastructure/services/LockFileService
- * @description Manages the persistent lock file that tracks installed package versions.
- * Lock file location: <workspaceRoot>/.descomplicai/installed.lock.json
- * Uses Node fs (synchronous) — not vscode.workspace.fs — for use in both
- * extension and test environments.
+ * @description Gerencia o arquivo de lock persistente que rastreia as versões de pacotes instalados.
+ * Localização do lock file: <workspaceRoot>/.descomplicai/installed.lock.json
+ * Usa Node fs (síncrono) — não vscode.workspace.fs — para funcionar tanto na extensão
+ * quanto em ambientes de teste.
  */
 
 import * as fs from 'fs';
@@ -12,25 +12,25 @@ import * as path from 'path';
 const LOCK_RELATIVE_PATH = '.descomplicai/installed.lock.json';
 const SCHEMA_VERSION = '1.0.0';
 
-/** A single installed-package record stored in the lock file. */
+/** Um único registro de pacote instalado armazenado no lock file. */
 export interface LockEntry {
-  /** Package ID (e.g. "agent-code-architect") */
+  /** ID do pacote (ex.: "agent-code-architect") */
   id: string;
-  /** Installed version string (e.g. "1.0.0") */
+  /** String de versão instalada (ex.: "1.0.0") */
   version: string;
-  /** ISO date-time when the package was installed */
+  /** Data e hora ISO de quando o pacote foi instalado */
   installedAt: string;
-  /** Whether the package came from the official DescomplicAI registry */
+  /** Se o pacote veio do registro oficial do DescomplicAI */
   sourceOfficial: boolean;
 }
 
-/** Top-level structure of the lock file. */
+/** Estrutura de nível superior do lock file. */
 export interface LockFile {
-  /** Schema version — bump when the format changes */
+  /** Versão do schema — incrementar quando o formato mudar */
   schemaVersion: string;
-  /** ISO date-time of the last write */
+  /** Data e hora ISO da última escrita */
   updatedAt: string;
-  /** Ordered list of installed package entries */
+  /** Lista ordenada de entradas de pacotes instalados */
   packages: LockEntry[];
 }
 
@@ -42,8 +42,8 @@ export class LockFileService {
   }
 
   /**
-   * Read the lock file from disk.
-   * Returns an empty lock structure if the file does not exist or is invalid.
+   * Lê o lock file do disco.
+   * Retorna uma estrutura de lock vazia se o arquivo não existir ou for inválido.
    */
   read(): LockFile {
     try {
@@ -55,7 +55,7 @@ export class LockFileService {
   }
 
   /**
-   * Write the lock file to disk, creating the directory if necessary.
+   * Escreve o lock file no disco, criando o diretório se necessário.
    */
   write(lockFile: LockFile): void {
     const dir = path.dirname(this.lockFilePath);
@@ -64,7 +64,7 @@ export class LockFileService {
   }
 
   /**
-   * Add a new entry or update an existing one (matched by ID).
+   * Adiciona uma nova entrada ou atualiza uma existente (identificada pelo ID).
    */
   addOrUpdate(pkg: { id: string; version: string; sourceOfficial: boolean }): void {
     const lockFile = this.read();
@@ -88,8 +88,8 @@ export class LockFileService {
   }
 
   /**
-   * Remove the entry for the given package ID.
-   * No-op if the package is not in the lock file.
+   * Remove a entrada do pacote com o ID fornecido.
+   * Sem efeito se o pacote não estiver no lock file.
    */
   remove(packageId: string): void {
     const lockFile = this.read();
@@ -99,8 +99,8 @@ export class LockFileService {
   }
 
   /**
-   * Find a lock entry by package ID.
-   * Returns `undefined` if not found.
+   * Localiza uma entrada pelo ID do pacote.
+   * Retorna `undefined` se não encontrada.
    */
   findById(packageId: string): LockEntry | undefined {
     return this.read().packages.find(p => p.id === packageId);

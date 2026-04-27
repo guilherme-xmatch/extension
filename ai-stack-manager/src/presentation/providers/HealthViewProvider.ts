@@ -1,7 +1,7 @@
 /**
  * @module presentation/providers/HealthViewProvider
- * @description WebviewViewProvider for the Health Check sidebar panel.
- * Shows validation results with score, findings, and actionable fixes.
+ * @description WebviewViewProvider para o painel lateral de Health Check.
+ * Exibe os resultados de validação com pontuação, descobertas e correções acionáveis.
  */
 
 import * as vscode from 'vscode';

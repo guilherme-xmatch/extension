@@ -1,6 +1,6 @@
 /**
  * @module infrastructure/services/InsightsGenerator
- * @description Generates the InsightsReport by analyzing the currently installed packages.
+ * @description Gera o InsightsReport analisando os pacotes instalados no momento.
  */
 
 import { InsightsReport, CoverageMap, SecurityAlert } from '../../domain/entities/InsightsReport';
@@ -26,7 +26,7 @@ export class InsightsGenerator {
 
     const agents = installedPackages.filter(p => p.isAgent);
     
-    // Calculate Coverage
+    // Calcula a Cobertura
     const coverage: CoverageMap = {
       triage: false, plan: false, design: false, execute: false, validate: false, critic: false
     };
@@ -47,7 +47,7 @@ export class InsightsGenerator {
     const coverageValues = Object.values(coverage);
     const coverageScore = Math.round((coverageValues.filter(Boolean).length / coverageValues.length) * 100);
 
-    // Calculate Security Alerts
+    // Calcula os Alertas de Segurança
     const securityAlerts: SecurityAlert[] = [];
     for (const agent of agents) {
       const tools = agent.agentMeta?.tools || [];
@@ -64,7 +64,7 @@ export class InsightsGenerator {
       }
     }
 
-    // Calculate Missing Dependencies
+    // Calcula as Dependências Faltantes
     const missingDependencies: string[] = [];
     for (const orch of orchestrators) {
       const delegates = orch.agentMeta?.delegatesTo || [];

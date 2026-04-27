@@ -311,7 +311,7 @@ export class WorkflowPanel {
 (function () {
   'use strict';
 
-  // Injected data from extension
+  // Dados injetados pela extensão
   const GRAPH = ${graphJson};
   const vscode = acquireVsCodeApi();
 
@@ -366,7 +366,7 @@ export class WorkflowPanel {
         card.dataset.agentId = agent.id;
         card.style.setProperty('--cat-color', agent.categoryColor);
 
-        // Find skills for this agent
+        // Busca skills para este agent
         var agentSkillChips = '';
         if (graph.skills && graph.skillEdges) {
           var mySkillIds = graph.skillEdges
@@ -397,7 +397,7 @@ export class WorkflowPanel {
           + agentSkillChips;
         lane.appendChild(card);
 
-        // Tooltip on hover
+        // Tooltip ao passar o mouse
         var agentSnap = agent;
         card.addEventListener('mouseenter', function () { showTooltip(agentSnap, card); });
         card.addEventListener('mouseleave', hideTooltip);
@@ -406,7 +406,7 @@ export class WorkflowPanel {
       boardEl.appendChild(lane);
     });
 
-    // Draw arrows after layout settles
+    // Desenha setas após o layout estabilizar
     requestAnimationFrame(function () {
       requestAnimationFrame(function () { drawEdges(graph.edges); });
     });
@@ -461,7 +461,7 @@ export class WorkflowPanel {
     badgeEl.style.display = 'none';
     resetEdges();
 
-    // Hide skills section
+    // Oculta a seção de skills
     var section = document.getElementById('wf-skills-section');
     if (section) { section.style.display = 'none'; }
 
@@ -536,7 +536,7 @@ export class WorkflowPanel {
         + '<span>' + escHtml(cat.emoji) + ' ' + escHtml(cat.label) + '</span>'
         + '</div>';
     });
-    // Show skill summary if present
+    // Exibe resumo de skills se existirem
     if (graph.skills && graph.skills.length > 0) {
       var installedSkills = graph.skills.filter(function (s) { return s.installed; }).length;
       html += '<div class="wf-legend-row" style="margin-top:4px;border-top:1px solid rgba(255,255,255,.07);padding-top:4px">'
@@ -551,7 +551,7 @@ export class WorkflowPanel {
   function renderZoomControls() {
     if (document.querySelector('.wf-zoom')) { return; }
 
-    // Restore saved zoom from webview state
+    // Restaura o zoom salvo do estado do webview
     var savedState = vscode.getState() || {};
     var scale = (typeof savedState.zoom === 'number') ? savedState.zoom : 1;
 
@@ -560,7 +560,7 @@ export class WorkflowPanel {
       boardEl.style.transformOrigin = 'top left';
       drawEdges(GRAPH.edges);
       updateMinimapViewport();
-      // Persist zoom level using VS Code webview state
+      // Persiste o nível de zoom no estado do webview do VS Code
       var state = vscode.getState() || {};
       state.zoom = scale;
       vscode.setState(state);
@@ -578,7 +578,7 @@ export class WorkflowPanel {
       + '<button class="wf-zoom-btn" id="z-in" title="Aumentar zoom">+</button>';
     document.body.appendChild(ctrl);
 
-    // Apply saved scale on initial render
+    // Aplica a escala salva na renderização inicial
     if (scale !== 1) { applyScale(); }
 
     document.getElementById('z-in').addEventListener('click', function () {

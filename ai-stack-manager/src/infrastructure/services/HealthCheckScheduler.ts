@@ -1,4 +1,4 @@
-/**
+﻿/**
  * @module infrastructure/services/HealthCheckScheduler
  * @description Executa verificações periódicas de saúde em segundo plano na infraestrutura de AI do workspace.
  *
@@ -148,14 +148,14 @@ export class HealthCheckScheduler {
       return;
     }
 
-    // Status bar
+    // Barra de status
     if (errorCount > 0) {
       this._statusBar?.setError(`${errorCount} erro(s) na infra`);
     } else {
       this._statusBar?.setSuccess(`${warnCount} aviso(s) na infra`);
     }
 
-    // Notify only when errors are new (count increased vs. last run)
+    // Notifica somente quando os erros são novos (contagem aumentou vs. última execução)
     const prevErrors = prev?.lastErrorCount ?? 0;
     if (errorCount > prevErrors) {
       const titles = report.errors.slice(0, 3).map(f => f.title).join(', ');
@@ -184,9 +184,9 @@ export class HealthCheckScheduler {
   }
 }
 
-// ─── Config helper ────────────────────────────────────────────────────────────
+// ─── Auxiliar de configuração ────────────────────────────────────────────────────────────
 
-/** Read the configured interval (in ms) for the health check scheduler. */
+/** Lê o intervalo configurado (em ms) para o agendador de health check. */
 export function getSchedulerIntervalMs(): number {
   const hours = vscode.workspace.getConfiguration('descomplicai')
     .get<number>('healthCheckIntervalHours', 6);

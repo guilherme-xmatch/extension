@@ -1,8 +1,8 @@
-/**
+﻿/**
  * @module presentation/providers/CatalogViewProvider
- * @description Main Catalog sidebar with DescomplicAI branding.
- * Features: animated logo, grouping by agent category, expandable cards
- * with network visualization, dependency resolution on install.
+ * @description Barra lateral principal do Catálogo com a marca DescomplicAI.
+ * Funcionalidades: logo animado, agrupamento por categoria de agent, cards expansíveis
+ * com visualização de rede e resolução de dependências na instalação.
  */
 
 import * as vscode from 'vscode';
@@ -64,8 +64,8 @@ export class CatalogViewProvider implements vscode.WebviewViewProvider {
     private readonly _installer: IInstaller,
     private readonly _operations: IOperationCoordinator,
   ) {
-    // Debounce operation banner updates to avoid re-rendering the full catalog
-    // on every single progress tick (0%→10%→25%→...→100%) during installs/syncs.
+    // Aplica debounce nas atualizações do banner de operação para evitar re-renderizar
+    // o catálogo completo a cada tick de progresso (0%→10%→25%→...→100%) durante instalações/sincronizações.
     this._operations.onDidChangeCurrentOperation(() => {
       if (this._view) {
         clearTimeout(this._operationUpdateTimer);
@@ -120,15 +120,15 @@ export class CatalogViewProvider implements vscode.WebviewViewProvider {
       statusMap.set(pkg.id, await this._scanner.getInstallStatus(pkg));
     }));
 
-    // Detect Project Profile for Smart Recommendation
+    // Detecta o Perfil do Projeto para Recomendação Inteligente
     const profiles = await this._scanner.detectProjectProfile();
     let recommendedBundleId: string | undefined;
     let recommendationMsg = '';
 
     if (profiles.length > 0 && !query && !filterType) {
-      // Pick the most confident profile
+      // Seleciona o perfil com maior confiança
       const bestProfile = profiles.reduce((prev: any, current: any) => (prev.confidence > current.confidence) ? prev : current);
-      // Check if bundle is already fully installed
+      // Verifica se o bundle já está totalmente instalado
       const recommendedBundle = bundles.find(b => b.id === bestProfile.bundleId);
       if (recommendedBundle) {
         let isFullyInstalled = true;
@@ -167,14 +167,14 @@ export class CatalogViewProvider implements vscode.WebviewViewProvider {
   }
 
   // ═══════════════════════════════════════════
-  // RENDERING
+  // RENDERIZAÇÃO
   // ═══════════════════════════════════════════
 
   private renderCatalog(packages: Package[], bundles: Bundle[], statusMap: Map<string, InstallStatus>, query: string, filterType?: string, recBundleId?: string, recMsg?: string): string {
     const installedCount = Array.from(statusMap.values()).filter(s => s === InstallStatus.Installed).length;
     const typeFilters = PackageType.all();
 
-    // Group agents by category
+    // Agrupa agents por categoria
     const agents = packages.filter(p => p.isAgent);
     const nonAgents = packages.filter(p => !p.isAgent);
 
@@ -185,7 +185,7 @@ export class CatalogViewProvider implements vscode.WebviewViewProvider {
       categoryGroups.get(catLabel)!.push(agent);
     }
 
-    // Sort categories by their sort order
+    // Ordena as categorias pela ordem de exibição
     const sortedCategories = [...categoryGroups.entries()].sort((a, b) => {
       const orderA = AgentCategory.all().find(c => c.label === a[0])?.sortOrder ?? 99;
       const orderB = AgentCategory.all().find(c => c.label === b[0])?.sortOrder ?? 99;
@@ -392,7 +392,7 @@ export class CatalogViewProvider implements vscode.WebviewViewProvider {
   }
 
   private renderNonAgentSection(packages: Package[], statusMap: Map<string, InstallStatus>): string {
-    // Group by type
+    // Agrupa por tipo
     const groups = new Map<string, Package[]>();
     for (const pkg of packages) {
       const key = pkg.type.label;
@@ -420,7 +420,7 @@ export class CatalogViewProvider implements vscode.WebviewViewProvider {
             <div class="dai-card-body">
               <span class="dai-card-name">${pkg.displayName}</span>
               <span class="dai-card-desc">${pkg.description}</span>
-              <span class="dai-card-inline-meta">${pkg.sourceLabel} · ${pkg.maturityLabel} · ${pkg.stats.installsTotal} installs</span>
+              <span class="dai-card-inline-meta">${pkg.sourceLabel} · ${pkg.maturityLabel} · ${pkg.stats.installsTotal} instalações</span>
             </div>
             <div class="dai-card-actions">
               <div class="dai-card-tags">${pkg.tags.slice(0, 3).map(t => `<span class="dai-tag">${t}</span>`).join('')}</div>
@@ -438,10 +438,10 @@ export class CatalogViewProvider implements vscode.WebviewViewProvider {
   }
 
   // ═══════════════════════════════════════════
-  // EVENT HANDLERS
+  // MANIPULADORES DE EVENTOS
   // ═══════════════════════════════════════════
 
-  /** Notify the webview logo controller of an operation result. */
+  /** Notifica o controlador de logo do webview sobre o resultado de uma operação. */
   private postLogoResult(result: 'success' | 'error' | 'reset'): void {
     if (this._view) {
       void this._view.webview.postMessage({ type: 'logoResult', result });
@@ -483,12 +483,12 @@ export class CatalogViewProvider implements vscode.WebviewViewProvider {
     const pkg = await this._registry.findById(packageId);
     if (!pkg?.agentMeta) { return await this.handleInstall(packageId); }
 
-    // Get full network
+    // Busca a rede completa
     const network = await this._registry.getAgentNetwork(packageId);
     const relatedSkills = await this._registry.getRelatedSkills(packageId);
     const allPackages = [pkg, ...network, ...relatedSkills];
 
-    // Deduplicate
+    // Remove duplicatas
     const seen = new Set<string>();
     const unique = allPackages.filter(p => { if (seen.has(p.id)) { return false; } seen.add(p.id); return true; });
 
@@ -536,7 +536,7 @@ export class CatalogViewProvider implements vscode.WebviewViewProvider {
         this.postLogoResult('error');
       }
     } else {
-      // User dismissed dialog — reset logo to idle state
+      // Usuário dispensou o diálogo — reseta o logo para o estado ocioso
       this.postLogoResult('reset');
     }
   }
@@ -592,7 +592,7 @@ export class CatalogViewProvider implements vscode.WebviewViewProvider {
   }
 
   // ═══════════════════════════════════════════
-  // CLIENT SCRIPT
+  // SCRIPT DO CLIENTE
   // ═══════════════════════════════════════════
 
   private getScript(): string {
@@ -600,9 +600,9 @@ export class CatalogViewProvider implements vscode.WebviewViewProvider {
     let searchTimeout;
     const render = (state) => state.html || '<div class="dai-container"><div class="dai-empty"><span class="dai-empty-text">Sem dados</span></div></div>';
 
-    // ── Logo animation: handle messages from extension ────────────────────────
-    // The extension sends { type: 'logoResult', result: 'success'|'error'|'reset' }
-    // after an operation completes. Handled via the framework's onMessage hook.
+    // ── Animação do logo: trata mensagens da extensão ──────────────────────
+    // A extensão envia { type: 'logoResult', result: 'success'|'error'|'reset' }
+      // após uma operação ser concluída. Tratado pelo hook onMessage do framework.
     function onMessage(message) {
       if (message.type === 'logoResult') {
         const anim = window.__daiLogoAnim;
@@ -615,17 +615,17 @@ export class CatalogViewProvider implements vscode.WebviewViewProvider {
 
     const bind = (state, app) => {
       const scrollingEl = document.scrollingElement;
-      // Restore scroll from the persisted vscode.getState() entry — decoupled from app re-renders.
-      // This prevents the scroll position from being included in the extension-side state,
-      // which would cause the page to jump to the top on every operation progress update.
+      // Restaura a posição de scroll do estado persistido vscode.getState() — desacoplado das re-renderizações.
+      // Evita que a posição de scroll seja incluída no estado do lado da extensão,
+      // o que causaria o salto da página ao topo a cada atualização de progresso.
       const persistedScrollTop = (vscode.getState() || {}).scrollTop;
       if (scrollingEl && typeof persistedScrollTop === 'number' && persistedScrollTop > 0) {
         requestAnimationFrame(() => { scrollingEl.scrollTop = persistedScrollTop; });
       }
 
-      // Persist scroll position directly to vscode.getState() WITHOUT calling patchState.
-      // patchState triggers a full innerHTML re-render, which destroys and recreates all
-      // DOM elements (including the animated logo) on every single pixel of scroll.
+      // Persiste a posição de scroll diretamente em vscode.getState() SEM chamar patchState.
+      // patchState dispara uma re-renderização completa do innerHTML, que destrói e recria todos
+      // os elementos DOM (incluindo o logo animado) a cada pixel de scroll.
       window.onscroll = () => {
         const el = document.scrollingElement;
         const scrollTop = el ? el.scrollTop : 0;
@@ -703,11 +703,11 @@ export class CatalogViewProvider implements vscode.WebviewViewProvider {
         });
       });
 
-      // ── Logo animation controller ─────────────────────────
-      // Triggered only during real operations — never on idle or scroll.
-      // Respects prefers-reduced-motion via the global CSS rule.
-      // All classes are removed after the animation ends so re-renders
-      // don't accidentally replay them (guards against dai-hydrated edge cases).
+      // ── Controlador de animação do logo ─────────────────────
+      // Acionado apenas durante operações reais — nunca em idle ou scroll.
+      // Respeita prefers-reduced-motion via a regra CSS global.
+      // Todas as classes são removidas após a animação para que re-renderizações
+      // não as reproduzam acidentalmente (proteção contra edge cases do dai-hydrated).
       window.__daiLogoAnim = window.__daiLogoAnim || {
         _el: null,
         _workingTimeout: null,
@@ -717,7 +717,7 @@ export class CatalogViewProvider implements vscode.WebviewViewProvider {
           return this._el;
         },
 
-        /** Call when an operation starts */
+        /** Chama quando uma operação inicia */
         startWorking() {
           const el = this.el;
           if (!el) { return; }
@@ -725,7 +725,7 @@ export class CatalogViewProvider implements vscode.WebviewViewProvider {
           el.classList.add('dai-logo-working');
         },
 
-        /** Call when an operation finishes successfully */
+        /** Chama quando uma operação é concluída com sucesso */
         succeed() {
           const el = this.el;
           if (!el) { return; }
@@ -737,7 +737,7 @@ export class CatalogViewProvider implements vscode.WebviewViewProvider {
           }, { once: true });
         },
 
-        /** Call when an operation finishes with an error */
+        /** Chama quando uma operação termina com erro */
         fail() {
           const el = this.el;
           if (!el) { return; }
@@ -749,7 +749,7 @@ export class CatalogViewProvider implements vscode.WebviewViewProvider {
           }, { once: true });
         },
 
-        /** Call when an operation is cancelled or the panel refreshes without result */
+        /** Chama quando uma operação é cancelada ou o painel atualiza sem resultado */
         reset() {
           const el = this.el;
           if (!el) { return; }
@@ -757,7 +757,7 @@ export class CatalogViewProvider implements vscode.WebviewViewProvider {
         },
       };
 
-      // Hook install/uninstall buttons so the logo responds in real time
+      // Conecta os botões de instalar/desinstalar para que o logo responda em tempo real
       app.root.querySelectorAll('[data-install], [data-install-network], [data-uninstall], [data-bundle-id]').forEach((btn) => {
         btn.addEventListener('click', () => {
           window.__daiLogoAnim.startWorking();

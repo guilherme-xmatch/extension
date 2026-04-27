@@ -1,7 +1,7 @@
 ﻿/**
  * @module infrastructure/repositories/CatalogManifestParser
- * @description Pure data-transformation utilities for catalog manifests.
- * No I/O, no network, no VS Code dependencies — all methods are static and testable in isolation.
+ * @description Utilitários puros de transformação de dados para manifestos de catálogo.
+ * Sem I/O, sem rede, sem dependências do VS Code — todos os métodos são estáticos e testáveis de forma isolada.
  */
 
 import * as path from 'path';

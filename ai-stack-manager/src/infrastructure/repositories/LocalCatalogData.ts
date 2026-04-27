@@ -1,14 +1,14 @@
 ﻿/**
  * @module infrastructure/repositories/LocalCatalogData
- * @description Built-in fallback catalog used by LocalRegistry.
+ * @description Catálogo de fallback embutido usado pelo LocalRegistry.
  *
- * All package/bundle data is loaded at runtime from the remote DescomplicAI
- * registry (configured via `descomplicai.registryUrl`). This module exposes
- * empty frozen arrays so that LocalRegistry works correctly when no external
- * registry is available, without shipping any hardcoded content.
+ * Todos os dados de pacotes/bundles são carregados em tempo de execução a partir do registro
+ * remoto do DescomplicAI (configurado via `descomplicai.registryUrl`). Este módulo expõe
+ * arrays congelados vazios para que o LocalRegistry funcione corretamente quando nenhum
+ * registro externo estiver disponível, sem incluir conteúdo fixo na distribuição.
  *
- * To inject custom data in tests, pass packages/bundles directly to the
- * LocalRegistry constructor.
+ * Para injetar dados personalizados em testes, passe packages/bundles diretamente
+ * ao construtor do LocalRegistry.
  */
 
 import { Package } from '../../domain/entities/Package';

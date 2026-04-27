@@ -1,10 +1,10 @@
-/**
+﻿/**
  * @module infrastructure/ServiceContainer
- * @description Lightweight dependency injection container.
+ * @description Contêiner leve de injeção de dependências.
  *
- * Services are registered as lazy factories and instantiated on first resolve.
- * Subsequent resolves return the cached (singleton) instance.
- * Supports chaining: `container.register(...).register(...)`
+ * Os serviços são registrados como fábricas preguiçosas e instanciados na primeira resolução.
+ * Resoluções subsequentes retornam a instância em cache (singleton).
+ * Suporta encadeamento: `container.register(...).register(...)`
  *
  * @example
  * ```ts
@@ -16,7 +16,7 @@
  * ```
  */
 
-// ─── Service Tokens ─────────────────────────────────────────────────────────
+// ─── Tokens de Serviço ─────────────────────────────────────────────────────────
 
 export const TOKENS = {
   Registry:     Symbol('IPackageRepository'),
@@ -29,15 +29,15 @@ export const TOKENS = {
   Insights:     Symbol('InsightsGenerator'),
 } as const;
 
-// ─── Container ───────────────────────────────────────────────────────────────
+// ─── Contêiner ───────────────────────────────────────────────────────────────
 
 export class ServiceContainer {
   private readonly _factories = new Map<symbol, (c: ServiceContainer) => unknown>();
   private readonly _cache    = new Map<symbol, unknown>();
 
   /**
-   * Registers a lazy factory for a service token.
-   * The factory receives the container so it can resolve its own dependencies.
+   * Registra uma fábrica preguiçosa para um token de serviço.
+   * A fábrica recebe o contêiner para que possa resolver suas próprias dependências.
    */
   register<T>(token: symbol, factory: (c: ServiceContainer) => T): this {
     this._factories.set(token, factory as (c: ServiceContainer) => unknown);
@@ -45,8 +45,8 @@ export class ServiceContainer {
   }
 
   /**
-   * Resolves a service by token, instantiating it on first call.
-   * Throws if the token was never registered.
+   * Resolve um serviço pelo token, instanciando-o na primeira chamada.
+   * Lança erro se o token nunca foi registrado.
    */
   resolve<T>(token: symbol): T {
     if (!this._cache.has(token)) {
@@ -59,7 +59,7 @@ export class ServiceContainer {
     return this._cache.get(token) as T;
   }
 
-  /** Clears all cached instances (useful in tests to reset state). */
+  /** Limpa todas as instâncias em cache (útil em testes para resetar o estado). */
   dispose(): void {
     this._cache.clear();
     this._factories.clear();
