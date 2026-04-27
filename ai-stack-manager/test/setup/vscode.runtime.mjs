@@ -179,6 +179,24 @@ vi.mock('vscode', () => {
       },
     })),
     openTextDocument: vi.fn(async (value) => ({ uri: typeof value === 'string' ? MockUri.file(value) : value })),
+    createFileSystemWatcher: vi.fn((pattern) => {
+      const createEmitter = new MockEventEmitter();
+      const changeEmitter = new MockEventEmitter();
+      const deleteEmitter = new MockEventEmitter();
+      return {
+        pattern,
+        onDidCreate: createEmitter.event,
+        onDidChange: changeEmitter.event,
+        onDidDelete: deleteEmitter.event,
+        dispose: vi.fn(),
+        /** Test helper — fire a create event. */
+        __fireCreate: (uri) => createEmitter.fire(uri),
+        /** Test helper — fire a change event. */
+        __fireChange: (uri) => changeEmitter.fire(uri),
+        /** Test helper — fire a delete event. */
+        __fireDelete: (uri) => deleteEmitter.fire(uri),
+      };
+    }),
   };
 
   return {

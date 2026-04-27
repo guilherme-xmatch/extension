@@ -27,6 +27,7 @@ import { WorkflowPanel } from './presentation/panels/WorkflowPanel';
 import { StackDiffPanel } from './presentation/panels/StackDiffPanel';
 import { ScaffoldWizardPanel } from './presentation/panels/ScaffoldWizardPanel';
 import { HealthCheckScheduler, getSchedulerIntervalMs } from './infrastructure/services/HealthCheckScheduler';
+import { WorkspaceFileWatcher } from './infrastructure/services/WorkspaceFileWatcher';
 import { InsightsPanel } from './presentation/panels/InsightsPanel';
 import { ConfigPanel } from './presentation/panels/ConfigPanel';
 import { InsightsGenerator } from './infrastructure/services/InsightsGenerator';
@@ -84,6 +85,16 @@ export function activate(context: vscode.ExtensionContext): void {
     }
   });
 
+  // ─── Workspace File Watcher ───────────────────────────────────────────────
+  // Silently refreshes the catalog and installed views whenever any
+  // DescomplicAI package file (*.agent.md, SKILL.md, etc.) is created,
+  // modified, or deleted. Uses a 500 ms debounce to collapse rapid changes
+  // (e.g. git checkout, bulk scaffold) into a single refresh.
+  const fileWatcher = new WorkspaceFileWatcher(async () => {
+    await catalogProvider.refresh();
+    await installedProvider.refresh();
+  });
+
   context.subscriptions.push(
     vscode.window.registerWebviewViewProvider(CatalogViewProvider.viewType, catalogProvider),
     vscode.window.registerWebviewViewProvider(InstalledViewProvider.viewType, installedProvider),
@@ -91,6 +102,7 @@ export function activate(context: vscode.ExtensionContext): void {
     statusBar,
     logger,
     operations,
+    fileWatcher,
   );
 
   const resolvePackagesForInstall = async (pkg: Package): Promise<Package[]> => {
@@ -553,25 +565,46 @@ export function activate(context: vscode.ExtensionContext): void {
 
       if (cmd === 'workflow') {
         stream.markdown('## 🔄 Pipeline de Workflow de Agents\n\n');
-        stream.markdown('Você também pode visualizar este workflow de forma interativa executando o comando `DescomplicAI: Abrir Visualizador de Workflow`.\n\n');
-        stream.markdown('```\n');
-        stream.markdown('TRIAGE (🧠 orchestrator)\n');
-        stream.markdown('  ↓\n');
-        stream.markdown('PLAN (📐 planner) — opcional para tarefas simples\n');
-        stream.markdown('  ↓\n');
-        stream.markdown('DESIGN (🏛️ code-architect) — opcional\n');
-        stream.markdown('  ↓\n');
-        stream.markdown('EXECUTION (⚡ backend/frontend/database/devops)\n');
-        stream.markdown('  ↓\n');
-        stream.markdown('VALIDATION (🧪 test-engineer) — opcional para documentação\n');
-        stream.markdown('  ↓\n');
-        stream.markdown('CRITIC (🛡️ code-reviewer) — para alterações complexas\n');
-        stream.markdown('  ↓\n');
-        stream.markdown('DELIVER (🧠 orchestrator)\n');
-        stream.markdown('  ↓\n');
-        stream.markdown('REMEMBER (💾 mempalace) — extração de memória\n');
-        stream.markdown('```\n\n');
-        stream.markdown('> Cada etapa pode ser pulada pelo orchestrator dependendo da complexidade da tarefa.\n');
+
+        // Build dynamic pipeline from the installed agents in the workspace
+        const [allPkgs, installedIds] = await Promise.all([
+          registry.getAll(),
+          scanner.getInstalledPackageIds(),
+        ]);
+        const installedSet = new Set(installedIds);
+
+        // Collect installed agents grouped by workflowPhase
+        const PHASE_ORDER = ['triage', 'plan', 'design', 'execute', 'execution', 'validate', 'validation', 'critic', 'deliver', 'memory'];
+        const phaseMap = new Map<string, string[]>();
+        for (const pkg of allPkgs) {
+          if (pkg.type.value !== 'agent' || !pkg.agentMeta || !installedSet.has(pkg.id)) { continue; }
+          const phase = pkg.agentMeta.workflowPhase.toLowerCase().split(/\s/)[0]; // take first word
+          if (!phaseMap.has(phase)) { phaseMap.set(phase, []); }
+          phaseMap.get(phase)!.push(`${pkg.agentMeta.category.emoji ?? ''} ${pkg.displayName}`.trim());
+        }
+
+        if (phaseMap.size === 0) {
+          stream.markdown('> Nenhum agent instalado no workspace atual.\n> Use `/recommend` para descobrir o stack ideal para o seu projeto.\n');
+        } else {
+          // Sort by canonical order, unknowns appended
+          const sortedPhases = [...phaseMap.keys()].sort((a, b) => {
+            const ia = PHASE_ORDER.indexOf(a);
+            const ib = PHASE_ORDER.indexOf(b);
+            return (ia === -1 ? 99 : ia) - (ib === -1 ? 99 : ib);
+          });
+
+          stream.markdown('```\n');
+          for (let i = 0; i < sortedPhases.length; i++) {
+            const phase  = sortedPhases[i];
+            const agents = phaseMap.get(phase)!.join(', ');
+            stream.markdown(`${phase.toUpperCase()} — ${agents}\n`);
+            if (i < sortedPhases.length - 1) { stream.markdown('  ↓\n'); }
+          }
+          stream.markdown('```\n\n');
+          stream.markdown('> Cada etapa pode ser pulada dependendo da complexidade da tarefa.\n');
+        }
+
+        stream.markdown('\n💡 Visualize o workflow de forma interativa: `DescomplicAI: Abrir Visualizador de Workflow`\n');
         return;
       }
 
