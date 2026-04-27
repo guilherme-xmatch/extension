@@ -85,11 +85,11 @@ export function activate(context: vscode.ExtensionContext): void {
     }
   });
 
-  // ─── Workspace File Watcher ───────────────────────────────────────────────
-  // Silently refreshes the catalog and installed views whenever any
-  // DescomplicAI package file (*.agent.md, SKILL.md, etc.) is created,
-  // modified, or deleted. Uses a 500 ms debounce to collapse rapid changes
-  // (e.g. git checkout, bulk scaffold) into a single refresh.
+  // ─── Observador de Arquivos do Workspace ────────────────────────────────────────
+  // Atualiza silenciosamente as views de catálogo e instalados sempre que um
+  // arquivo de pacote DescomplicAI (*.agent.md, SKILL.md, etc.) for criado,
+  // modificado ou excluído. Usa debounce de 500 ms para colapsar alterações rápidas
+  // (ex.: git checkout, scaffold em lote) em um único refresh.
   const fileWatcher = new WorkspaceFileWatcher(async () => {
     await catalogProvider.refresh();
     await installedProvider.refresh();
@@ -264,7 +264,7 @@ export function activate(context: vscode.ExtensionContext): void {
     }),
 
     vscode.commands.registerCommand('dai.stackDiff', async (targetBundleId?: string) => {
-      // Allow pre-selecting a bundle (e.g. from chat /diff command)
+      // Permite pré-selecionar um bundle (ex.: do comando /diff do chat)
       let bundleId = targetBundleId;
       if (!bundleId) {
         const bundles = await registry.getAllBundles();
@@ -384,7 +384,7 @@ export function activate(context: vscode.ExtensionContext): void {
 
         // ── 2. Show detected project profile (or generic intro) ───────────────
         if (profiles.length > 0) {
-          // Sort by confidence descending, pick highest
+          // Ordena por confiança decrescente, seleciona o maior
           const sorted = [...profiles].sort((a, b) => b.confidence - a.confidence);
           const best   = sorted[0];
           const pct    = Math.round(best.confidence * 100);
@@ -404,7 +404,7 @@ export function activate(context: vscode.ExtensionContext): void {
             stream.markdown(`---\n\n### 🎯 Bundle Recomendado — **${recommendedBundle.displayName}**\n\n`);
             stream.markdown(`> ${recommendedBundle.description}\n\n`);
 
-            // Table of packages in the bundle
+            // Tabela de pacotes do bundle
             stream.markdown('| Pacote | Tipo | Status |\n');
             stream.markdown('|--------|------|--------|\n');
             let installedCount = 0;
@@ -431,7 +431,7 @@ export function activate(context: vscode.ExtensionContext): void {
             }
           }
         } else {
-          // No project profile detected — show generic intro
+          // Nenhum perfil de projeto detectado — exibe introdução genérica
           stream.markdown('Nenhum perfil de projeto reconhecido foi detectado.\n');
           stream.markdown('Aqui está um resumo do catálogo completo:\n\n');
         }
@@ -439,7 +439,7 @@ export function activate(context: vscode.ExtensionContext): void {
         // ── 4. Complete catalog listing ───────────────────────────────────────
         stream.markdown('\n---\n\n### 📦 Catálogo Completo\n\n');
 
-        // Bundles section
+        // Seção de bundles
         stream.markdown('#### 🚀 Bundles (pacotes combinados)\n\n');
         for (const b of bundles) {
           const bundlePkgIds = b.packageIds;
@@ -447,7 +447,7 @@ export function activate(context: vscode.ExtensionContext): void {
           stream.markdown(`- **${b.displayName}** (${bundleInstalled}/${b.packageCount} instalados) — ${b.description}\n`);
         }
 
-        // Agents section
+        // Seção de agents
         const agents = allPkgs.filter((p: Package) => p.isAgent);
         if (agents.length > 0) {
           stream.markdown('\n#### 🤖 Agents\n\n');
@@ -456,7 +456,7 @@ export function activate(context: vscode.ExtensionContext): void {
           }
         }
 
-        // Skills section
+        // Seção de skills
         const skills = allPkgs.filter((p: Package) => p.type.value === 'skill');
         if (skills.length > 0) {
           stream.markdown('\n#### 📐 Skills\n\n');
@@ -465,7 +465,7 @@ export function activate(context: vscode.ExtensionContext): void {
           }
         }
 
-        // MCPs section
+        // Seção de MCPs
         const mcps = allPkgs.filter((p: Package) => p.type.value === 'mcp');
         if (mcps.length > 0) {
           stream.markdown('\n#### 🔌 MCP Servers\n\n');
@@ -483,7 +483,7 @@ export function activate(context: vscode.ExtensionContext): void {
       }
 
       if (cmd === 'diff') {
-        // Resolve optional bundle name argument (e.g. "/diff backend")
+        // Resolve argumento opcional de nome do bundle (ex.: "/diff backend")
         const allBundles = await registry.getAllBundles();
         const query      = prompt.toLowerCase().trim();
         const target     = query
@@ -502,7 +502,7 @@ export function activate(context: vscode.ExtensionContext): void {
           return;
         }
 
-        // Open the visual panel (passes bundleId or undefined to auto-pick)
+        // Abre o painel visual (passa bundleId ou undefined para seleção automática)
         stream.markdown(`## 📊 Stack Diff\n\n`);
         if (target) {
           stream.markdown(`Abrindo comparação com **${target.displayName}**…\n\n`);
@@ -511,7 +511,7 @@ export function activate(context: vscode.ExtensionContext): void {
         }
         void vscode.commands.executeCommand('dai.stackDiff', target?.id);
 
-        // Also show a quick Markdown summary in chat
+        // Também exibe um resumo rápido em Markdown no chat
         const [allPkgs2, installedIds2] = await Promise.all([
           registry.getAll(),
           scanner.getInstalledPackageIds(),
@@ -566,14 +566,14 @@ export function activate(context: vscode.ExtensionContext): void {
       if (cmd === 'workflow') {
         stream.markdown('## 🔄 Pipeline de Workflow de Agents\n\n');
 
-        // Build dynamic pipeline from the installed agents in the workspace
+        // Constrói o pipeline dinâmico a partir dos agents instalados no workspace
         const [allPkgs, installedIds] = await Promise.all([
           registry.getAll(),
           scanner.getInstalledPackageIds(),
         ]);
         const installedSet = new Set(installedIds);
 
-        // Collect installed agents grouped by workflowPhase
+        // Coleta agents instalados agrupados por workflowPhase
         const PHASE_ORDER = ['triage', 'plan', 'design', 'execute', 'execution', 'validate', 'validation', 'critic', 'deliver', 'memory'];
         const phaseMap = new Map<string, string[]>();
         for (const pkg of allPkgs) {
@@ -586,7 +586,7 @@ export function activate(context: vscode.ExtensionContext): void {
         if (phaseMap.size === 0) {
           stream.markdown('> Nenhum agent instalado no workspace atual.\n> Use `/recommend` para descobrir o stack ideal para o seu projeto.\n');
         } else {
-          // Sort by canonical order, unknowns appended
+          // Ordena pela ordem canônica, desconhecidos ao final
           const sortedPhases = [...phaseMap.keys()].sort((a, b) => {
             const ia = PHASE_ORDER.indexOf(a);
             const ib = PHASE_ORDER.indexOf(b);
@@ -630,7 +630,7 @@ export function activate(context: vscode.ExtensionContext): void {
         return;
       }
 
-      // Default: help
+      // Padrão: ajuda
       stream.markdown('## 🧠 DescomplicAI\n\n');
       stream.markdown('Eu posso ajudar você a gerenciar sua infraestrutura de AI agents:\n\n');
       stream.markdown('- `/recommend` — Sugere pacotes e agents para o seu projeto\n');
@@ -646,12 +646,12 @@ export function activate(context: vscode.ExtensionContext): void {
     context.subscriptions.push(participant);
   } catch (error) {
     logger.warn('API de chat não disponível nesta versão do VS Code.', { error });
-    // Chat API may not be available in all VS Code versions
+    // A API de chat pode não estar disponível em todas as versões do VS Code
   }
 
   // ─── URI Handler (Deep Link) ─────────────────
-  // Handles: vscode://itau-engineering.descomplicai/install?packageId=<id>
-  // Handles: vscode://itau-engineering.descomplicai/install?bundleId=<id>
+  // Trata: vscode://itau-engineering.descomplicai/install?packageId=<id>
+  // Trata: vscode://itau-engineering.descomplicai/install?bundleId=<id>
   context.subscriptions.push(
     vscode.window.registerUriHandler({
       handleUri: async (uri: vscode.Uri): Promise<void> => {
@@ -714,7 +714,7 @@ export function activate(context: vscode.ExtensionContext): void {
     })
   );
 
-  // ─── Health Check Scheduler ──────────────────
+  // ─── Agendador de Health Check ──────────────
   const config = vscode.workspace.getConfiguration('descomplicai');
   const scheduler = new HealthCheckScheduler(
     healthChecker,
@@ -728,7 +728,7 @@ export function activate(context: vscode.ExtensionContext): void {
     context.subscriptions.push({ dispose: () => scheduler.dispose() });
   }
 
-  // Command: force an immediate health check
+  // Comando: força uma verificação de saúde imediata
   context.subscriptions.push(
     vscode.commands.registerCommand('dai.forceHealthCheck', async () => {
       await healthProvider.refresh();

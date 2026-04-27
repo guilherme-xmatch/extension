@@ -1,14 +1,14 @@
 /**
- * AI Stack Manager — Animations
+ * AI Stack Manager — Animações
  * 
- * Micro-animations for premium feel:
- * - Slide-in staggered cards
- * - Scale-in for score ring
- * - Fade-in for empty states
- * - Pulse for status indicators
- * - Score progress animation
- * - Ripple click effect
- * - Shimmer loading state
+ * Micro-animações para uma experiência premium:
+ * - Cards com entrada em escalonamento (stagger)
+ * - Scale-in para o anel de pontuação
+ * - Fade-in para estados vazios
+ * - Pulso para indicadores de status
+ * - Animação de progresso de pontuação
+ * - Efeito ripple ao clicar
+ * - Estado de carregamento shimmer
  */
 
 /* ═══════════════════════════════════════════════════
@@ -158,13 +158,13 @@ body.dai-hydrated .dai-layer-1,
 body.dai-hydrated .dai-layer-2,
 body.dai-hydrated .dai-layer-3 {
   animation: none !important;
-  /* Restore each layer's final visual state (matches the 100% keyframe end values). */
+  /* Restaura o estado visual final de cada camada (corresponde aos valores finais do keyframe 100%). */
   opacity: 0.9 !important;
 }
 
 body.dai-hydrated .dai-brand {
   animation: none !important;
-  /* Restore final state of the type-in animation. */
+  /* Restaura o estado final da animação de digitação. */
   opacity: 1 !important;
   transform: translateX(0) !important;
   filter: blur(0) !important;
@@ -175,18 +175,18 @@ body.dai-hydrated .dai-tagline {
   opacity: 1 !important;
 }
 
-/* Score ring animation */
+/* Animação do anel de pontuação */
 .dai-score-progress {
   animation: score-draw 1.2s cubic-bezier(0.4, 0, 0.2, 1) both;
   animation-delay: 0.3s;
 }
 
-/* Logo glow on hover */
+/* Brilho do logo ao passar o mouse */
 .dai-logo-icon:hover {
   animation: glow-pulse 2s ease-in-out infinite;
 }
 
-/* Shimmer loading effect */
+/* Efeito shimmer de carregamento */
 .dai-shimmer {
   background: linear-gradient(
     90deg,
@@ -199,7 +199,7 @@ body.dai-hydrated .dai-tagline {
   border-radius: 6px;
 }
 
-/* Bundle card border animation on hover */
+/* Animação da borda do card de bundle ao passar o mouse */
 .dai-bundle-card:hover .dai-bundle-glow {
   animation: border-shine 2s ease infinite;
   background-size: 200% auto;
@@ -211,7 +211,7 @@ body.dai-hydrated .dai-tagline {
   );
 }
 
-/* Health icon floating animation */
+/* Animação flutuante do ícone de saúde */
 .dai-health-icon-large {
   animation: float 3s ease-in-out infinite;
 }
@@ -220,7 +220,7 @@ body.dai-hydrated .dai-tagline {
    TRANSITION UTILITIES
    ═══════════════════════════════════════════════════ */
 
-/* Smooth hover transitions for interactive elements */
+/* Transições suaves ao passar o mouse nos elementos interativos */
 .dai-package-card,
 .dai-bundle-card,
 .dai-installed-item,
@@ -230,7 +230,7 @@ body.dai-hydrated .dai-tagline {
   will-change: transform, box-shadow;
 }
 
-/* Reduce motion for accessibility */
+/* Redução de movimento para acessibilidade */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;
@@ -240,19 +240,19 @@ body.dai-hydrated .dai-tagline {
 }
 
 /* ═══════════════════════════════════════════════════
-   LOGO — SITUATIONAL ANIMATIONS
-   Triggered by JS via class addition/removal.
-   Event-driven only — never loop on idle.
-   Fully suppressed by prefers-reduced-motion (covered
-   by the global reduce rule above).
+   LOGO — ANIMAÇÕES SITUACIONAIS
+   Disparadas pelo JS via adição/remoção de classes.
+   Orientadas a eventos — nunca em loop idle.
+   Completamente suprimidas por prefers-reduced-motion (coberto
+   pela regra global de redução acima).
    ═══════════════════════════════════════════════════ */
 
-/* ── 1. Working indicator ─────────────────────────
-   Applied to .dai-stack-icon while an operation runs.
-   The middle layer (dai-layer-2) rotates continuously
-   on the Y axis, giving a "spinning plate" effect
-   that uses only compositor-safe transform.
-   Removed by JS when the operation completes.         */
+/* ── 1. Indicador de processamento ──────────────────
+   Aplicado a .dai-stack-icon enquanto uma operação está em andamento.
+   A camada do meio (dai-layer-2) gira continuamente no eixo Y,
+   dando um efeito de "prato girando" que usa apenas transform
+   compatível com o compositor.
+   Removido pelo JS quando a operação é concluída.          */
 @keyframes logo-working {
   from { transform: rotateX(60deg) rotateZ(-45deg) rotateY(0deg)   translateZ(0px); }
   to   { transform: rotateX(60deg) rotateZ(-45deg) rotateY(360deg) translateZ(0px); }
@@ -260,16 +260,16 @@ body.dai-hydrated .dai-tagline {
 
 .dai-logo-working .dai-layer-2 {
   animation: logo-working 1.2s linear infinite !important;
-  /* Keep the layer visible during the spin */
+  /* Mantém a camada visível durante o giro */
   opacity: 0.95 !important;
 }
 
-/* ── 2. Success flash ─────────────────────────────
-   Applied once to .dai-stack-icon when an install/
-   operation succeeds.  The three layers briefly
-   scale up together, with a green tint on the shadow.
-   Class is removed by JS after the animation ends
-   (via the animationend event).                      */
+/* ── 2. Flash de sucesso ────────────────────────
+   Aplicado uma vez a .dai-stack-icon quando uma instalação/
+   operação é bem-sucedida. As três camadas ampliam juntas
+   brevemente, com tom verde na sombra.
+   Classe removida pelo JS após o fim da animação
+   (via evento animationend).                         */
 @keyframes logo-success {
   0%   { transform: scale(1);    filter: drop-shadow(0 0 0px  rgba(0,230,118,0));   }
   40%  { transform: scale(1.18); filter: drop-shadow(0 0 8px  rgba(0,230,118,0.7)); }
@@ -281,9 +281,9 @@ body.dai-hydrated .dai-tagline {
   animation: logo-success 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) both !important;
 }
 
-/* ── 3. Error flash ───────────────────────────────
-   Brief horizontal shake on critical errors.
-   Minimal, single occurrence.                        */
+/* ── 3. Flash de erro ───────────────────────────
+   Vibração horizontal breve em erros críticos.
+   Mínimo e de ocorrência única.                       */
 @keyframes logo-error {
   0%, 100% { transform: translateX(0); }
   20%       { transform: translateX(-4px); }

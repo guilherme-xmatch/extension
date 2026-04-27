@@ -1,18 +1,18 @@
 /**
  * @module infrastructure/services/HealthCheckScheduler
- * @description Runs periodic background health checks on the workspace's AI infrastructure.
+ * @description Executa verificações periódicas de saúde em segundo plano na infraestrutura de AI do workspace.
  *
- * ## Responsibilities
- * - Schedule automatic `HealthCheckerService.check()` calls on a configurable interval
- * - Persist `lastRunTime` to `ExtensionContext.globalState` so the interval
- *   survives VS Code restarts (next run fires only when the full interval has elapsed)
- * - Notify the user when new error-level findings appear (without spamming)
- * - Expose the last report and a `runNow()` method for manual / command triggers
- * - Be fully disposable (safe to call `dispose()` on deactivation)
+ * ## Responsabilidades
+ * - Agendar chamadas automáticas a `HealthCheckerService.check()` em um intervalo configurável
+ * - Persistir `lastRunTime` em `ExtensionContext.globalState` para que o intervalo
+ *   sobreviva a reinicializações do VS Code (a próxima execução ocorre somente após o intervalo completo)
+ * - Notificar o usuário quando novos erros críticos aparecerem (sem spam)
+ * - Expor o último relatório e um método `runNow()` para acionamento manual / por comando
+ * - Ser totalmente disponsível (seguro chamar `dispose()` na desativação)
  *
- * ## Configuration
- * Reads `descomplicai.healthCheckIntervalHours` (default `6`).
- * Setting the value to `0` disables automatic scheduling.
+ * ## Configuração
+ * Lê `descomplicai.healthCheckIntervalHours` (padrão `6`).
+ * Definir o valor como `0` desativa o agendamento automático.
  */
 
 import * as vscode from 'vscode';
@@ -22,7 +22,7 @@ import { AppLogger } from './AppLogger';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-/** Minimal interface for the status bar so this service remains testable */
+/** Interface mínima para a status bar, mantendo este serviço testável */
 export interface IStatusBarBridge {
   setWorking(task: string): void;
   setSuccess(message: string): void;
@@ -30,9 +30,9 @@ export interface IStatusBarBridge {
   setIdle(): void;
 }
 
-/** Snapshot persisted to globalState */
+/** Snapshot persistido em globalState */
 interface PersistedState {
-  lastRunTime: number;   // Unix timestamp (ms)
+  lastRunTime: number;   // timestamp Unix (ms)
   lastErrorCount: number;
 }
 
@@ -55,14 +55,14 @@ export class HealthCheckScheduler {
   // ─── Public API ──────────────────────────────────────────────────────────────
 
   /**
-   * Start the periodic scheduler.
+   * Inicia o agendador periódico.
    *
-   * @param intervalMs Milliseconds between scheduled runs. 0 = disabled.
+   * @param intervalMs Milissegundos entre execuções agendadas. 0 = desativado.
    *
-   * On start:
-   * 1. Checks `globalState` for when the last run happened.
-   * 2. If more than `intervalMs` has elapsed since the last run, fires immediately.
-   * 3. Schedules future runs at `intervalMs`.
+   * Na inicialização:
+   * 1. Verifica no `globalState` quando foi a última execução.
+   * 2. Se mais de `intervalMs` passou desde a última execução, dispara imediatamente.
+   * 3. Agenda execuções futuras em `intervalMs`.
    */
   public start(intervalMs: number): void {
     if (intervalMs <= 0) {
@@ -76,30 +76,30 @@ export class HealthCheckScheduler {
 
     this._logger.info(`[HealthCheckScheduler] Next run in ${Math.round(delay / 1000)}s`);
 
-    // First run (possibly deferred by 3 s if stale, or deferred to next interval)
+    // Primeira execução (possivelmente adiada 3 s se obsoleta, ou adiada para o próximo intervalo)
     setTimeout(() => {
       void this._runChecked();
       this._timer = setInterval(() => void this._runChecked(), intervalMs);
     }, delay);
   }
 
-  /** Force an immediate health check, bypassing the timer. */
+  /** Força uma verificação de saúde imediata, ignorando o timer. */
   public async runNow(): Promise<HealthReport> {
     return this._runChecked();
   }
 
-  /** Most recent health report, or undefined if no run has completed yet. */
+  /** Relatório de saúde mais recente, ou undefined se nenhuma execução foi concluída. */
   public get lastReport(): HealthReport | undefined {
     return this._lastReport;
   }
 
-  /** Timestamp of the most recent completed run. */
+  /** Timestamp da execução mais recente concluída. */
   public get lastRunTime(): Date | undefined {
     const state = this._loadState();
     return state ? new Date(state.lastRunTime) : undefined;
   }
 
-  /** Whether a check is currently in progress. */
+  /** Indica se uma verificação está em andamento. */
   public get isRunning(): boolean {
     return this._isRunning;
   }

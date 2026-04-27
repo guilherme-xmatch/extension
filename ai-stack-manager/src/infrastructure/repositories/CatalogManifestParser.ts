@@ -97,8 +97,8 @@ export class CatalogManifestParser {
   }
 
   /**
-   * Validates a manifest object for required fields, ID format, safe paths, and URLs.
-   * @param isUrlSafe  Caller-supplied predicate for URL safety (from CatalogFetcher).
+   * Valida um objeto manifest quanto a campos obrigatórios, formato de ID, caminhos seguros e URLs.
+   * @param isUrlSafe  Predicado fornecido pelo chamador para validação de segurança de URL (vindo do CatalogFetcher).
    */
   static validateManifest(
     manifest: CatalogPackageManifest,

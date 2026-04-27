@@ -113,8 +113,8 @@ export class WorkflowGraphBuilder {
    *
    * …are included in the graph.
    *
-   * @param allPackages - Full list of packages from the registry
-   * @param installedIds - IDs installed in the current workspace
+   * @param allPackages - Lista completa de pacotes do registro
+   * @param installedIds - IDs instalados no workspace atual
    */
   buildGraph(allPackages: Package[], installedIds: string[]): WorkflowGraphData {
     const installedSet = new Set(installedIds);

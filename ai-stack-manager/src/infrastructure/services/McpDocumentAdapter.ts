@@ -1,7 +1,7 @@
 /**
  * @module infrastructure/services/McpDocumentAdapter
- * @description Normalizes MCP configuration documents from multiple client formats
- * (Copilot/VS Code, Claude Desktop, Cursor) to the canonical internal format.
+ * @description Normaliza documentos de configuração MCP de múltiplos formatos de clientes
+ * (Copilot/VS Code, Claude Desktop, Cursor) para o formato interno canônico.
  */
 
 export type McpClientFormat = 'copilot' | 'claude-desktop' | 'cursor' | 'unknown';
@@ -17,7 +17,7 @@ export interface NormalizedMcpDocument {
 
 export class McpDocumentAdapter {
   /**
-   * Detects the format of an MCP configuration document.
+   * Detecta o formato de um documento de configuração MCP.
    */
   static detectFormat(raw: unknown): McpClientFormat {
     if (!raw || typeof raw !== 'object') {
@@ -26,19 +26,19 @@ export class McpDocumentAdapter {
     const obj = raw as Record<string, unknown>;
 
     if (obj['servers'] && typeof obj['servers'] === 'object') {
-      // Has 'servers' key — Copilot/VS Code format
+      // Possui chave 'servers' — formato Copilot/VS Code
       return 'copilot';
     }
     if (obj['mcpServers'] && typeof obj['mcpServers'] === 'object') {
-      // Both Claude Desktop and Cursor share this root key; label generically as claude-desktop
+      // Claude Desktop e Cursor compartilham esta chave raiz; identificado genericamente como claude-desktop
       return 'claude-desktop';
     }
     return 'unknown';
   }
 
   /**
-   * Normalizes any supported MCP document format to the canonical internal format.
-   * Throws if the document cannot be parsed or no servers are found.
+   * Normaliza qualquer formato suportado de documento MCP para o formato interno canônico.
+   * Lança exceção se o documento não puder ser analisado ou nenhum servidor for encontrado.
    */
   static normalize(raw: unknown): NormalizedMcpDocument {
     const format = McpDocumentAdapter.detectFormat(raw);
@@ -79,11 +79,11 @@ export class McpDocumentAdapter {
   }
 
   /**
-   * Reads and parses a JSON file, stripping single-line and block comments (JSONC).
+   * Lê e analisa um arquivo JSON, removendo comentários de linha única e em bloco (JSONC).
    */
   static parseJsonFile(content: string): unknown {
-    // Only strip // comments that start a line (possibly preceded by whitespace).
-    // This avoids accidentally stripping // inside string values such as URLs.
+    // Remove apenas comentários // que iniciam uma linha (possivelmente precedidos por espaços).
+    // Isso evita remover // dentro de valores de string, como URLs.
     const stripped = content
       .replace(/^\s*\/\/.*$/gm, '')
       .replace(/\/\*[\s\S]*?\*\//g, '')

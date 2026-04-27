@@ -1,8 +1,8 @@
 /**
  * @module infrastructure/services/InstallationStrategy
- * @description Strategy pattern for package installation.
- * Each strategy encapsulates how a specific package type is installed/uninstalled
- * in the workspace, making each independently testable and extensible.
+ * @description Padrão Strategy para instalação de pacotes.
+ * Cada estratégia encapsula como um tipo específico de pacote é instalado/desinstalado
+ * no workspace, tornando cada uma independentemente testável e extensível.
  */
 
 import * as vscode from 'vscode';
@@ -10,7 +10,7 @@ import * as path from 'path';
 import { Package } from '../../domain/entities/Package';
 import { AppLogger } from './AppLogger';
 
-/** Strategy for installing and uninstalling a package into a workspace root. */
+/** Estratégia para instalar e desinstalar um pacote na raiz de um workspace. */
 export interface IInstallationStrategy {
   install(root: string, pkg: Package, existingFileMode: 'prompt' | 'skip'): Promise<void>;
   uninstall(root: string, pkg: Package): Promise<void>;
@@ -44,8 +44,8 @@ async function removeEmptyParent(dirPath: string, rootPath: string, logger: AppL
 // ─── FileCopyStrategy ──────────────────────────────────────────────────────
 
 /**
- * Default strategy: copies package files directly into the workspace.
- * Prompts the user on conflict when existingFileMode is 'prompt'.
+ * Estratégia padrão: copia os arquivos do pacote diretamente no workspace.
+ * Solicita confirmação do usuário em caso de conflito quando existingFileMode é 'prompt'.
  */
 export class FileCopyStrategy implements IInstallationStrategy {
   private readonly _logger = AppLogger.getInstance();
@@ -60,12 +60,12 @@ export class FileCopyStrategy implements IInstallationStrategy {
         if (existingFileMode === 'skip') { continue; }
 
         const choice = await vscode.window.showWarningMessage(
-          `File "${file.relativePath}" already exists. Overwrite?`,
+          `O arquivo "${file.relativePath}" já existe. Sobrescrever?`,
           { modal: true },
-          'Overwrite',
-          'Skip',
+          'Sobrescrever',
+          'Pular',
         );
-        if (choice !== 'Overwrite') { continue; }
+        if (choice !== 'Sobrescrever') { continue; }
       }
 
       const dirUri = vscode.Uri.file(path.dirname(fullPath));
@@ -96,8 +96,8 @@ type McpDocument = {
 };
 
 /**
- * MCP strategy: merges server entries into `.vscode/mcp.json` rather than
- * copying individual files. Preserves existing servers and deduplicates inputs.
+ * Estratégia MCP: mescla entradas de servidor no `.vscode/mcp.json` em vez de
+ * copiar arquivos individualmente. Preserva servidores existentes e deduplica as entradas.
  */
 export class McpMergeStrategy implements IInstallationStrategy {
   private readonly _logger = AppLogger.getInstance();

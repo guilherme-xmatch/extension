@@ -1,8 +1,8 @@
 ﻿/**
  * @module infrastructure/repositories/CatalogFetcher
- * @description Handles all network and Git operations for fetching catalog data.
- * Encapsulates URL safety validation, HTTPS fetching, and local clone management.
- * Inject this class to mock network calls in tests.
+ * @description Gerencia todas as operações de rede e Git para busca de dados do catálogo.
+ * Encapsula validação de segurança de URLs, busca HTTPS e gerenciamento de clone local.
+ * Injete esta classe para simular chamadas de rede em testes.
  */
 
 import * as path from 'path';

@@ -1,0 +1,756 @@
+﻿
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mC:/Users/Guilherme Campos/Desktop/2026/4. Extens├úo/ai-stack-manager[39m
+      [2mCoverage enabled with [22m[33mv8[39m
+
+ [32mÔ£ô[39m test/infrastructure/LockFileService.test.ts[2m > [22mLockFileService[2m > [22mread() retorna lock vazio se o arquivo n├úo existir[32m 12[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/LockFileService.test.ts[2m > [22mLockFileService[2m > [22maddOrUpdate() cria o arquivo e adiciona uma entrada corretamente[32m 11[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/LockFileService.test.ts[2m > [22mLockFileService[2m > [22maddOrUpdate() atualiza a vers├úo se o pacote j├í existir[32m 5[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/LockFileService.test.ts[2m > [22mLockFileService[2m > [22mremove() remove uma entrada existente[32m 12[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/LockFileService.test.ts[2m > [22mLockFileService[2m > [22mremove() ├® no-op se o pacote n├úo estiver no lock[32m 9[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/LockFileService.test.ts[2m > [22mLockFileService[2m > [22mfindById() retorna a entrada correta quando o pacote existe[32m 7[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/LockFileService.test.ts[2m > [22mLockFileService[2m > [22mfindById() retorna undefined quando o pacote n├úo existe[32m 2[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/FileInstaller.test.ts[2m > [22mFileInstaller[2m > [22mmescla servidores MCP preservando o conte├║do existente[32m 26[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/FileInstaller.test.ts[2m > [22mFileInstaller[2m > [22mdeduplica pacotes em installMany[32m 15[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/FileInstaller.test.ts[2m > [22mFileInstaller[2m > [22minstala um agente criando o arquivo no workspace[32m 13[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/FileInstaller.test.ts[2m > [22mFileInstaller[2m > [22mdesinstala agente quando usu├írio confirma "Remove"[32m 16[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/FileInstaller.test.ts[2m > [22mFileInstaller[2m > [22mmant├®m arquivos quando usu├írio cancela desinstala├º├úo[32m 10[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/FileInstaller.test.ts[2m > [22mFileInstaller[2m > [22minstall lan├ºa erro quando nenhum workspace est├í aberto[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/FileInstaller.test.ts[2m > [22mFileInstaller[2m > [22muninstall lan├ºa erro quando nenhum workspace est├í aberto[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/FileInstaller.test.ts[2m > [22mFileInstaller[2m > [22minstallMany lan├ºa erro quando nenhum workspace est├í aberto[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/WorkspaceScanner.test.ts[2m > [22mWorkspaceScanner[2m > [22mretorna NotInstalled quando n├úo h├í workspace aberto[32m 6[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/WorkspaceScanner.test.ts[2m > [22mWorkspaceScanner[2m > [22mdetecta status Installed quando todos os arquivos existem[32m 16[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/WorkspaceScanner.test.ts[2m > [22mWorkspaceScanner[2m > [22mretorna NotInstalled quando nenhum arquivo existe[32m 13[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/WorkspaceScanner.test.ts[2m > [22mWorkspaceScanner[2m > [22mretorna Partial quando apenas alguns arquivos existem[32m 9[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/WorkspaceScanner.test.ts[2m > [22mWorkspaceScanner[2m > [22mgetInstalledPackageIds retorna array vazio por ora[32m 3[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/WorkspaceScanner.test.ts[2m > [22mWorkspaceScanner[2m > [22mhasGitHubDirectory retorna false sem workspace[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/WorkspaceScanner.test.ts[2m > [22mWorkspaceScanner[2m > [22mhasGitHubDirectory retorna false quando .github n├úo existe[32m 3[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/WorkspaceScanner.test.ts[2m > [22mWorkspaceScanner[2m > [22mhasGitHubDirectory retorna true quando .github existe[32m 6[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/WorkspaceScanner.test.ts[2m > [22mWorkspaceScanner[2m > [22mretorna [] sem workspace aberto[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/WorkspaceScanner.test.ts[2m > [22mWorkspaceScanner[2m > [22mretorna [] sem package.json e sem docker/terraform[32m 14[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/WorkspaceScanner.test.ts[2m > [22mWorkspaceScanner[2m > [22mdetecta Frontend App (react)[32m 9[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/WorkspaceScanner.test.ts[2m > [22mWorkspaceScanner[2m > [22mdetecta Frontend App (next)[32m 7[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/InstallationStrategy.test.ts[2m > [22mFileCopyStrategy[2m > [22minstall[2m > [22mcreates file when it does not exist[32m 22[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/InstallationStrategy.test.ts[2m > [22mFileCopyStrategy[2m > [22minstall[2m > [22mskips existing file when mode is "skip"[32m 11[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/InstallationStrategy.test.ts[2m > [22mFileCopyStrategy[2m > [22minstall[2m > [22moverwrites existing file when mode is "prompt" and user selects Overwrite[32m 11[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/InstallationStrategy.test.ts[2m > [22mFileCopyStrategy[2m > [22minstall[2m > [22mpreserves existing file when mode is "prompt" and user selects Skip[32m 9[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/InstallationStrategy.test.ts[2m > [22mFileCopyStrategy[2m > [22minstall[2m > [22minstalls multiple files from a single package[32m 13[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/InstallationStrategy.test.ts[2m > [22mFileCopyStrategy[2m > [22muninstall[2m > [22mdeletes file that exists[32m 10[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/InstallationStrategy.test.ts[2m > [22mFileCopyStrategy[2m > [22muninstall[2m > [22mdoes not throw when file does not exist[32m 18[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/HealthChecker.test.ts[2m > [22mHealthCheckerService[2m > [22mretorna finding no-workspace quando n├â┬úo h├â┬í workspace aberto[32m 5[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/HealthChecker.test.ts[2m > [22mHealthCheckerService[2m > [22mretorna finding all-good quando workspace est├â┬í vazio e saud├â┬ível[32m 25[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/HealthChecker.test.ts[2m > [22mHealthCheckerService[2m > [22memite warning no-github-dir quando .github n├â┬úo existe[32m 4[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/HealthChecker.test.ts[2m > [22mHealthCheckerService[2m > [22memite info no-vscode-dir quando .vscode n├â┬úo existe mas .github existe[32m 7[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/HealthChecker.test.ts[2m > [22mHealthCheckerService[2m > [22mn├â┬úo emite warnings de diret├â┬│rio quando ambos existem[32m 10[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/HealthChecker.test.ts[2m > [22mHealthCheckerService[2m > [22memite warning empty-agents-dir quando .github/agents existe mas est├â┬í vazio[32m 10[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/HealthChecker.test.ts[2m > [22mHealthCheckerService[2m > [22memite error quando agent .agent.md n├â┬úo tem frontmatter "---"[32m 10[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/HealthChecker.test.ts[2m > [22mHealthCheckerService[2m > [22memite warning quando agent tem frontmatter mas n├â┬úo tem "name:"[32m 15[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/HealthChecker.test.ts[2m > [22mHealthCheckerService[2m > [22mn├â┬úo emite erros para agent corretamente estruturado[32m 9[2mms[22m[39m
+ [31m├ù[39m test/infrastructure/PublishService.test.ts[2m > [22mPublishService[2m > [22mimportCustomMcp[2m > [22mimporta 1 server com sucesso, retorna 1 Package e salva no registry[32m 17[2mms[22m[39m
+[31m   ÔåÆ Unterminated string in JSON at position 48 (line 1 column 49)[39m
+ [31m├ù[39m test/infrastructure/PublishService.test.ts[2m > [22mPublishService[2m > [22mimportCustomMcp[2m > [22mparseia JSON com coment├írios de linha corretamente, sem lan├ºar erro[32m 1[2mms[22m[39m
+[31m   ÔåÆ Bad control character in string literal in JSON at position 68 (line 4 column 49)[39m
+ [31m├ù[39m test/infrastructure/PublishService.test.ts[2m > [22mPublishService[2m > [22mimportCustomMcp[2m > [22mimporta 2 servers e chama saveWorkspaceCustomPackage 2 vezes[32m 2[2mms[22m[39m
+[31m   ÔåÆ Unterminated string in JSON at position 52 (line 1 column 53)[39m
+ [31m├ù[39m test/infrastructure/PublishService.test.ts[2m > [22mPublishService[2m > [22mimportCustomMcp[2m > [22mJSON com campo mcpServers (alternativo a servers) ÔåÆ importa normalmente[32m 2[2mms[22m[39m
+[31m   ÔåÆ Unterminated string in JSON at position 51 (line 1 column 52)[39m
+ [31m├ù[39m test/infrastructure/PublishService.test.ts[2m > [22mPublishService[2m > [22mimportCustomMcp[2m > [22mJSON com servers vazio ÔåÆ throw com mensagem de valida├º├úo (linhas 222-223)[32m 15[2mms[22m[39m
+[31m   ÔåÆ expected [Function] to throw error including 'O arquivo mcp.json n├úo possui servidoÔÇª' but got 'Nenhum servidor MCP encontrado no docÔÇª'[39m
+ [31m├ù[39m test/infrastructure/PublishService.test.ts[2m > [22mPublishService[2m > [22mimportCustomMcp[2m > [22mJSON sem campo inputs ÔåÆ normalizado como array vazio (linha 229)[32m 2[2mms[22m[39m
+[31m   ÔåÆ Unterminated string in JSON at position 48 (line 1 column 49)[39m
+ [32mÔ£ô[39m test/infrastructure/PublishService.test.ts[2m > [22mPublishService[2m > [22mimportCustomMcp[2m > [22mserver sem url nem command ÔåÆ descri├º├úo fallback gen├®rica (linha 252)[32m 4[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/PublishService.test.ts[2m > [22mPublishService[2m > [22mimportCustomMcp[2m > [22mfs.readFileSync lan├ºa erro ÔåÆ setError chamado com mensagem correta e erro relan├ºado[32m 6[2mms[22m[39m
+ [31m├ù[39m test/infrastructure/PublishService.test.ts[2m > [22mPublishService[2m > [22mpublishPackage[2m > [22mserver v├ílido ÔåÆ mkdirSync chamado 2x e writeFileSync chamado 4x[32m 3[2mms[22m[39m
+[31m   ÔåÆ expected "spy" to be called 2 times, but got 0 times[39m
+ [31m├ù[39m test/infrastructure/PublishService.test.ts[2m > [22mPublishService[2m > [22mpublishPackage[2m > [22mchoice ÔåÆ Abrir pasta: revealFileInOS executado (branch linha 222)[32m 6[2mms[22m[39m
+[31m   ÔåÆ expected "spy" to be called with arguments: [ 'revealFileInOS', ÔÇª(1) ][90m
+
+Number of calls: [1m0[22m
+[31m[39m
+ [31m├ù[39m test/infrastructure/PublishService.test.ts[2m > [22mPublishService[2m > [22mpublishPackage[2m > [22mchoice ÔåÆ Abrir reposit├│rio oficial: openExternal chamado (branch linha 229)[32m 3[2mms[22m[39m
+[31m   ÔåÆ expected "spy" to be called with arguments: [ ObjectContaining{ÔÇª} ][90m
+
+Number of calls: [1m0[22m
+[31m[39m
+ [32mÔ£ô[39m test/infrastructure/PublishService.test.ts[2m > [22mPublishService[2m > [22mpublishPackage[2m > [22mfs.mkdirSync lan├ºa erro ÔåÆ setError chamado, erro N├âO relan├ºado pela fun├º├úo[32m 4[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/InsightsGenerator.test.ts[2m > [22mInsightsGenerator[2m > [22mretorna relat├│rio vazio quando n├úo h├í pacotes instalados[32m 6[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/InsightsGenerator.test.ts[2m > [22mInsightsGenerator[2m > [22mconta apenas agents instalados (Installed + Partial)[32m 2[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/InsightsGenerator.test.ts[2m > [22mInsightsGenerator[2m > [22minclui pacotes Partial como instalados[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/InsightsGenerator.test.ts[2m > [22mInsightsGenerator[2m > [22mn├úo conta pacotes NotInstalled[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/InsightsGenerator.test.ts[2m > [22mInsightsGenerator[2m > [22mcoverage.triage = true para agent com workflowPhase "orchestrator"[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/InsightsGenerator.test.ts[2m > [22mInsightsGenerator[2m > [22mcoverage.triage = true para workflowPhase "triage"[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/InsightsGenerator.test.ts[2m > [22mInsightsGenerator[2m > [22mcoverage.plan = true para workflowPhase "plan"[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/InsightsGenerator.test.ts[2m > [22mInsightsGenerator[2m > [22mcoverage.design = true para workflowPhase "architect"[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/InsightsGenerator.test.ts[2m > [22mInsightsGenerator[2m > [22mcoverage.execute = true para workflowPhase "specialist"[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/InsightsGenerator.test.ts[2m > [22mInsightsGenerator[2m > [22mcoverage.validate = true para workflowPhase "test"[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/InsightsGenerator.test.ts[2m > [22mInsightsGenerator[2m > [22mcoverage.critic = true para workflowPhase "critic"[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/InsightsGenerator.test.ts[2m > [22mInsightsGenerator[2m > [22mcoverageScore ├® 100 quando todas as dimens├Áes est├úo cobertas[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/InsightsGenerator.test.ts[2m > [22mInsightsGenerator[2m > [22memite securityAlert quando agent tem ferramenta de terminal[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/InsightsGenerator.test.ts[2m > [22mInsightsGenerator[2m > [22memite securityAlert quando agent tem ferramenta de edi├º├úo de arquivo[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/InsightsGenerator.test.ts[2m > [22mInsightsGenerator[2m > [22misGuardianPresent = true quando h├í agent critic presente[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/InsightsGenerator.test.ts[2m > [22mInsightsGenerator[2m > [22mdetects ferramenta por prefixo runCommands/[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/InsightsGenerator.test.ts[2m > [22mInsightsGenerator[2m > [22mdetects ferramenta por prefixo edit/[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/InsightsGenerator.test.ts[2m > [22mInsightsGenerator[2m > [22midentifica missingDependencies quando delegate n├úo est├í instalado[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/InsightsGenerator.test.ts[2m > [22mInsightsGenerator[2m > [22mn├úo duplica missingDependencies quando mesmo delegate referenciado 2 vezes[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/InsightsGenerator.test.ts[2m > [22mInsightsGenerator[2m > [22mn├úo adiciona missingDependency se delegate estiver instalado[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/InsightsGenerator.test.ts[2m > [22mInsightsGenerator[2m > [22mn├úo emite securityAlert para agent sem ferramentas de risco[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/InsightsGenerator.test.ts[2m > [22mGitHubMetricsService[2m > [22mn├úo faz nada quando metrics.enabled = false (default)[32m 3[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/InsightsGenerator.test.ts[2m > [22mGitHubMetricsService[2m > [22mn├úo faz nada quando owner/repo n├úo est├úo configurados[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/InsightsGenerator.test.ts[2m > [22mGitHubMetricsService[2m > [22mn├úo faz nada quando session ├® nula (n├úo autenticado)[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m test/presentation/panels.test.ts[2m > [22mConfigPanel[2m > [22mcreateOrShow (1st time) ÔåÆ createWebviewPanel called once and currentPanel is set[32m 7[2mms[22m[39m
+ [32mÔ£ô[39m test/presentation/panels.test.ts[2m > [22mConfigPanel[2m > [22mcreateOrShow (2nd time) ÔåÆ reveals existing panel, does NOT create a second panel[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m test/presentation/panels.test.ts[2m > [22mConfigPanel[2m > [22msaveConfig message (valid) ÔåÆ configuration.update called and info message shown[32m 23[2mms[22m[39m
+ [32mÔ£ô[39m test/presentation/panels.test.ts[2m > [22mConfigPanel[2m > [22msaveConfig message ÔÇö configuration.update throws ÔåÆ showErrorMessage called[32m 34[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/FileInstaller.test.ts[2m > [22mFileInstaller[2m > [22minstall invoca onProgress no in├¡cio e no fim[32m 21[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/FileInstaller.test.ts[2m > [22mFileInstaller[2m > [22muninstall invoca onProgress quando usu├írio confirma[32m 10[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/FileInstaller.test.ts[2m > [22mFileInstaller[2m > [22minstallMany invoca onProgress para cada pacote ├║nico[32m 9[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/FileInstaller.test.ts[2m > [22mFileInstaller[2m > [22minstall chama trackInstall quando tracker ├® fornecido[32m 13[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/FileInstaller.test.ts[2m > [22mFileInstaller[2m > [22minstallMany chama trackInstall para cada pacote ├║nico quando tracker ├® fornecido[32m 14[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/WorkspaceScanner.test.ts[2m > [22mWorkspaceScanner[2m > [22mdetecta Frontend App (vue)[32m 13[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/WorkspaceScanner.test.ts[2m > [22mWorkspaceScanner[2m > [22mdetecta Frontend App (@angular/core)[32m 7[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/WorkspaceScanner.test.ts[2m > [22mWorkspaceScanner[2m > [22mdetecta Backend API (express)[32m 8[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/WorkspaceScanner.test.ts[2m > [22mWorkspaceScanner[2m > [22mdetecta Backend API (@nestjs/core)[32m 6[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/WorkspaceScanner.test.ts[2m > [22mWorkspaceScanner[2m > [22mdetecta Backend API (fastify)[32m 9[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/WorkspaceScanner.test.ts[2m > [22mWorkspaceScanner[2m > [22mdetecta Infra & Cloud via Dockerfile[32m 10[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/WorkspaceScanner.test.ts[2m > [22mWorkspaceScanner[2m > [22mdetecta Infra & Cloud via docker-compose.yml[32m 9[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/WorkspaceScanner.test.ts[2m > [22mWorkspaceScanner[2m > [22mdetecta Infra & Cloud via main.tf (terraform)[32m 5[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/WorkspaceScanner.test.ts[2m > [22mWorkspaceScanner[2m > [22madiciona Full Stack quando m├║ltiplos perfis detectados[32m 9[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/WorkspaceScanner.test.ts[2m > [22mWorkspaceScanner[2m > [22mlida silenciosamente com package.json com JSON inv├ílido[32m 10[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/HealthChecker.test.ts[2m > [22mHealthCheckerService[2m > [22mn├â┬úo emite findings quando .github/skills n├â┬úo existe[32m 13[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/HealthChecker.test.ts[2m > [22mHealthCheckerService[2m > [22memite error quando diret├â┬│rio de skill n├â┬úo cont├â┬®m SKILL.md[32m 30[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/HealthChecker.test.ts[2m > [22mHealthCheckerService[2m > [22mn├â┬úo emite error quando SKILL.md existe no diret├â┬│rio da skill[32m 14[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/HealthChecker.test.ts[2m > [22mHealthCheckerService[2m > [22mn├â┬úo emite finding de MCP quando .vscode/mcp.json n├â┬úo existe e n├â┬úo h├â┬í agents[32m 7[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/HealthChecker.test.ts[2m > [22mHealthCheckerService[2m > [22memite info no-mcp-config quando h├â┬í agents mas n├â┬úo h├â┬í mcp.json[32m 13[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/InstallationStrategy.test.ts[2m > [22mFileCopyStrategy[2m > [22muninstall[2m > [22mremoves empty parent directories after uninstall[32m 8[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/InstallationStrategy.test.ts[2m > [22mFileCopyStrategy[2m > [22muninstall[2m > [22msuprime erro silenciosamente quando workspace.fs.delete falha[32m 14[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/InstallationStrategy.test.ts[2m > [22mFileCopyStrategy[2m > [22muninstall[2m > [22mkeeps non-empty parent directories after uninstall[32m 19[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/InstallationStrategy.test.ts[2m > [22mMcpMergeStrategy[2m > [22minstall[2m > [22mcreates mcp.json when it does not exist[32m 12[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/InstallationStrategy.test.ts[2m > [22mMcpMergeStrategy[2m > [22minstall[2m > [22mmerges servers into existing mcp.json preserving existing[32m 8[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/InstallationStrategy.test.ts[2m > [22mMcpMergeStrategy[2m > [22minstall[2m > [22moverwrites existing server config with new one[32m 10[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/InstallationStrategy.test.ts[2m > [22mMcpMergeStrategy[2m > [22minstall[2m > [22mdeduplicates inputs with the same id[32m 12[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/InstallationStrategy.test.ts[2m > [22mMcpMergeStrategy[2m > [22minstall[2m > [22madds new inputs not present in existing file[32m 11[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/InstallationStrategy.test.ts[2m > [22mMcpMergeStrategy[2m > [22minstall[2m > [22maccepts legacy mcpServers format in package content[32m 15[2mms[22m[39m
+ [32mÔ£ô[39m test/presentation/panels.test.ts[2m > [22mConfigPanel[2m > [22munknown message command ÔåÆ silently ignored (no info/error messages)[32m 38[2mms[22m[39m
+ [32mÔ£ô[39m test/presentation/panels.test.ts[2m > [22mConfigPanel[2m > [22mdispose() ÔåÆ ConfigPanel.currentPanel becomes undefined[32m 4[2mms[22m[39m
+ [32mÔ£ô[39m test/presentation/panels.test.ts[2m > [22mConfigPanel[2m > [22mpanel.dispose() fires onDidDispose listener which calls this.dispose()[32m 25[2mms[22m[39m
+ [32mÔ£ô[39m test/presentation/panels.test.ts[2m > [22mInsightsPanel[2m > [22mcreateOrShow (1st time) ÔåÆ createWebviewPanel called once and currentPanel is set[32m 2[2mms[22m[39m
+ [32mÔ£ô[39m test/presentation/panels.test.ts[2m > [22mInsightsPanel[2m > [22mcreateOrShow (2nd time) ÔåÆ reveals existing panel, currentPanel unchanged[32m 2[2mms[22m[39m
+ [32mÔ£ô[39m test/presentation/panels.test.ts[2m > [22mInsightsPanel[2m > [22mconstructor calls update() ÔåÆ generator.generateReport invoked[32m 30[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/GitRegistry.test.ts[2m > [22mGitRegistry[2m > [22msync() sem registryUrl[2m > [22mretorna lista vazia quando n├úo h├í workspace nem URL[32m 8[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/GitRegistry.test.ts[2m > [22mGitRegistry[2m > [22msync() sem registryUrl[2m > [22mcarrega pacotes customizados do workspace quando URL ├® vazia[32m 15[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/GitRegistry.test.ts[2m > [22mGitRegistry[2m > [22msync() sem registryUrl[2m > [22mretorna [] quando custom-packages.json cont├®m JSON inv├ílido[32m 25[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/GitRegistry.test.ts[2m > [22mGitRegistry[2m > [22msync() com diret├│rio local[2m > [22mcarrega pacotes inline no catalog/index.json[32m 16[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/GitRegistry.test.ts[2m > [22mGitRegistry[2m > [22msync() com diret├│rio local[2m > [22mcarrega pacotes via refs de string no index.json[32m 13[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/GitRegistry.test.ts[2m > [22mGitRegistry[2m > [22msync() com diret├│rio local[2m > [22mdescobre manifest.json recursivamente quando index.json sem packages[32m 11[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/GitRegistry.test.ts[2m > [22mGitRegistry[2m > [22msync() com diret├│rio local[2m > [22mfunciona sem catalog/index.json (busca direta)[32m 9[2mms[22m[39m
+ [32mÔ£ô[39m test/presentation/providers.test.ts[2m > [22mCatalogViewProvider[2m > [22mresolveWebviewView configura op├â┬º├â┬Áes e define HTML inicial[32m 10[2mms[22m[39m
+ [32mÔ£ô[39m test/presentation/providers.test.ts[2m > [22mCatalogViewProvider[2m > [22mrefresh() posta mensagem com pacotes quando view est├â┬í resolvida[32m 5[2mms[22m[39m
+ [32mÔ£ô[39m test/presentation/providers.test.ts[2m > [22mCatalogViewProvider[2m > [22mrefresh() com bundle emite bundleId na mensagem[32m 2[2mms[22m[39m
+ [32mÔ£ô[39m test/presentation/providers.test.ts[2m > [22mCatalogViewProvider[2m > [22mmensagem "refresh" de webview atualiza a view (postMessage chamado)[32m 27[2mms[22m[39m
+ [32mÔ£ô[39m test/presentation/providers.test.ts[2m > [22mCatalogViewProvider[2m > [22mmensagem com command desconhecido ├â┬® ignorada silenciosamente[32m 4[2mms[22m[39m
+ [32mÔ£ô[39m test/presentation/providers.test.ts[2m > [22mCatalogViewProvider[2m > [22mmensagem "install" aciona instala├â┬º├â┬úo via coordinator[32m 28[2mms[22m[39m
+ [32mÔ£ô[39m test/presentation/providers.test.ts[2m > [22mCatalogViewProvider[2m > [22mmensagem "install" com packageId vazio ├â┬® rejeitada (type guard)[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m test/presentation/providers.test.ts[2m > [22mCatalogViewProvider[2m > [22mmensagem "openExternal" com URL http (n├â┬úo https) ├â┬® rejeitada[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m test/presentation/providers.test.ts[2m > [22mCatalogViewProvider[2m > [22mmensagem "openExternal" com URL https ├â┬® aceita[32m 15[2mms[22m[39m
+ [32mÔ£ô[39m test/presentation/providers.test.ts[2m > [22mCatalogViewProvider[2m > [22misCatalogMessage: query muito longa (>500 chars) ├â┬® rejeitada[32m 2[2mms[22m[39m
+ [32mÔ£ô[39m test/presentation/panels.test.ts[2m > [22mInsightsPanel[2m > [22mrefresh message ÔåÆ generator.generateReport called a 2nd time[32m 54[2mms[22m[39m
+ [32mÔ£ô[39m test/presentation/panels.test.ts[2m > [22mInsightsPanel[2m > [22mdispose() ÔåÆ InsightsPanel.currentPanel becomes undefined[32m 29[2mms[22m[39m
+ [32mÔ£ô[39m test/presentation/panels.test.ts[2m > [22mWorkflowPanel[2m > [22mcreateOrShow (1st time) ÔåÆ createWebviewPanel called once and currentPanel is set[32m 2[2mms[22m[39m
+ [32mÔ£ô[39m test/presentation/panels.test.ts[2m > [22mWorkflowPanel[2m > [22mcreateOrShow (2nd time) ÔåÆ reveals existing panel, currentPanel unchanged[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m test/presentation/panels.test.ts[2m > [22mWorkflowPanel[2m > [22mconstructor calls update() ÔåÆ webview.html is non-empty[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m test/presentation/panels.test.ts[2m > [22mWorkflowPanel[2m > [22mdispose() ÔåÆ WorkflowPanel.currentPanel becomes undefined[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/InsightsGenerator.test.ts[2m > [22mGitHubMetricsService[2m > [22mcaptura exce├º├Áes de rede silenciosamente (swallows errors)[32m 222[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/HealthChecker.test.ts[2m > [22mHealthCheckerService[2m > [22memite error mcp-invalid-json quando mcp.json tem JSON inv├â┬ílido[32m 31[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/HealthChecker.test.ts[2m > [22mHealthCheckerService[2m > [22mn├â┬úo emite error para mcp.json v├â┬ílido[32m 15[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/HealthChecker.test.ts[2m > [22mHealthCheckerService[2m > [22mn├â┬úo emite error para mcp.json com coment├â┬írios de linha[32m 19[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/HealthChecker.test.ts[2m > [22mHealthCheckerService[2m > [22mn├â┬úo emite findings quando .github/instructions n├â┬úo existe[32m 15[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/HealthChecker.test.ts[2m > [22mHealthCheckerService[2m > [22memite warning quando .instructions.md n├â┬úo tem applyTo[32m 10[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/HealthChecker.test.ts[2m > [22mHealthCheckerService[2m > [22mn├â┬úo emite warning quando .instructions.md tem applyTo[32m 28[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/InstallationStrategy.test.ts[2m > [22mMcpMergeStrategy[2m > [22minstall[2m > [22mnormaliza mcp.json cujo conte├║do ├® null (JSON "null")[32m 18[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/InstallationStrategy.test.ts[2m > [22mMcpMergeStrategy[2m > [22minstall[2m > [22mnormaliza mcp.json com servers inv├ílido (n├úo-objeto)[32m 24[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/InstallationStrategy.test.ts[2m > [22mMcpMergeStrategy[2m > [22minstall[2m > [22mnormaliza mcp.json com apenas coment├írios (parseJsonWithComments retorna {})[32m 9[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/InstallationStrategy.test.ts[2m > [22mMcpMergeStrategy[2m > [22minstall[2m > [22mnormaliza mcp.json com mcpServers (chave legada) n├úo-objeto[32m 16[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/InstallationStrategy.test.ts[2m > [22mMcpMergeStrategy[2m > [22minstall[2m > [22mmigra mcp.json legado com mcpServers como objeto[32m 27[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/GitRegistry.test.ts[2m > [22mGitRegistry[2m > [22msync() com diret├│rio local[2m > [22mcarrega pacote com install.targets lendo arquivo fonte do disco[32m 16[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/GitRegistry.test.ts[2m > [22mGitRegistry[2m > [22msync() com diret├│rio local[2m > [22musa defaultInlineContent quando arquivo fonte de MCP n├úo existe[32m 12[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/GitRegistry.test.ts[2m > [22mGitRegistry[2m > [22msync() com diret├│rio local[2m > [22mdeduplica pacotes: customizado tem preced├¬ncia sobre cat├ílogo[32m 9[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/GitRegistry.test.ts[2m > [22mGitRegistry[2m > [22msync() com diret├│rio local[2m > [22mignora manifest ref inexistente silenciosamente[32m 8[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/GitRegistry.test.ts[2m > [22mGitRegistry[2m > [22msync() com arquivo JSON local[2m > [22mcarrega de array JSON inline[32m 7[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/GitRegistry.test.ts[2m > [22mGitRegistry[2m > [22msync() com arquivo JSON local[2m > [22mcarrega de objeto { packages: [...] }[32m 11[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/GitRegistry.test.ts[2m > [22mGitRegistry[2m > [22msync() com arquivo JSON local[2m > [22musa fallback quando arquivo local n├úo ├® JSON nem diret├│rio[32m 9[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/GitRegistry.test.ts[2m > [22mGitRegistry[2m > [22musa fallback vazio quando URL remota n├úo ├® confi├ível[32m 5[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/GitRegistry.test.ts[2m > [22mGitRegistry[2m > [22mbloqueia registry remoto inseguro e faz fallback local[32m 4[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/GitRegistry.test.ts[2m > [22mGitRegistry[2m > [22msync() concorrente executa apenas uma vez[32m 2[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/GitRegistry.test.ts[2m > [22mGitRegistry[2m > [22mcarrega cat├ílogo local manifest-driven (fixture completo)[32m 10[2mms[22m[39m
+ [32mÔ£ô[39m test/presentation/providers.test.ts[2m > [22mCatalogViewProvider[2m > [22mmensagem "search" com query atualiza a view com resultados filtrados[32m 33[2mms[22m[39m
+ [32mÔ£ô[39m test/presentation/providers.test.ts[2m > [22mCatalogViewProvider[2m > [22mmensagem "filter" com tipo espec├¡fico atualiza a view[32m 36[2mms[22m[39m
+ [32mÔ£ô[39m test/presentation/providers.test.ts[2m > [22mCatalogViewProvider[2m > [22mmensagem "installBundle" aciona opera├º├úo de instala├º├úo de bundle[32m 34[2mms[22m[39m
+ [31m├ù[39m test/extension/activate.test.ts[2m > [22mextension activation[2m > [22mregistra comandos principais sem crash[32m 36[2mms[22m[39m
+[31m   ÔåÆ stored is not iterable[39m
+ [32mÔ£ô[39m test/infrastructure/HealthChecker.test.ts[2m > [22mHealthCheckerService[2m > [22mreporta todos os problemas de metadata do cat├â┬ílogo no pacote MCP inv├â┬ílido[32m 28[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/HealthChecker.test.ts[2m > [22mHealthCheckerService[2m > [22memite warning mcp-merge-strategy quando MCP usa estrat├â┬®gia copy[32m 31[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/HealthChecker.test.ts[2m > [22mHealthCheckerService[2m > [22mn├â┬úo emite warnings para pacote MCP bem configurado[32m 36[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/HealthChecker.test.ts[2m > [22mHealthCheckerService[2m > [22memite info ui-details-missing quando longDescription est├â┬í vazio[32m 16[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/InstallationStrategy.test.ts[2m > [22mMcpMergeStrategy[2m > [22minstall[2m > [22musa {} como fallback de servers quando package content n├úo tem chave servers/mcpServers[32m 23[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/InstallationStrategy.test.ts[2m > [22mMcpMergeStrategy[2m > [22minstall[2m > [22musa {} e [] como fallback quando pkg.files est├í vazio (pkg.files[0] undefined)[32m 28[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/InstallationStrategy.test.ts[2m > [22mMcpMergeStrategy[2m > [22minstall[2m > [22mfiltra inputs sem id no conte├║do do pacote (extractMcpConfig)[32m 51[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/GitRegistry.test.ts[2m > [22mGitRegistry[2m > [22mBundles[2m > [22mcarrega bundles do index.json[32m 22[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/GitRegistry.test.ts[2m > [22mGitRegistry[2m > [22mBundles[2m > [22mcarrega bundles de catalog/bundles.json quando n├úo est├úo no index[32m 19[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/GitRegistry.test.ts[2m > [22mGitRegistry[2m > [22mBundles[2m > [22mcarrega bundles.json no formato { bundles: [...] }[32m 13[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/GitRegistry.test.ts[2m > [22mGitRegistry[2m > [22mBundles[2m > [22mignora bundles inv├ílidos (null, packageIds vazio)[32m 17[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/GitRegistry.test.ts[2m > [22mGitRegistry[2m > [22mBundles[2m > [22mfindBundleById retorna bundle correto e undefined para desconhecido[32m 15[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/GitRegistry.test.ts[2m > [22mGitRegistry[2m > [22mStats[2m > [22mcarrega stats do arquivo quando presente[32m 21[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/HealthChecker.test.ts[2m > [22mHealthCheckerService[2m > [22mn├â┬úo verifica pacotes n├â┬úo instalados no checkCatalogMetadata[32m 8[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/HealthChecker.test.ts[2m > [22mHealthCheckerService[2m > [22mn├â┬úo executa checkCatalogMetadata quando registry/scanner s├â┬úo undefined[32m 39[2mms[22m[39m
+ [32mÔ£ô[39m test/presentation/providers.test.ts[2m > [22mCatalogViewProvider[2m > [22mmensagem "uninstall" aciona opera├º├úo de desinstala├º├úo[32m 36[2mms[22m[39m
+ [32mÔ£ô[39m test/presentation/providers.test.ts[2m > [22mCatalogViewProvider[2m > [22mmensagem "installNetwork" instala o agent e todos do seu network[32m 27[2mms[22m[39m
+ [32mÔ£ô[39m test/presentation/providers.test.ts[2m > [22mHealthViewProvider[2m > [22mresolveWebviewView define HTML inicial e registra listener[32m 2[2mms[22m[39m
+ [32mÔ£ô[39m test/presentation/providers.test.ts[2m > [22mHealthViewProvider[2m > [22mmensagem "runCheck" executa health check e posta resultado[32m 40[2mms[22m[39m
+ [32mÔ£ô[39m test/presentation/providers.test.ts[2m > [22mHealthViewProvider[2m > [22mmensagem inv├â┬ílida ├â┬® ignorada[32m 10[2mms[22m[39m
+ [32mÔ£ô[39m test/presentation/providers.test.ts[2m > [22mHealthViewProvider[2m > [22mrefresh() executa check e posta resultado sem resolveWebviewView pr├â┬®vio n├â┬úo falha[32m 5[2mms[22m[39m
+ [32mÔ£ô[39m test/presentation/providers.test.ts[2m > [22mHealthViewProvider[2m > [22mrefresh() com view j├â┬í configurada posta mensagem de resultado[32m 2[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/InstallationStrategy.test.ts[2m > [22mMcpMergeStrategy[2m > [22minstall[2m > [22mfiltra inputs sem id (normalizeMcpDocument Boolean(input) check)[32m 29[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/InstallationStrategy.test.ts[2m > [22mMcpMergeStrategy[2m > [22muninstall[2m > [22mremoves server from mcp.json leaving others intact[32m 52[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/GitRegistry.test.ts[2m > [22mGitRegistry[2m > [22mStats[2m > [22musa defaults quando arquivo de stats n├úo existe[32m 39[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/GitRegistry.test.ts[2m > [22mGitRegistry[2m > [22mStats[2m > [22musa stats inline do manifest quando arquivo n├úo existe[32m 18[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/GitRegistry.test.ts[2m > [22mGitRegistry[2m > [22msaveWorkspaceCustomPackage[2m > [22mlan├ºa erro quando n├úo h├í workspace aberto[32m 4[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/GitRegistry.test.ts[2m > [22mGitRegistry[2m > [22msaveWorkspaceCustomPackage[2m > [22msalva pacote e cria o arquivo custom-packages.json[32m 11[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/GitRegistry.test.ts[2m > [22mGitRegistry[2m > [22msaveWorkspaceCustomPackage[2m > [22msubstitui pacote existente sem duplicar[32m 23[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/GitRegistry.test.ts[2m > [22mGitRegistry[2m > [22mIPackageRepository[2m > [22mgetAll() aciona sync autom├ítico se n├úo inicializado[32m 6[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/GitRegistry.test.ts[2m > [22mGitRegistry[2m > [22mIPackageRepository[2m > [22mfindById() retorna correto e undefined para desconhecido[32m 9[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/GitRegistry.test.ts[2m > [22mGitRegistry[2m > [22mIPackageRepository[2m > [22msearch() filtra por query[32m 7[2mms[22m[39m
+ [32mÔ£ô[39m test/presentation/providers.test.ts[2m > [22mHealthViewProvider[2m > [22mrunCheck com findings de erro inclui severidades no payload postado[32m 25[2mms[22m[39m
+ [32mÔ£ô[39m test/presentation/providers.test.ts[2m > [22mInstalledViewProvider[2m > [22mresolveWebviewView configura webview e define HTML[32m 19[2mms[22m[39m
+ [32mÔ£ô[39m test/presentation/providers.test.ts[2m > [22mInstalledViewProvider[2m > [22mrefresh() com pacotes instalados posta mensagem atualizada[32m 3[2mms[22m[39m
+ [32mÔ£ô[39m test/presentation/providers.test.ts[2m > [22mInstalledViewProvider[2m > [22mmensagem "refresh" atualiza a view (postMessage chamado)[32m 37[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/InstallationStrategy.test.ts[2m > [22mMcpMergeStrategy[2m > [22muninstall[2m > [22mdeletes mcp.json when it becomes empty after uninstall[32m 72[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/InstallationStrategy.test.ts[2m > [22mMcpMergeStrategy[2m > [22muninstall[2m > [22mdoes not throw when mcp.json does not exist[32m 34[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/GitRegistry.test.ts[2m > [22mGitRegistry[2m > [22mIPackageRepository[2m > [22mgetAgentNetwork() resolve delegatesTo[32m 8[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/GitRegistry.test.ts[2m > [22mGitRegistry[2m > [22mIPackageRepository[2m > [22mgetAgentNetwork() retorna [] para pacote desconhecido[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/GitRegistry.test.ts[2m > [22mGitRegistry[2m > [22mIPackageRepository[2m > [22mgetRelatedSkills() resolve skills relacionadas[32m 34[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/GitRegistry.test.ts[2m > [22mGitRegistry[2m > [22mIPackageRepository[2m > [22mgetRelatedSkills() retorna [] para pacote desconhecido[32m 2[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/GitRegistry.test.ts[2m > [22mGitRegistry[2m > [22mHydration de pacotes[2m > [22mMCP sem install.targets recebe arquivo .vscode/mcp.json padr├úo[32m 35[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/GitRegistry.test.ts[2m > [22mGitRegistry[2m > [22mHydration de pacotes[2m > [22magente com agentMeta ├® hidratado corretamente[32m 13[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/GitRegistry.test.ts[2m > [22mGitRegistry[2m > [22mHydration de pacotes[2m > [22mpacote com readme e details l├¬ textos do disco[32m 14[2mms[22m[39m
+ [32mÔ£ô[39m test/presentation/providers.test.ts[2m > [22mInstalledViewProvider[2m > [22mmensagem "uninstall" aciona opera├â┬º├â┬úo de desinstala├â┬º├â┬úo[32m 46[2mms[22m[39m
+ [32mÔ£ô[39m test/presentation/providers.test.ts[2m > [22mInstalledViewProvider[2m > [22mmensagem "uninstall" com packageId vazio ├â┬® rejeitada (type guard)[32m 7[2mms[22m[39m
+ [32mÔ£ô[39m test/presentation/providers.test.ts[2m > [22mInstalledViewProvider[2m > [22mmensagem "openFile" com path relativo v├ílido abre documento[32m 40[2mms[22m[39m
+ [32mÔ£ô[39m test/presentation/providers.test.ts[2m > [22mInstalledViewProvider[2m > [22mmensagem "openFile" com path traversal "../../../" ├â┬® rejeitada (type guard)[32m 2[2mms[22m[39m
+ [32mÔ£ô[39m test/presentation/providers.test.ts[2m > [22mInstalledViewProvider[2m > [22mmensagem "openFile" com path absoluto "/" ├â┬® rejeitada (type guard)[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m test/presentation/providers.test.ts[2m > [22mInstalledViewProvider[2m > [22mmensagens inv├â┬ílidas s├â┬úo ignoradas silenciosamente[32m 2[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/GitRegistry.test.ts[2m > [22mGitRegistry[2m > [22mHydration de pacotes[2m > [22mresolveLinks gera link "Homepage" quando homepage est├í presente[32m 10[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/GitRegistry.test.ts[2m > [22mGitRegistry[2m > [22mHydration de pacotes[2m > [22minferAgentCategory infere Orchestrator, Planner, Guardian, Memory e Specialist[32m 11[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/OperationCoordinator.test.ts[2m > [22mOperationCoordinator[2m > [22mserializa opera├º├Áes exclusivas e dispara refresh[32m 20[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/OperationCoordinator.test.ts[2m > [22mOperationCoordinator[2m > [22mmant├®m hist├│rico recente e m├®tricas por tipo de opera├º├úo[32m 17[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/CatalogFetcher.network.test.ts[2m > [22mCatalogFetcher.fetchJson[2m > [22mrejeita URL HTTPS n├úo-confi├ível em modo estrito (allowUnsafeUrls=false)[32m 7[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/CatalogFetcher.network.test.ts[2m > [22mCatalogFetcher.fetchJson[2m > [22mrejeita URL HTTP (sem HTTPS)[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/CatalogFetcher.network.test.ts[2m > [22mCatalogFetcher.fetchJson[2m > [22mresolve com dados parseados para uma resposta 200 de URL confi├ível[32m 3[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/CatalogFetcher.network.test.ts[2m > [22mCatalogFetcher.fetchJson[2m > [22maceita JSON com coment├írios de linha // no corpo da resposta[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/CatalogFetcher.network.test.ts[2m > [22mCatalogFetcher.fetchJson[2m > [22mrejeita com c├│digo quando statusCode === 404[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/CatalogFetcher.network.test.ts[2m > [22mCatalogFetcher.fetchJson[2m > [22mrejeita com c├│digo quando statusCode >= 500[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/CatalogFetcher.network.test.ts[2m > [22mCatalogFetcher.fetchJson[2m > [22mrejeita com "sem status" quando statusCode est├í ausente[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/CatalogFetcher.network.test.ts[2m > [22mCatalogFetcher.fetchJson[2m > [22mrejeita com o erro de rede emitido pelo ClientRequest[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/CatalogFetcher.network.test.ts[2m > [22mCatalogFetcher.fetchJson[2m > [22mrejeita quando o corpo da resposta n├úo ├® JSON v├ílido[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/CatalogFetcher.network.test.ts[2m > [22mCatalogFetcher.ensureLocalClone[2m > [22mclona quando repoDir n├úo existe[32m 4[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/CatalogFetcher.network.test.ts[2m > [22mCatalogFetcher.ensureLocalClone[2m > [22mclona quando repoDir existe mas .git n├úo existe[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/CatalogFetcher.network.test.ts[2m > [22mCatalogFetcher.ensureLocalClone[2m > [22mfaz pull quando repoDir e .git existem e remote.origin.url bate[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/CatalogFetcher.network.test.ts[2m > [22mCatalogFetcher.ensureLocalClone[2m > [22mreclona quando remote.origin.url diverge do esperado[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/CatalogFetcher.network.test.ts[2m > [22mCatalogFetcher.ensureLocalClone[2m > [22mreclona quando git pull --ff-only lan├ºa erro (fallback do catch)[32m 9[2mms[22m[39m
+ [32mÔ£ô[39m test/presentation/webview.test.ts[2m > [22mWebviewHelper[2m > [22mgetNonce()[2m > [22mreturns exactly 32 characters[32m 5[2mms[22m[39m
+ [32mÔ£ô[39m test/presentation/webview.test.ts[2m > [22mWebviewHelper[2m > [22mgetNonce()[2m > [22mcontains only [A-Za-z0-9] characters[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m test/presentation/webview.test.ts[2m > [22mWebviewHelper[2m > [22mgetNonce()[2m > [22mreturns different values on consecutive calls (aleatoriedade)[32m 2[2mms[22m[39m
+ [32mÔ£ô[39m test/presentation/webview.test.ts[2m > [22mWebviewHelper[2m > [22mbuildHtml()[2m > [22mstarts with <!DOCTYPE html>[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m test/presentation/webview.test.ts[2m > [22mWebviewHelper[2m > [22mbuildHtml()[2m > [22mcontains <title> with the title passed[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m test/presentation/webview.test.ts[2m > [22mWebviewHelper[2m > [22mbuildHtml()[2m > [22mcontains the nonce inside the Content-Security-Policy meta tag[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m test/presentation/webview.test.ts[2m > [22mWebviewHelper[2m > [22mbuildHtml()[2m > [22mcontains bodyContent in the HTML body[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m test/presentation/webview.test.ts[2m > [22mWebviewHelper[2m > [22mbuildHtml()[2m > [22mcontains scriptContent when provided[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m test/presentation/webview.test.ts[2m > [22mWebviewHelper[2m > [22mbuildHtml()[2m > [22mrenders a <script> tag even when scriptContent is omitted (uses empty string fallback)[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m test/presentation/webview.test.ts[2m > [22mWebviewHelper[2m > [22mbuildStatefulHtml()[2m > [22mstarts with <!DOCTYPE html>[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m test/presentation/webview.test.ts[2m > [22mWebviewHelper[2m > [22mbuildStatefulHtml()[2m > [22mcontains the data-state attribute on #app-root[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m test/presentation/webview.test.ts[2m > [22mWebviewHelper[2m > [22mbuildStatefulHtml()[2m > [22mthe data-state value is valid base64[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m test/presentation/webview.test.ts[2m > [22mWebviewHelper[2m > [22mbuildStatefulHtml()[2m > [22mdecoding data-state (base64 ÔåÆ decodeURIComponent ÔåÆ JSON.parse) reproduces the original state[32m 2[2mms[22m[39m
+ [32mÔ£ô[39m test/presentation/webview.test.ts[2m > [22mWebviewHelper[2m > [22mbuildStatefulHtml()[2m > [22mapplies bodyClassName to the <body> element[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m test/presentation/webview.test.ts[2m > [22mWebviewHelper[2m > [22mbuildStatefulHtml()[2m > [22muses empty string for body class when bodyClassName is omitted[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m test/presentation/webview.test.ts[2m > [22mWebviewHelper[2m > [22mbuildStatefulHtml()[2m > [22mdoes not throw when initialState is null[32m 2[2mms[22m[39m
+ [32mÔ£ô[39m test/presentation/webview.test.ts[2m > [22mWebviewHelper[2m > [22mbuildStatefulHtml()[2m > [22mdoes not throw when initialState is undefined[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m test/presentation/webview.test.ts[2m > [22mWebviewHelper[2m > [22mbuildStatefulHtml()[2m > [22mencodes null/undefined initialState as empty object {}[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m test/presentation/webview.test.ts[2m > [22mWebviewHelper[2m > [22mpostState()[2m > [22mcalls webview.postMessage exactly once[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m test/presentation/webview.test.ts[2m > [22mWebviewHelper[2m > [22mpostState()[2m > [22msends a message with type "setState" (not "command")[32m 5[2mms[22m[39m
+ [32mÔ£ô[39m test/presentation/webview.test.ts[2m > [22mWebviewHelper[2m > [22mpostState()[2m > [22msends the state under the "state" property[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m test/presentation/webview.test.ts[2m > [22mWebviewHelper[2m > [22mpostState()[2m > [22msends both type and state in a single message object[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m test/presentation/webview.test.ts[2m > [22mWebviewHelper[2m > [22mpostState()[2m > [22muses type "replaceState" when replace=true is passed[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/StatusBarManager.test.ts[2m > [22mStatusBarManager[2m > [22mgetInstance retorna a mesma inst├óncia (singleton)[32m 6[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/StatusBarManager.test.ts[2m > [22mStatusBarManager[2m > [22mdispose destroi a inst├óncia e permite criar nova[32m 3[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/StatusBarManager.test.ts[2m > [22mStatusBarManager[2m > [22msetIdle n├úo lan├ºa exce├º├úo[32m 3[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/StatusBarManager.test.ts[2m > [22mStatusBarManager[2m > [22msetWorking n├úo lan├ºa exce├º├úo[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/StatusBarManager.test.ts[2m > [22mStatusBarManager[2m > [22msetSuccess n├úo lan├ºa exce├º├úo[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/StatusBarManager.test.ts[2m > [22mStatusBarManager[2m > [22msetError n├úo lan├ºa exce├º├úo[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/StatusBarManager.test.ts[2m > [22mStatusBarManager[2m > [22mbindToCoordinator ÔÇö recebe snapshot undefined ÔåÆ chama setIdle[32m 2[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/StatusBarManager.test.ts[2m > [22mStatusBarManager[2m > [22mbindToCoordinator ÔÇö recebe snapshot ÔåÆ chama setWorking com label[32m 6[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/StatusBarManager.test.ts[2m > [22mStatusBarManager[2m > [22mbindToCoordinator ÔÇö snapshot com progress e message ÔåÆ label inclui %[32m 4[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/StatusBarManager.test.ts[2m > [22mStatusBarManager[2m > [22mbindToCoordinator substitui subscription anterior ao chamar novamente[32m 2[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/StatusBarManager.test.ts[2m > [22mAppLogger[2m > [22mgetInstance retorna singleton[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/StatusBarManager.test.ts[2m > [22mAppLogger[2m > [22mdispose destr├│i a inst├óncia e permite criar nova[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/StatusBarManager.test.ts[2m > [22mAppLogger[2m > [22mdebug registra mensagem sem dados[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/StatusBarManager.test.ts[2m > [22mAppLogger[2m > [22minfo registra mensagem com dados[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/StatusBarManager.test.ts[2m > [22mAppLogger[2m > [22mwarn registra warning[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/StatusBarManager.test.ts[2m > [22mAppLogger[2m > [22merror registra erro[32m 10[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/StatusBarManager.test.ts[2m > [22mAppLogger[2m > [22merror serializa Error com name, message e stack[32m 4[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/StatusBarManager.test.ts[2m > [22mAppLogger[2m > [22mshow n├úo lan├ºa exce├º├úo[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/StatusBarManager.test.ts[2m > [22mAppLogger[2m > [22msafeSerialize: usa String() quando JSON.stringify falha (circular)[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/StatusBarManager.test.ts[2m > [22mAppLogger[2m > [22mformatMessage: sem data retorna apenas a mensagem[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m test/domain/value-objects.test.ts[2m > [22mVersion[2m > [22mparse()[2m > [22mparseia string "1.2.3" corretamente[32m 4[2mms[22m[39m
+ [32mÔ£ô[39m test/domain/value-objects.test.ts[2m > [22mVersion[2m > [22mparse()[2m > [22mremove prefixo "v"[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m test/domain/value-objects.test.ts[2m > [22mVersion[2m > [22mparse()[2m > [22musa 0 como default para partes ausentes[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m test/domain/value-objects.test.ts[2m > [22mVersion[2m > [22mparse()[2m > [22mparseia "1.0" (sem patch)[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m test/domain/value-objects.test.ts[2m > [22mVersion[2m > [22mof()[2m > [22mcria version a partir de componentes[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m test/domain/value-objects.test.ts[2m > [22mVersion[2m > [22mtoString()[2m > [22mretorna string no formato major.minor.patch[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m test/domain/value-objects.test.ts[2m > [22mVersion[2m > [22mcompareTo()[2m > [22mretorna 0 para vers├Áes iguais[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m test/domain/value-objects.test.ts[2m > [22mVersion[2m > [22mcompareTo()[2m > [22mretorna 1 quando major ├® maior[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m test/domain/value-objects.test.ts[2m > [22mVersion[2m > [22mcompareTo()[2m > [22mretorna -1 quando major ├® menor[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m test/domain/value-objects.test.ts[2m > [22mVersion[2m > [22mcompareTo()[2m > [22mretorna 1 quando minor ├® maior (major igual)[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m test/domain/value-objects.test.ts[2m > [22mVersion[2m > [22mcompareTo()[2m > [22mretorna -1 quando minor ├® menor (major igual)[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m test/domain/value-objects.test.ts[2m > [22mVersion[2m > [22mcompareTo()[2m > [22mretorna 1 quando patch ├® maior (major e minor iguais)[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m test/domain/value-objects.test.ts[2m > [22mVersion[2m > [22mcompareTo()[2m > [22mretorna -1 quando patch ├® menor (major e minor iguais)[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m test/domain/value-objects.test.ts[2m > [22mVersion[2m > [22misNewerThan()[2m > [22mretorna true quando this ├® mais novo[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m test/domain/value-objects.test.ts[2m > [22mVersion[2m > [22misNewerThan()[2m > [22mretorna false quando this ├® igual ou mais antigo[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m test/domain/value-objects.test.ts[2m > [22mVersion[2m > [22mequals()[2m > [22mretorna true para mesma vers├úo[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m test/domain/value-objects.test.ts[2m > [22mVersion[2m > [22mequals()[2m > [22mretorna false para vers├Áes diferentes[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m test/domain/value-objects.test.ts[2m > [22mPackageType[2m > [22msingletons[2m > [22mAgent, Skill, MCP, Instruction, Prompt existem como singletons[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m test/domain/value-objects.test.ts[2m > [22mPackageType[2m > [22mfromString()[2m > [22mretorna Agent para "agent"[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m test/domain/value-objects.test.ts[2m > [22mPackageType[2m > [22mfromString()[2m > [22mretorna Skill para "skill"[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m test/domain/value-objects.test.ts[2m > [22mPackageType[2m > [22mfromString()[2m > [22mretorna MCP para "mcp"[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m test/domain/value-objects.test.ts[2m > [22mPackageType[2m > [22mfromString()[2m > [22mretorna Instruction para "instruction"[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m test/domain/value-objects.test.ts[2m > [22mPackageType[2m > [22mfromString()[2m > [22mretorna Prompt para "prompt"[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m test/domain/value-objects.test.ts[2m > [22mPackageType[2m > [22mfromString()[2m > [22m├® case-insensitive[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m test/domain/value-objects.test.ts[2m > [22mPackageType[2m > [22mfromString()[2m > [22mlan├ºa Error para tipo desconhecido[32m 2[2mms[22m[39m
+ [32mÔ£ô[39m test/domain/value-objects.test.ts[2m > [22mPackageType[2m > [22mall()[2m > [22mretorna todos os 5 tipos[32m 3[2mms[22m[39m
+ [32mÔ£ô[39m test/domain/value-objects.test.ts[2m > [22mPackageType[2m > [22mcssClass getter[2m > [22mretorna "type-<value>" para cada tipo[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m test/domain/value-objects.test.ts[2m > [22mPackageType[2m > [22mcolor getter[2m > [22mretorna cor correta para cada tipo[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m test/domain/value-objects.test.ts[2m > [22mPackageType[2m > [22mequals()[2m > [22mretorna true para mesmo tipo[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m test/domain/value-objects.test.ts[2m > [22mPackageType[2m > [22mequals()[2m > [22mretorna false para tipos diferentes[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m test/domain/value-objects.test.ts[2m > [22mPackageType[2m > [22mtoString()[2m > [22mretorna o value do tipo[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m test/domain/value-objects.test.ts[2m > [22mPackageType[2m > [22mpropriedades[2m > [22mAgent tem label e icon corretos[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m test/domain/value-objects.test.ts[2m > [22mPackageType[2m > [22mpropriedades[2m > [22mMCP tem defaultDirectory correto[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m test/domain/value-objects.test.ts[2m > [22mAgentCategory[2m > [22msingletons[2m > [22mOrchestrator, Planner, Memory existem como singletons[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m test/domain/value-objects.test.ts[2m > [22mAgentCategory[2m > [22msingletons[2m > [22mSpecialist e Guardian existem[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m test/domain/value-objects.test.ts[2m > [22mAgentCategory[2m > [22mfromString()[2m > [22mretorna Orchestrator para "orchestrator"[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m test/domain/value-objects.test.ts[2m > [22mAgentCategory[2m > [22mfromString()[2m > [22mretorna Planner para "planner"[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m test/domain/value-objects.test.ts[2m > [22mAgentCategory[2m > [22mfromString()[2m > [22mretorna Specialist para "specialist"[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m test/domain/value-objects.test.ts[2m > [22mAgentCategory[2m > [22mfromString()[2m > [22mretorna Guardian para "guardian"[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m test/domain/value-objects.test.ts[2m > [22mAgentCategory[2m > [22mfromString()[2m > [22mretorna Memory para "memory"[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m test/domain/value-objects.test.ts[2m > [22mAgentCategory[2m > [22mfromString()[2m > [22m├® case-insensitive[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m test/domain/value-objects.test.ts[2m > [22mAgentCategory[2m > [22mfromString()[2m > [22mretorna Specialist para categoria desconhecida (default)[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m test/domain/value-objects.test.ts[2m > [22mAgentCategory[2m > [22mall()[2m > [22mretorna 5 categorias[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m test/domain/value-objects.test.ts[2m > [22mAgentCategory[2m > [22mcssClass getter[2m > [22mretorna "category-<value>"[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m test/domain/value-objects.test.ts[2m > [22mAgentCategory[2m > [22mequals()[2m > [22mretorna true para mesma categoria[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m test/domain/value-objects.test.ts[2m > [22mAgentCategory[2m > [22mequals()[2m > [22mretorna false para categorias diferentes[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m test/domain/value-objects.test.ts[2m > [22mAgentCategory[2m > [22mpropriedades[2m > [22mOrchestrator tem sortOrder 0[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m test/domain/value-objects.test.ts[2m > [22mAgentCategory[2m > [22mpropriedades[2m > [22mMemory tem emoji e label corretos[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/CatalogManifestParser.test.ts[2m > [22mCatalogManifestParser.parseJsonWithComments[2m > [22mparses plain JSON[32m 5[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/CatalogManifestParser.test.ts[2m > [22mCatalogManifestParser.parseJsonWithComments[2m > [22mstrips single-line // comments[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/CatalogManifestParser.test.ts[2m > [22mCatalogManifestParser.parseJsonWithComments[2m > [22mstrips multi-line /* */ comments[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/CatalogManifestParser.test.ts[2m > [22mCatalogManifestParser.parseJsonWithComments[2m > [22mreturns {} for empty/whitespace input[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/CatalogManifestParser.test.ts[2m > [22mCatalogManifestParser.parseJsonWithComments[2m > [22mthrows on malformed JSON[32m 3[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/CatalogManifestParser.test.ts[2m > [22mCatalogManifestParser.validateManifest[2m > [22maccepts a valid manifest[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/CatalogManifestParser.test.ts[2m > [22mCatalogManifestParser.validateManifest[2m > [22mrejects unknown type[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/CatalogManifestParser.test.ts[2m > [22mCatalogManifestParser.validateManifest[2m > [22maccepts all valid types[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/CatalogManifestParser.test.ts[2m > [22mCatalogManifestParser.validateManifest[2m > [22mrejects invalid ID format (uppercase)[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/CatalogManifestParser.test.ts[2m > [22mCatalogManifestParser.validateManifest[2m > [22mrejects manifest with path traversal in source paths[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/CatalogManifestParser.test.ts[2m > [22mCatalogManifestParser.validateManifest[2m > [22mrejects manifest with absolute path in files[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/CatalogManifestParser.test.ts[2m > [22mCatalogManifestParser.validateManifest[2m > [22mrejects manifest with unsafe URL (via isUrlSafe callback)[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/CatalogManifestParser.test.ts[2m > [22mCatalogManifestParser.validateManifest[2m > [22maccepts manifest without optional URLs/paths[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/CatalogManifestParser.test.ts[2m > [22mCatalogManifestParser.isSafeRelativePath[2m > [22maccepts normal relative paths[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/CatalogManifestParser.test.ts[2m > [22mCatalogManifestParser.isSafeRelativePath[2m > [22mrejects path traversal with ..[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/CatalogManifestParser.test.ts[2m > [22mCatalogManifestParser.isSafeRelativePath[2m > [22mrejects absolute paths[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/CatalogManifestParser.test.ts[2m > [22mCatalogManifestParser.isSafeRelativePath[2m > [22mrejects null bytes[32m 2[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/CatalogManifestParser.test.ts[2m > [22mCatalogManifestParser.isSafeRelativePath[2m > [22mrejects empty string[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/CatalogManifestParser.test.ts[2m > [22mCatalogManifestParser.asString[2m > [22mreturns trimmed string for string input[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/CatalogManifestParser.test.ts[2m > [22mCatalogManifestParser.asString[2m > [22mreturns empty string for non-string types[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/CatalogManifestParser.test.ts[2m > [22mCatalogManifestParser.asStringArray[2m > [22mreturns filtered array of trimmed strings[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/CatalogManifestParser.test.ts[2m > [22mCatalogManifestParser.asStringArray[2m > [22mwraps single string in array[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/CatalogManifestParser.test.ts[2m > [22mCatalogManifestParser.asStringArray[2m > [22mfilters out non-string items in array[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/CatalogManifestParser.test.ts[2m > [22mCatalogManifestParser.asStringArray[2m > [22mfilters out empty strings[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/CatalogManifestParser.test.ts[2m > [22mCatalogManifestParser.asStringArray[2m > [22mreturns empty array for non-string types[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/CatalogManifestParser.test.ts[2m > [22mCatalogManifestParser.asAuthor[2m > [22mreturns string author directly[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/CatalogManifestParser.test.ts[2m > [22mCatalogManifestParser.asAuthor[2m > [22mreturns name from object author[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/CatalogManifestParser.test.ts[2m > [22mCatalogManifestParser.asAuthor[2m > [22mreturns default for missing/invalid input[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/CatalogManifestParser.test.ts[2m > [22mCatalogManifestParser.asBoolean[2m > [22mreturns boolean values as-is[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/CatalogManifestParser.test.ts[2m > [22mCatalogManifestParser.asBoolean[2m > [22mreturns fallback for non-boolean[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/CatalogManifestParser.test.ts[2m > [22mCatalogManifestParser.asMaturity[2m > [22maccepts valid maturity values[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/CatalogManifestParser.test.ts[2m > [22mCatalogManifestParser.asMaturity[2m > [22mfalls back to stable for unknown/missing values[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/CatalogManifestParser.test.ts[2m > [22mCatalogManifestParser.asInstallTargets[2m > [22mparses valid targets[32m 2[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/CatalogManifestParser.test.ts[2m > [22mCatalogManifestParser.asInstallTargets[2m > [22muses merge-mcp-servers strategy when specified[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/CatalogManifestParser.test.ts[2m > [22mCatalogManifestParser.asInstallTargets[2m > [22mskips targets without target path[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/CatalogManifestParser.test.ts[2m > [22mCatalogManifestParser.asInstallTargets[2m > [22mreturns empty array for non-array input[32m 2[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/CatalogManifestParser.test.ts[2m > [22mCatalogManifestParser.slugify[2m > [22mlowercases and replaces spaces[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/CatalogManifestParser.test.ts[2m > [22mCatalogManifestParser.slugify[2m > [22mremoves special characters[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/CatalogManifestParser.test.ts[2m > [22mCatalogManifestParser.slugify[2m > [22mcollapses multiple hyphens[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/CatalogManifestParser.test.ts[2m > [22mCatalogManifestParser.slugify[2m > [22mstrips leading/trailing hyphens[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/CatalogManifestParser.test.ts[2m > [22mCatalogManifestParser.slugify[2m > [22mreturns "package" for empty/invalid input[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/CatalogManifestParser.test.ts[2m > [22mCatalogManifestParser.toDisplayName[2m > [22mconverts slug to title case[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/CatalogManifestParser.test.ts[2m > [22mCatalogManifestParser.toDisplayName[2m > [22mpreserves existing uppercase and capitalizes first letter per word[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/CatalogManifestParser.test.ts[2m > [22mCatalogManifestParser.toRelativePath[2m > [22mreturns posix-style relative path[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m test/domain/entities.test.ts[2m > [22mHealthReport[2m > [22mcria relat├│rio vazio com score 100[32m 5[2mms[22m[39m
+ [32mÔ£ô[39m test/domain/entities.test.ts[2m > [22mHealthReport[2m > [22mcalcula score: 1 erro ÔåÆ -20 (80)[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m test/domain/entities.test.ts[2m > [22mHealthReport[2m > [22mcalcula score: 1 warning ÔåÆ -5 (95)[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m test/domain/entities.test.ts[2m > [22mHealthReport[2m > [22mcalcula score: 5 erros ÔåÆ 0 (n├úo vai negativo)[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m test/domain/entities.test.ts[2m > [22mHealthReport[2m > [22mcalcula score misto: 2 erros + 3 warnings = 100 - 40 - 15 = 45[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m test/domain/entities.test.ts[2m > [22mHealthReport[2m > [22mstatusEmoji: score >= 90 ÔåÆ verde[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m test/domain/entities.test.ts[2m > [22mHealthReport[2m > [22mstatusEmoji: score >= 60 (e < 90) ÔåÆ amarelo[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m test/domain/entities.test.ts[2m > [22mHealthReport[2m > [22mstatusEmoji: score < 60 ÔåÆ vermelho[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m test/domain/entities.test.ts[2m > [22mHealthReport[2m > [22mstatusLabel: Healthy quando score >= 90[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m test/domain/entities.test.ts[2m > [22mHealthReport[2m > [22mstatusLabel: Needs Attention quando 60 <= score < 90[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m test/domain/entities.test.ts[2m > [22mHealthReport[2m > [22mstatusLabel: Critical Issues quando score < 60[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m test/domain/entities.test.ts[2m > [22mHealthReport[2m > [22mfiltra erros, warnings e infos corretamente[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m test/domain/entities.test.ts[2m > [22mHealthReport[2m > [22mautoFixableCount retorna apenas os autoFixable=true[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m test/domain/entities.test.ts[2m > [22mHealthReport[2m > [22mfindings ├® imut├ível (frozen)[32m 2[2mms[22m[39m
+ [32mÔ£ô[39m test/domain/entities.test.ts[2m > [22mBundle[2m > [22mcria bundle com valores padr├úo de icon e color[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m test/domain/entities.test.ts[2m > [22mBundle[2m > [22mcria bundle com valores customizados[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m test/domain/entities.test.ts[2m > [22mBundle[2m > [22mpackageCount retorna o n├║mero de pacotes[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m test/domain/entities.test.ts[2m > [22mBundle[2m > [22mcontainsPackage: retorna true para pacote presente[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m test/domain/entities.test.ts[2m > [22mBundle[2m > [22mcontainsPackage: retorna false para pacote ausente[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m test/domain/entities.test.ts[2m > [22mBundle[2m > [22mmatchesQuery: string vazia retorna true[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m test/domain/entities.test.ts[2m > [22mBundle[2m > [22mmatchesQuery: encontra por name[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m test/domain/entities.test.ts[2m > [22mBundle[2m > [22mmatchesQuery: encontra por displayName (case-insensitive)[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m test/domain/entities.test.ts[2m > [22mBundle[2m > [22mmatchesQuery: encontra por description[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m test/domain/entities.test.ts[2m > [22mBundle[2m > [22mmatchesQuery: n├úo encontra string irrelevante[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m test/domain/entities.test.ts[2m > [22mBundle[2m > [22mversion ├® parseada corretamente[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m test/domain/entities.test.ts[2m > [22mBundle[2m > [22mpackageIds ├® imut├ível[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m test/domain/entities.test.ts[2m > [22mInsightsReport types[2m > [22mCoverageMap tem todas as dimens├Áes esperadas[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m test/domain/entities.test.ts[2m > [22mInsightsReport types[2m > [22mSecurityAlert shape ├® constru├¡da corretamente[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m test/domain/entities.test.ts[2m > [22mInsightsReport types[2m > [22mInsightsReport completo ├® constru├¡do corretamente[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m test/domain/entities.test.ts[2m > [22mOperation types[2m > [22mOperationSnapshot shape ├® constru├¡da corretamente[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m test/domain/entities.test.ts[2m > [22mOperation types[2m > [22mOperationDefinition shape ├® constru├¡da corretamente[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m test/domain/entities.test.ts[2m > [22mOperation types[2m > [22mOperationMetricsSnapshot shape ├® constru├¡da corretamente[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m test/domain/entities.test.ts[2m > [22mOperation types[2m > [22mOperationContext setProgress e setRefreshing s├úo callable[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/McpDocumentAdapter.test.ts[2m > [22mMcpDocumentAdapter[2m > [22mdetectFormat[2m > [22mdetecta formato Copilot (servers)[32m 4[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/McpDocumentAdapter.test.ts[2m > [22mMcpDocumentAdapter[2m > [22mdetectFormat[2m > [22mdetecta formato Copilot (servers + inputs)[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/McpDocumentAdapter.test.ts[2m > [22mMcpDocumentAdapter[2m > [22mdetectFormat[2m > [22mdetecta formato Claude Desktop (mcpServers)[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/McpDocumentAdapter.test.ts[2m > [22mMcpDocumentAdapter[2m > [22mdetectFormat[2m > [22mdetecta formato Cursor (mcpServers sem inputs)[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/McpDocumentAdapter.test.ts[2m > [22mMcpDocumentAdapter[2m > [22mdetectFormat[2m > [22mretorna unknown para objeto vazio[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/McpDocumentAdapter.test.ts[2m > [22mMcpDocumentAdapter[2m > [22mdetectFormat[2m > [22mretorna unknown para null[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/McpDocumentAdapter.test.ts[2m > [22mMcpDocumentAdapter[2m > [22mdetectFormat[2m > [22mretorna unknown para string[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/McpDocumentAdapter.test.ts[2m > [22mMcpDocumentAdapter[2m > [22mdetectFormat[2m > [22mretorna unknown para documento sem chave de servidores reconhecida[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/McpDocumentAdapter.test.ts[2m > [22mMcpDocumentAdapter[2m > [22mnormalize[2m > [22mnormaliza formato Copilot sem altera├º├Áes (servers + inputs)[32m 2[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/McpDocumentAdapter.test.ts[2m > [22mMcpDocumentAdapter[2m > [22mnormalize[2m > [22mnormaliza formato Copilot sem campo inputs[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/McpDocumentAdapter.test.ts[2m > [22mMcpDocumentAdapter[2m > [22mnormalize[2m > [22mfiltra inputs inv├ílidos (sem campo id)[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/McpDocumentAdapter.test.ts[2m > [22mMcpDocumentAdapter[2m > [22mnormalize[2m > [22mnormaliza formato Claude Desktop (mcpServers ÔåÆ servers)[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/McpDocumentAdapter.test.ts[2m > [22mMcpDocumentAdapter[2m > [22mnormalize[2m > [22mnormaliza formato Cursor (mcpServers ÔåÆ servers, sem inputs)[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/McpDocumentAdapter.test.ts[2m > [22mMcpDocumentAdapter[2m > [22mnormalize[2m > [22mlan├ºa erro para formato Copilot com servers vazio[32m 2[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/McpDocumentAdapter.test.ts[2m > [22mMcpDocumentAdapter[2m > [22mnormalize[2m > [22mlan├ºa erro para formato Claude Desktop com mcpServers vazio[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/McpDocumentAdapter.test.ts[2m > [22mMcpDocumentAdapter[2m > [22mnormalize[2m > [22mlan├ºa erro para formato desconhecido[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/McpDocumentAdapter.test.ts[2m > [22mMcpDocumentAdapter[2m > [22mnormalize[2m > [22mlan├ºa erro para null[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/McpDocumentAdapter.test.ts[2m > [22mMcpDocumentAdapter[2m > [22mparseJsonFile[2m > [22mfaz parse de JSON normal[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/McpDocumentAdapter.test.ts[2m > [22mMcpDocumentAdapter[2m > [22mparseJsonFile[2m > [22mstrip de coment├írios de linha (//) antes do parse[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/McpDocumentAdapter.test.ts[2m > [22mMcpDocumentAdapter[2m > [22mparseJsonFile[2m > [22mstrip de coment├írios de bloco (/* */) antes do parse[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/McpDocumentAdapter.test.ts[2m > [22mMcpDocumentAdapter[2m > [22mparseJsonFile[2m > [22mstrip de coment├írios de bloco multi-linha[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/McpDocumentAdapter.test.ts[2m > [22mMcpDocumentAdapter[2m > [22mparseJsonFile[2m > [22mlan├ºa SyntaxError para JSON inv├ílido ap├│s strip[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/McpDocumentAdapter.test.ts[2m > [22mMcpDocumentAdapter[2m > [22mparseJsonFile[2m > [22mretorna objeto vazio para conte├║do vazio ap├│s strip[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/LocalRegistry.test.ts[2m > [22mLOCAL_CATALOG_PACKAGES[2m > [22mexports a non-empty frozen array[32m 4[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/LocalRegistry.test.ts[2m > [22mLOCAL_CATALOG_PACKAGES[2m > [22mincludes all expected agent IDs[32m 2[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/LocalRegistry.test.ts[2m > [22mLOCAL_CATALOG_PACKAGES[2m > [22mincludes skill packages[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/LocalRegistry.test.ts[2m > [22mLOCAL_CATALOG_PACKAGES[2m > [22mincludes MCP, instruction and prompt packages[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/LocalRegistry.test.ts[2m > [22mLOCAL_CATALOG_PACKAGES[2m > [22morchestrator has complete agentMeta[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/LocalRegistry.test.ts[2m > [22mLOCAL_CATALOG_BUNDLES[2m > [22mexports a non-empty frozen array[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/LocalRegistry.test.ts[2m > [22mLOCAL_CATALOG_BUNDLES[2m > [22mincludes expected bundle IDs[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/LocalRegistry.test.ts[2m > [22mLOCAL_CATALOG_BUNDLES[2m > [22mzm1-full bundle references existing package IDs[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/LocalRegistry.test.ts[2m > [22mLocalRegistry ÔÇö default constructor[2m > [22mreturns all catalog packages[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/LocalRegistry.test.ts[2m > [22mLocalRegistry ÔÇö default constructor[2m > [22mreturns a copy (not the internal array)[32m 2[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/LocalRegistry.test.ts[2m > [22mLocalRegistry ÔÇö default constructor[2m > [22mfindById returns correct package[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/LocalRegistry.test.ts[2m > [22mLocalRegistry ÔÇö default constructor[2m > [22mfindById returns undefined for unknown id[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/LocalRegistry.test.ts[2m > [22mLocalRegistry ÔÇö default constructor[2m > [22msearch matches by name/description[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/LocalRegistry.test.ts[2m > [22mLocalRegistry ÔÇö default constructor[2m > [22msearch returns empty array for no matches[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/LocalRegistry.test.ts[2m > [22mLocalRegistry ÔÇö default constructor[2m > [22mgetAllBundles returns all bundles[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/LocalRegistry.test.ts[2m > [22mLocalRegistry ÔÇö default constructor[2m > [22mfindBundleById returns correct bundle[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/LocalRegistry.test.ts[2m > [22mLocalRegistry ÔÇö default constructor[2m > [22mgetAgentNetwork returns delegated agents for orchestrator[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/LocalRegistry.test.ts[2m > [22mLocalRegistry ÔÇö default constructor[2m > [22mgetAgentNetwork returns empty for non-agent package[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/LocalRegistry.test.ts[2m > [22mLocalRegistry ÔÇö default constructor[2m > [22mgetRelatedSkills returns skills for backend agent[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/LocalRegistry.test.ts[2m > [22mLocalRegistry ÔÇö custom data injection[2m > [22muses injected packages instead of defaults[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/LocalRegistry.test.ts[2m > [22mLocalRegistry ÔÇö custom data injection[2m > [22muses injected bundles instead of defaults[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/LocalRegistry.test.ts[2m > [22mLocalRegistry ÔÇö custom data injection[2m > [22mempty arrays produce empty results[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/LocalRegistry.test.ts[2m > [22mLocalRegistry ÔÇö custom data injection[2m > [22mgetAgentNetwork returns empty for agent with no delegatesTo[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/ServiceContainer.test.ts[2m > [22mServiceContainer[2m > [22mresolves a registered service[32m 3[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/ServiceContainer.test.ts[2m > [22mServiceContainer[2m > [22mreturns the same instance on subsequent resolves (singleton)[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/ServiceContainer.test.ts[2m > [22mServiceContainer[2m > [22msupports chained register calls[32m 2[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/ServiceContainer.test.ts[2m > [22mServiceContainer[2m > [22minjects resolved dependencies into factory[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/ServiceContainer.test.ts[2m > [22mServiceContainer[2m > [22mthrows when resolving an unregistered token[32m 2[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/ServiceContainer.test.ts[2m > [22mServiceContainer[2m > [22mclears all instances after dispose[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/ServiceContainer.test.ts[2m > [22mServiceContainer[2m > [22msupports custom symbols outside TOKENS[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/CatalogFetcher.test.ts[2m > [22mCatalogFetcher.isSafeRemoteUrl (strict mode)[2m > [22maccepts trusted HTTPS origins[32m 4[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/CatalogFetcher.test.ts[2m > [22mCatalogFetcher.isSafeRemoteUrl (strict mode)[2m > [22mrejects HTTP (non-HTTPS)[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/CatalogFetcher.test.ts[2m > [22mCatalogFetcher.isSafeRemoteUrl (strict mode)[2m > [22mrejects HTTPS from untrusted host[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/CatalogFetcher.test.ts[2m > [22mCatalogFetcher.isSafeRemoteUrl (strict mode)[2m > [22mrejects invalid URL strings[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/CatalogFetcher.test.ts[2m > [22mCatalogFetcher.isSafeRemoteUrl (permissive mode)[2m > [22maccepts any HTTPS URL[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/CatalogFetcher.test.ts[2m > [22mCatalogFetcher.isSafeRemoteUrl (permissive mode)[2m > [22mstill rejects HTTP[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/CatalogFetcher.test.ts[2m > [22mCatalogFetcher.isSafeRemoteUrl (permissive mode)[2m > [22mstill rejects invalid URLs[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/CatalogFetcher.test.ts[2m > [22mCatalogFetcher.normalizeRepoUrl[2m > [22mstrips .git suffix[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/CatalogFetcher.test.ts[2m > [22mCatalogFetcher.normalizeRepoUrl[2m > [22mstrips .Git (case-insensitive)[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/CatalogFetcher.test.ts[2m > [22mCatalogFetcher.normalizeRepoUrl[2m > [22mleaves URL without .git unchanged[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/CatalogFetcher.test.ts[2m > [22mCatalogFetcher.assertTrustedRegistryUrl[2m > [22mdoes not throw for trusted URL[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/CatalogFetcher.test.ts[2m > [22mCatalogFetcher.assertTrustedRegistryUrl[2m > [22mthrows for untrusted URL[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/CatalogFetcher.test.ts[2m > [22mCatalogFetcher.assertTrustedRegistryUrl[2m > [22mthrows for HTTP URL[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/CatalogFetcher.test.ts[2m > [22mCatalogFetcher.isLocalPath[2m > [22mdetects file:// URL[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/CatalogFetcher.test.ts[2m > [22mCatalogFetcher.isLocalPath[2m > [22mdetects absolute paths[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/CatalogFetcher.test.ts[2m > [22mCatalogFetcher.isLocalPath[2m > [22mreturns false for remote HTTP/HTTPS URLs[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/CatalogFetcher.test.ts[2m > [22mCatalogFetcher.isLocalPath[2m > [22mreturns false for empty string[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/CatalogFetcher.test.ts[2m > [22mCatalogFetcher.isJsonEndpoint[2m > [22mdetects .json extension[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/CatalogFetcher.test.ts[2m > [22mCatalogFetcher.isJsonEndpoint[2m > [22mdetects raw.githubusercontent.com[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/CatalogFetcher.test.ts[2m > [22mCatalogFetcher.isJsonEndpoint[2m > [22mreturns false for regular git repository URLs[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/CatalogFetcher.test.ts[2m > [22mCatalogFetcher.normalizeLocalPath[2m > [22mconverts file:// URL on POSIX to filesystem path[32m 1[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/CatalogFetcher.test.ts[2m > [22mCatalogFetcher.normalizeLocalPath[2m > [22mpasses through regular paths unchanged[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/CatalogFetcher.test.ts[2m > [22mCatalogFetcher.normalizeLocalPath[2m > [22mhandles URL-encoded paths[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m test/domain/Package.test.ts[2m > [22mPackage[2m > [22maplica defaults derivados corretamente[32m 5[2mms[22m[39m
+ [32mÔ£ô[39m test/domain/Package.test.ts[2m > [22mPackage[2m > [22musa mcp-merge por padr├úo para pacotes MCP[32m 0[2mms[22m[39m
+node.exe : 
+No linha:1 caractere:1
++ & "C:\nvm4w\nodejs/node.exe" "C:\nvm4w\nodejs/node_modules/npm/bin/np ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+[31mÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»[39m[1m[41m Failed Tests 10 
+[49m[22m[31mÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»[39m
+
+[41m[1m FAIL [22m[49m test/extension/activate.test.ts[2m > [22mextension 
+activation[2m > [22mregistra comandos principais sem crash
+[31m[1mTypeError[22m: stored is not iterable[39m
+[36m [2mÔØ»[22m OperationCoordinator.initializePersistence 
+src/infrastructure/services/OperationCoordinator.ts:[2m61:43[22m[39m
+    [90m 59| [39m    const stored = 
+context.globalState.get<OperationSnapshot[]>(OperatÔÇª
+    [90m 60| [39m    // Merge stored (older) with current in-memory history, 
+keeping moÔÇª
+    [90m 61| [39m    [35mthis[39m[33m.[39m_history [33m=[39m 
+[[33m...[39m[35mthis[39m[33m.[39m_history[33m,[39m [33m...[39mstored]
+    [90m   | [39m                                          [31m^[39m
+    [90m 62| [39m      [33m.[39m[34msort[39m((a[33m,[39m b) 
+[33m=>[39m (b[33m.[39mstartedAt [33m??[39m [34m0[39m) [33m-[39m 
+(a[33m.[39mstartedAt [33m??[39m [34m0[39m))
+    [90m 63| [39m      [33m.[39m[34mslice[39m([34m0[39m[33m,[39m 
+[33mOperationCoordinator[39m[33m.[39m[33mHISTORY_LIMIT[39m)[33m;[39m
+[90m [2mÔØ»[22m activate src/extension.ts:[2m56:14[22m[39m
+[90m [2mÔØ»[22m test/extension/activate.test.ts:[2m32:5[22m[39m
+
+[31m[2mÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»[
+1/10]ÔÄ»[22m[39m
+
+[41m[1m FAIL [22m[49m test/infrastructure/PublishService.test.ts[2m > 
+[22mPublishService[2m > [22mimportCustomMcp[2m > [22mimporta 1 server com 
+sucesso, retorna 1 Package e salva no registry
+[31m[1mSyntaxError[22m: Unterminated string in JSON at position 48 (line 1 
+column 49)[39m
+[36m [2mÔØ»[22m Function.parseJsonFile 
+src/infrastructure/services/McpDocumentAdapter.ts:[2m89:28[22m[39m
+    [90m 87| [39m      
+[33m.[39m[34mreplace[39m([36m/\/\*[\s\S]*?\*\//g[39m[33m,[39m 
+[32m''[39m)
+    [90m 88| [39m      [33m.[39m[34mtrim[39m()[33m;[39m
+    [90m 89| [39m    [35mreturn[39m stripped [33m?[39m 
+[33mJSON[39m[33m.[39m[34mparse[39m(stripped) [33m:[39m {}[33m;[39m
+    [90m   | [39m                           [31m^[39m
+    [90m 90| [39m  }
+    [90m 91| [39m}
+[90m [2mÔØ»[22m PublishService.readMcpDocument 
+src/infrastructure/services/PublishService.ts:[2m217:40[22m[39m
+[90m [2mÔØ»[22m PublishService.importCustomMcp 
+src/infrastructure/services/PublishService.ts:[2m24:29[22m[39m
+[90m [2mÔØ»[22m 
+test/infrastructure/PublishService.test.ts:[2m67:38[22m[39m
+
+[31m[2mÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»[
+2/10]ÔÄ»[22m[39m
+
+[41m[1m FAIL [22m[49m test/infrastructure/PublishService.test.ts[2m > 
+[22mPublishService[2m > [22mimportCustomMcp[2m > [22mparseia JSON com 
+coment├írios de linha corretamente, sem lan├ºar erro
+[31m[1mSyntaxError[22m: Bad control character in string literal in JSON at 
+position 68 (line 4 column 49)[39m
+[36m [2mÔØ»[22m Function.parseJsonFile 
+src/infrastructure/services/McpDocumentAdapter.ts:[2m89:28[22m[39m
+    [90m 87| [39m      
+[33m.[39m[34mreplace[39m([36m/\/\*[\s\S]*?\*\//g[39m[33m,[39m 
+[32m''[39m)
+    [90m 88| [39m      [33m.[39m[34mtrim[39m()[33m;[39m
+    [90m 89| [39m    [35mreturn[39m stripped [33m?[39m 
+[33mJSON[39m[33m.[39m[34mparse[39m(stripped) [33m:[39m {}[33m;[39m
+    [90m   | [39m                           [31m^[39m
+    [90m 90| [39m  }
+    [90m 91| [39m}
+[90m [2mÔØ»[22m PublishService.readMcpDocument 
+src/infrastructure/services/PublishService.ts:[2m217:40[22m[39m
+[90m [2mÔØ»[22m PublishService.importCustomMcp 
+src/infrastructure/services/PublishService.ts:[2m24:29[22m[39m
+[90m [2mÔØ»[22m 
+test/infrastructure/PublishService.test.ts:[2m87:38[22m[39m
+
+[31m[2mÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»[
+3/10]ÔÄ»[22m[39m
+
+[41m[1m FAIL [22m[49m test/infrastructure/PublishService.test.ts[2m > 
+[22mPublishService[2m > [22mimportCustomMcp[2m > [22mimporta 2 servers e 
+chama saveWorkspaceCustomPackage 2 vezes
+[31m[1mSyntaxError[22m: Unterminated string in JSON at position 52 (line 1 
+column 53)[39m
+[36m [2mÔØ»[22m Function.parseJsonFile 
+src/infrastructure/services/McpDocumentAdapter.ts:[2m89:28[22m[39m
+    [90m 87| [39m      
+[33m.[39m[34mreplace[39m([36m/\/\*[\s\S]*?\*\//g[39m[33m,[39m 
+[32m''[39m)
+    [90m 88| [39m      [33m.[39m[34mtrim[39m()[33m;[39m
+    [90m 89| [39m    [35mreturn[39m stripped [33m?[39m 
+[33mJSON[39m[33m.[39m[34mparse[39m(stripped) [33m:[39m {}[33m;[39m
+    [90m   | [39m                           [31m^[39m
+    [90m 90| [39m  }
+    [90m 91| [39m}
+[90m [2mÔØ»[22m PublishService.readMcpDocument 
+src/infrastructure/services/PublishService.ts:[2m217:40[22m[39m
+[90m [2mÔØ»[22m PublishService.importCustomMcp 
+src/infrastructure/services/PublishService.ts:[2m24:29[22m[39m
+[90m [2mÔØ»[22m 
+test/infrastructure/PublishService.test.ts:[2m100:38[22m[39m
+
+[31m[2mÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»[
+4/10]ÔÄ»[22m[39m
+
+[41m[1m FAIL [22m[49m test/infrastructure/PublishService.test.ts[2m > 
+[22mPublishService[2m > [22mimportCustomMcp[2m > [22mJSON com campo 
+mcpServers (alternativo a servers) ÔåÆ importa normalmente
+[31m[1mSyntaxError[22m: Unterminated string in JSON at position 51 (line 1 
+column 52)[39m
+[36m [2mÔØ»[22m Function.parseJsonFile 
+src/infrastructure/services/McpDocumentAdapter.ts:[2m89:28[22m[39m
+    [90m 87| [39m      
+[33m.[39m[34mreplace[39m([36m/\/\*[\s\S]*?\*\//g[39m[33m,[39m 
+[32m''[39m)
+    [90m 88| [39m      [33m.[39m[34mtrim[39m()[33m;[39m
+    [90m 89| [39m    [35mreturn[39m stripped [33m?[39m 
+[33mJSON[39m[33m.[39m[34mparse[39m(stripped) [33m:[39m {}[33m;[39m
+    [90m   | [39m                           [31m^[39m
+    [90m 90| [39m  }
+    [90m 91| [39m}
+[90m [2mÔØ»[22m PublishService.readMcpDocument 
+src/infrastructure/services/PublishService.ts:[2m217:40[22m[39m
+[90m [2mÔØ»[22m PublishService.importCustomMcp 
+src/infrastructure/services/PublishService.ts:[2m24:29[22m[39m
+[90m [2mÔØ»[22m 
+test/infrastructure/PublishService.test.ts:[2m115:38[22m[39m
+
+[31m[2mÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»[
+5/10]ÔÄ»[22m[39m
+
+[41m[1m FAIL [22m[49m test/infrastructure/PublishService.test.ts[2m > 
+[22mPublishService[2m > [22mimportCustomMcp[2m > [22mJSON com servers 
+vazio ÔåÆ throw com mensagem de valida├º├úo (linhas 222-223)
+[31m[1mAssertionError[22m: expected [Function] to throw error including 'O 
+arquivo mcp.json n├úo possui servidoÔÇª' but got 'Nenhum servidor MCP 
+encontrado no docÔÇª'[39m
+
+Expected: [32m"[7mO arquivo mcp.json[27m n[7m├ú[27mo [7mpossui 
+servidores v├ílidos[27m."[39m
+Received: [31m"[7mNenhum servidor MCP encontrado[27m no [7mdocumento 
+(formato Copilot)[27m."[39m
+
+[31m[2mÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»[
+6/10]ÔÄ»[22m[39m
+
+[41m[1m FAIL [22m[49m test/infrastructure/PublishService.test.ts[2m > 
+[22mPublishService[2m > [22mimportCustomMcp[2m > [22mJSON sem campo 
+inputs ÔåÆ normalizado como array vazio (linha 229)
+[31m[1mSyntaxError[22m: Unterminated string in JSON at position 48 (line 1 
+column 49)[39m
+[36m [2mÔØ»[22m Function.parseJsonFile 
+src/infrastructure/services/McpDocumentAdapter.ts:[2m89:28[22m[39m
+    [90m 87| [39m      
+[33m.[39m[34mreplace[39m([36m/\/\*[\s\S]*?\*\//g[39m[33m,[39m 
+[32m''[39m)
+    [90m 88| [39m      [33m.[39m[34mtrim[39m()[33m;[39m
+    [90m 89| [39m    [35mreturn[39m stripped [33m?[39m 
+[33mJSON[39m[33m.[39m[34mparse[39m(stripped) [33m:[39m {}[33m;[39m
+    [90m   | [39m                           [31m^[39m
+    [90m 90| [39m  }
+    [90m 91| [39m}
+[90m [2mÔØ»[22m PublishService.readMcpDocument 
+src/infrastructure/services/PublishService.ts:[2m217:40[22m[39m
+[90m [2mÔØ»[22m PublishService.importCustomMcp 
+src/infrastructure/services/PublishService.ts:[2m24:29[22m[39m
+[90m [2mÔØ»[22m 
+test/infrastructure/PublishService.test.ts:[2m143:38[22m[39m
+
+[31m[2mÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»[
+7/10]ÔÄ»[22m[39m
+
+[41m[1m FAIL [22m[49m test/infrastructure/PublishService.test.ts[2m > 
+[22mPublishService[2m > [22mpublishPackage[2m > [22mserver v├ílido ÔåÆ 
+mkdirSync chamado 2x e writeFileSync chamado 4x
+[31m[1mAssertionError[22m: expected "spy" to be called 2 times, but got 0 
+times[39m
+[36m [2mÔØ»[22m 
+test/infrastructure/PublishService.test.ts:[2m198:28[22m[39m
+    [90m196| [39m
+    [90m197| [39m      [90m// artifactRoot + packageRoot (1 servidor)[39m
+    [90m198| [39m      [34mexpect[39m(fs[33m.[39mmkdirSync)[33m.[39m[3
+4mtoHaveBeenCalledTimes[39m([34m2[39m)[33m;[39m
+    [90m   | [39m                           [31m^[39m
+    [90m199| [39m      [90m// manifest.json + mcp.json + README.md + 
+details.md (1 servidor)[39m
+    [90m200| [39m      [34mexpect[39m(fs[33m.[39mwriteFileSync)[33m.[39
+m[34mtoHaveBeenCalledTimes[39m([34m4[39m)[33m;[39m
+
+[31m[2mÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»[
+8/10]ÔÄ»[22m[39m
+
+[41m[1m FAIL [22m[49m test/infrastructure/PublishService.test.ts[2m > 
+[22mPublishService[2m > [22mpublishPackage[2m > [22mchoice ÔåÆ Abrir 
+pasta: revealFileInOS executado (branch linha 222)
+[31m[1mAssertionError[22m: expected "spy" to be called with arguments: [ 
+'revealFileInOS', ÔÇª(1) ][90m
+
+Number of calls: [1m0[22m
+[31m[39m
+[36m [2mÔØ»[22m 
+test/infrastructure/PublishService.test.ts:[2m210:57[22m[39m
+    [90m208| [39m      await 
+service.publishPackage(vscode.Uri.file('/workspace/mcp.jsoÔÇª
+    [90m209| [39m
+    [90m210| [39m      
+expect(vi.mocked(vscode.commands.executeCommand)).toHaveBeenCallÔÇª
+    [90m   | [39m                                                        
+[31m^[39m
+    [90m211| [39m        [32m'revealFileInOS'[39m[33m,[39m
+    [90m212| [39m        expect[33m.[39m[34mobjectContaining[39m({ 
+fsPath[33m:[39m expect[33m.[39m[34many[39m([33mString[39m) 
+})[33m,[39m
+
+[31m[2mÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»[
+9/10]ÔÄ»[22m[39m
+
+[41m[1m FAIL [22m[49m test/infrastructure/PublishService.test.ts[2m > 
+[22mPublishService[2m > [22mpublishPackage[2m > [22mchoice ÔåÆ Abrir 
+reposit├│rio oficial: openExternal chamado (branch linha 229)
+[31m[1mAssertionError[22m: expected "spy" to be called with arguments: [ 
+ObjectContaining{ÔÇª} ][90m
+
+Number of calls: [1m0[22m
+[31m[39m
+[36m [2mÔØ»[22m 
+test/infrastructure/PublishService.test.ts:[2m223:50[22m[39m
+    [90m221| [39m      await 
+service.publishPackage(vscode.Uri.file('/workspace/mcp.jsoÔÇª
+    [90m222| [39m
+    [90m223| [39m      [34mexpect[39m(vi[33m.[39m[34mmocked[39m(vscode
+[33m.[39menv[33m.[39mopenExternal))[33m.[39m[34mtoHaveBeenCalledWith[39m
+(
+    [90m   | [39m                                                 [31m^[39m
+    [90m224| [39m        expect.objectContaining({ fsPath: 
+expect.stringContaining('DesÔÇª
+    [90m225| [39m      )[33m;[39m
+
+[31m[2mÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»[10/
+10]ÔÄ»[22m[39m
+
+
+[2m Test Files [22m [1m[31m2 failed[39m[22m[2m | [22m[1m[32m21 passed[39m[22m[90m (23)[39m
+[2m      Tests [22m [1m[31m10 failed[39m[22m[2m | [22m[1m[32m473 passed[39m[22m[90m (483)[39m
+[2m   Start at [22m 11:07:30
+[2m   Duration [22m 3.68s[2m (transform 2.74s, setup 2.10s, collect 6.69s, tests 3.43s, environment 15ms, prepare 8.34s)[22m
+

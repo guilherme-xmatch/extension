@@ -146,7 +146,7 @@ describe('PackageType', () => {
     });
 
     it('lança Error para tipo desconhecido', () => {
-      expect(() => PackageType.fromString('unknown')).toThrow('Unknown package type: "unknown"');
+      expect(() => PackageType.fromString('unknown')).toThrow('Tipo de pacote desconhecido: "unknown"');
     });
   });
 

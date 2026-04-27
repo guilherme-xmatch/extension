@@ -1,7 +1,7 @@
 /**
  * @module infrastructure/services/HealthChecker
- * @description Validates the integrity of AI infrastructure in the workspace.
- * Checks cross-references between agents, skills, MCPs, and instructions.
+ * @description Valida a integridade da infraestrutura de AI no workspace.
+ * Verifica referências cruzadas entre agents, skills, MCPs e instructions.
  */
 
 import * as vscode from 'vscode';
@@ -33,14 +33,14 @@ export class HealthCheckerService implements IHealthChecker {
         id: 'no-workspace',
         severity: HealthSeverity.Error,
         category: 'general',
-        title: 'No workspace open',
-        message: 'Open a workspace folder to run health checks.',
+        title: 'Nenhum workspace aberto',
+        message: 'Abra uma pasta de workspace para executar verificações de saúde.',
         autoFixable: false,
       });
       return HealthReport.create(findings, Date.now() - startTime);
     }
 
-    // Run all checks in parallel for performance
+    // Executa todas as verificações em paralelo para melhor desempenho
     const [
       githubCheck,
       agentChecks,
@@ -59,14 +59,14 @@ export class HealthCheckerService implements IHealthChecker {
 
     findings.push(...githubCheck, ...agentChecks, ...skillChecks, ...mcpChecks, ...instructionChecks, ...catalogMetadataChecks);
 
-    // Add positive finding if everything is good
+    // Adiciona resultado positivo se tudo estiver ok
     if (findings.length === 0) {
       findings.push({
         id: 'all-good',
         severity: HealthSeverity.Ok,
         category: 'general',
-        title: 'All checks passed',
-        message: 'Your AI infrastructure is healthy! 🎉',
+        title: 'Todas as verificações passaram',
+        message: 'Sua infraestrutura de AI está saudável! 🎉',
         autoFixable: false,
       });
     }
@@ -85,9 +85,9 @@ export class HealthCheckerService implements IHealthChecker {
         id: 'no-github-dir',
         severity: HealthSeverity.Warning,
         category: 'general',
-        title: 'No .github directory',
-        message: 'Create a .github directory to start using agents and skills.',
-        fix: 'Install any agent or skill to auto-create the directory.',
+        title: 'Diretório .github ausente',
+        message: 'Crie o diretório .github para começar a usar agentes e skills.',
+        fix: 'Instale qualquer agente ou skill para criar o diretório automaticamente.',
         autoFixable: true,
       });
     }
@@ -98,8 +98,8 @@ export class HealthCheckerService implements IHealthChecker {
         id: 'no-vscode-dir',
         severity: HealthSeverity.Info,
         category: 'general',
-        title: 'No .vscode directory',
-        message: 'Create a .vscode directory for MCP server configuration.',
+        title: 'Diretório .vscode ausente',
+        message: 'Crie o diretório .vscode para configurar servidores MCP.',
         autoFixable: true,
       });
     }
@@ -122,14 +122,14 @@ export class HealthCheckerService implements IHealthChecker {
           id: 'empty-agents-dir',
           severity: HealthSeverity.Warning,
           category: 'agent',
-          title: 'Empty agents directory',
-          message: 'The .github/agents/ directory exists but contains no agent files.',
-          fix: 'Install agents from the catalog.',
+          title: 'Diretório de agentes vazio',
+          message: 'O diretório .github/agents/ existe mas não contém arquivos de agente.',
+          fix: 'Instale agentes a partir do catálogo.',
           autoFixable: false,
         });
       }
 
-      // Check each agent for basic structure
+      // Verifica cada agente quanto à estrutura básica
       for (const [fileName] of agentFiles) {
         const filePath = path.join(agentsDir, fileName);
         try {
@@ -205,15 +205,15 @@ export class HealthCheckerService implements IHealthChecker {
     const mcpPath = path.join(root, '.vscode', 'mcp.json');
 
     if (!(await this.fileExists(mcpPath))) {
-      // Only warn if agents exist (agents likely need MCPs)
+      // Avisa apenas se existirem agentes (agentes geralmente precisam de MCPs)
       const hasAgents = await this.dirExists(path.join(root, '.github', 'agents'));
       if (hasAgents) {
         findings.push({
           id: 'no-mcp-config',
           severity: HealthSeverity.Info,
           category: 'mcp',
-          title: 'No MCP configuration',
-          message: 'Consider adding .vscode/mcp.json to configure MCP servers for your agents.',
+          title: 'Sem configuração de MCP',
+          message: 'Considere adicionar .vscode/mcp.json para configurar servidores MCP para seus agentes.',
           autoFixable: false,
         });
       }
@@ -222,7 +222,7 @@ export class HealthCheckerService implements IHealthChecker {
 
     try {
       const content = await this.readFile(mcpPath);
-      // Basic JSON validation
+      // Validação básica de JSON
       JSON.parse(content.replace(/\/\/.*$/gm, '').replace(/\/\*[\s\S]*?\*\//g, ''));
     } catch (error) {
       this._logger.warn('HEALTH_MCP_JSON_INVALID', { mcpPath, error });
@@ -230,8 +230,8 @@ export class HealthCheckerService implements IHealthChecker {
         id: 'mcp-invalid-json',
         severity: HealthSeverity.Error,
         category: 'mcp',
-        title: 'Invalid mcp.json',
-        message: 'The .vscode/mcp.json file contains invalid JSON.',
+        title: 'mcp.json inválido',
+        message: 'O arquivo .vscode/mcp.json contém JSON inválido.',
         filePath: mcpPath,
         autoFixable: false,
       });
@@ -259,8 +259,8 @@ export class HealthCheckerService implements IHealthChecker {
               id: `instruction-no-applyto-${fileName}`,
               severity: HealthSeverity.Warning,
               category: 'instruction',
-              title: `Instruction missing applyTo: ${fileName}`,
-              message: `The instruction "${fileName}" doesn't specify applyTo scope.`,
+              title: `Instruction sem applyTo: ${fileName}`,
+              message: `A instruction "${fileName}" não especifica o escopo applyTo.`,
               filePath,
               autoFixable: false,
             });

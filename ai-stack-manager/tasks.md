@@ -22,6 +22,7 @@
 - [x] Adicionar automação local para configurar `remote origin` no Git root correto
 - [x] Corrigir e validar o `DryRun` de `configure-git-origin.ps1`
 - [x] P5 — Import MCP Multi-Formato: `McpDocumentAdapter` (Copilot, Claude Desktop, Cursor), atualização de `PublishService`, 23 testes unitários verdes
+- [x] Corrigir bugs pré-existentes no test setup: mock `globalState.get` retornava `false` (deveria ser `[]`), e `vscode.window.registerUriHandler` ausente do mock — 483 testes passando, 0 falhas
 - [x] BUG FIX — `CatalogManifestParser.toDisplayName`: preserva acrônimos ALL_CAPS (API, AWS, MCP); 44/44 testes passando
 - [x] P6 — Persistência do Histórico de Operações via `ExtensionContext.globalState` em `OperationCoordinator`
 - [x] P13 — Deep Link `vscode://itau-engineering.descomplicai/install?packageId=<id>&bundleId=<id>` com `registerUriHandler` e `activationEvents: onUri`

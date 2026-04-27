@@ -68,12 +68,12 @@ export interface StackDiff {
 export class StackDiffBuilder {
 
   /**
-   * Computes the full diff between the installed workspace packages and
-   * the given target bundle.
+   * Calcula o diff completo entre os pacotes instalados no workspace e
+   * o bundle alvo fornecido.
    *
-   * @param targetBundle  — the bundle to compare against
-   * @param allPackages   — complete catalog (used to resolve display metadata)
-   * @param installedIds  — IDs of packages currently installed in the workspace
+   * @param targetBundle  — o bundle usado como referência de comparação
+   * @param allPackages   — catálogo completo (usado para resolver metadados de exibição)
+   * @param installedIds  — IDs dos pacotes atualmente instalados no workspace
    */
   build(params: {
     targetBundle: Bundle;

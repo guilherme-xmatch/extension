@@ -1,8 +1,8 @@
 ﻿/**
  * @module infrastructure/services/FileInstaller
- * @description Coordinates package installation by delegating file-system operations
- * to typed IInstallationStrategy implementations. Handles VS Code notifications,
- * user confirmation dialogs, and progress reporting.
+ * @description Coordena a instalação de pacotes delegando operações de sistema de arquivos
+ * a implementações tipadas de IInstallationStrategy. Gerencia notificações do VS Code,
+ * diálogos de confirmação e relatório de progresso.
  */
 
 import * as vscode from 'vscode';
@@ -22,7 +22,7 @@ export class FileInstaller implements IInstaller {
     return vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
   }
 
-  /** Route to the correct strategy based on package type. */
+  /** Direciona para a estratégia correta com base no tipo de pacote. */
   private strategyFor(pkg: Package): IInstallationStrategy {
     return pkg.type.value === 'mcp' ? this._mcpStrategy : this._copyStrategy;
   }
@@ -30,7 +30,7 @@ export class FileInstaller implements IInstaller {
   async install(pkg: Package, options?: InstallExecutionOptions): Promise<void> {
     return this.runExclusive(async () => {
       const root = this.workspaceRoot;
-      if (!root) { throw new Error('No workspace folder open. Please open a folder first.'); }
+      if (!root) { throw new Error('Nenhuma pasta de workspace aberta. Abra uma pasta primeiro.'); }
 
       options?.onProgress?.({ current: 0, total: 1, packageId: pkg.id, label: pkg.displayName });
       await this.strategyFor(pkg).install(root, pkg, 'prompt');
@@ -38,43 +38,43 @@ export class FileInstaller implements IInstaller {
       new LockFileService(root).addOrUpdate({ id: pkg.id, version: pkg.version.toString(), sourceOfficial: pkg.source.official });
       options?.onProgress?.({ current: 1, total: 1, packageId: pkg.id, label: pkg.displayName });
 
-      vscode.window.showInformationMessage(`✅ Installed "${pkg.displayName}" successfully!`);
+      vscode.window.showInformationMessage(`✅ "${pkg.displayName}" instalado com sucesso!`);
     });
   }
 
   async uninstall(pkg: Package, options?: InstallExecutionOptions): Promise<void> {
     return this.runExclusive(async () => {
       const root = this.workspaceRoot;
-      if (!root) { throw new Error('No workspace folder open.'); }
+      if (!root) { throw new Error('Nenhuma pasta de workspace aberta.'); }
 
       const confirm = await vscode.window.showWarningMessage(
-        `Remove "${pkg.displayName}" and all its files?`,
+        `Remover "${pkg.displayName}" e todos os seus arquivos?`,
         { modal: true },
-        'Remove',
-        'Cancel',
+        'Remover',
+        'Cancelar',
       );
-      if (confirm !== 'Remove') { return; }
+      if (confirm !== 'Remover') { return; }
 
       options?.onProgress?.({ current: 0, total: 1, packageId: pkg.id, label: pkg.displayName });
       await this.strategyFor(pkg).uninstall(root, pkg);
       new LockFileService(root).remove(pkg.id);
       options?.onProgress?.({ current: 1, total: 1, packageId: pkg.id, label: pkg.displayName });
 
-      vscode.window.showInformationMessage(`🗑️ Uninstalled "${pkg.displayName}".`);
+      vscode.window.showInformationMessage(`🗑️ "${pkg.displayName}" desinstalado.`);
     });
   }
 
   async installMany(packages: Package[], options?: InstallExecutionOptions): Promise<void> {
     return this.runExclusive(async () => {
       const root = this.workspaceRoot;
-      if (!root) { throw new Error('No workspace folder open.'); }
+      if (!root) { throw new Error('Nenhuma pasta de workspace aberta.'); }
 
       const uniquePackages = [...new Map(packages.map(pkg => [pkg.id, pkg])).values()];
       let installed = 0;
       const total = uniquePackages.length;
 
       await vscode.window.withProgress(
-        { location: vscode.ProgressLocation.Notification, title: `Installing bundle (${total} packages)...`, cancellable: false },
+        { location: vscode.ProgressLocation.Notification, title: `Instalando bundle (${total} pacotes)...`, cancellable: false },
         async (progress) => {
           for (const pkg of uniquePackages) {
             progress.report({ message: `${pkg.displayName} (${installed + 1}/${total})`, increment: (100 / total) });
@@ -87,7 +87,7 @@ export class FileInstaller implements IInstaller {
         },
       );
 
-      vscode.window.showInformationMessage(`✅ Bundle installed! ${installed} packages ready.`);
+      vscode.window.showInformationMessage(`✅ Bundle instalado! ${installed} pacotes prontos.`);
     });
   }
 

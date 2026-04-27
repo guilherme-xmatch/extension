@@ -1,0 +1,75 @@
+
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mC:/Users/Guilherme Campos/Desktop/2026/4. Extensão/ai-stack-manager[39m
+      [2mCoverage enabled with [22m[33mv8[39m
+
+ [32m✓[39m test/infrastructure/LockFileService.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 90[2mms[22m[39m
+ [31m❯[39m test/infrastructure/PublishService.test.ts [2m([22m[2m12 tests[22m[2m | [22m[31m9 failed[39m[2m)[22m[32m 91[2mms[22m[39m
+[31m   [31m×[31m PublishService[2m > [22mimportCustomMcp[2m > [22mimporta 1 server com sucesso, retorna 1 Package e salva no registry[39m[32m 18[2mms[22m[39m
+[31m     → Unterminated string in JSON at position 48 (line 1 column 49)[39m
+[31m   [31m×[31m PublishService[2m > [22mimportCustomMcp[2m > [22mparseia JSON com comentários de linha corretamente, sem lançar erro[39m[32m 2[2mms[22m[39m
+[31m     → Bad control character in string literal in JSON at position 68 (line 4 column 49)[39m
+[31m   [31m×[31m PublishService[2m > [22mimportCustomMcp[2m > [22mimporta 2 servers e chama saveWorkspaceCustomPackage 2 vezes[39m[32m 4[2mms[22m[39m
+[31m     → Unterminated string in JSON at position 52 (line 1 column 53)[39m
+[31m   [31m×[31m PublishService[2m > [22mimportCustomMcp[2m > [22mJSON com campo mcpServers (alternativo a servers) → importa normalmente[39m[32m 4[2mms[22m[39m
+[31m     → Unterminated string in JSON at position 51 (line 1 column 52)[39m
+[31m   [31m×[31m PublishService[2m > [22mimportCustomMcp[2m > [22mJSON com servers vazio → throw com mensagem de validação (linhas 222-223)[39m[32m 20[2mms[22m[39m
+[31m     → expected [Function] to throw error including 'O arquivo mcp.json não possui servido…' but got 'Nenhum servidor MCP encontrado no doc…'[39m
+[31m   [31m×[31m PublishService[2m > [22mimportCustomMcp[2m > [22mJSON sem campo inputs → normalizado como array vazio (linha 229)[39m[32m 5[2mms[22m[39m
+[31m     → Unterminated string in JSON at position 48 (line 1 column 49)[39m
+   [32m✓[39m PublishService[2m > [22mimportCustomMcp[2m > [22mserver sem url nem command → descrição fallback genérica (linha 252)[32m 4[2mms[22m[39m
+   [32m✓[39m PublishService[2m > [22mimportCustomMcp[2m > [22mfs.readFileSync lança erro → setError chamado com mensagem correta e erro relançado[32m 4[2mms[22m[39m
+[31m   [31m×[31m PublishService[2m > [22mpublishPackage[2m > [22mserver válido → mkdirSync chamado 2x e writeFileSync chamado 4x[39m[32m 11[2mms[22m[39m
+[31m     → expected "spy" to be called 2 times, but got 0 times[39m
+[31m   [31m×[31m PublishService[2m > [22mpublishPackage[2m > [22mchoice → Abrir pasta: revealFileInOS executado (branch linha 222)[39m[32m 6[2mms[22m[39m
+[31m     → expected "spy" to be called with arguments: [ 'revealFileInOS', …(1) ][90m
+
+Number of calls: [1m0[22m
+[31m[39m
+[31m   [31m×[31m PublishService[2m > [22mpublishPackage[2m > [22mchoice → Abrir repositório oficial: openExternal chamado (branch linha 229)[39m[32m 6[2mms[22m[39m
+[31m     → expected "spy" to be called with arguments: [ ObjectContaining{…} ][90m
+
+Number of calls: [1m0[22m
+[31m[39m
+   [32m✓[39m PublishService[2m > [22mpublishPackage[2m > [22mfs.mkdirSync lança erro → setError chamado, erro NÃO relançado pela função[32m 5[2mms[22m[39m
+ [32m✓[39m test/infrastructure/InsightsGenerator.test.ts [2m([22m[2m25 tests[22m[2m)[22m[33m 338[2mms[22m[39m
+   [33m[2m✓[22m[39m GitHubMetricsService[2m > [22mcaptura exceções de rede silenciosamente (swallows errors) [33m 303[2mms[22m[39m
+ [32m✓[39m test/infrastructure/FileInstaller.test.ts [2m([22m[2m13 tests[22m[2m)[22m[33m 427[2mms[22m[39m
+ [32m✓[39m test/infrastructure/WorkspaceScanner.test.ts [2m([22m[2m22 tests[22m[2m)[22m[33m 536[2mms[22m[39m
+ [32m✓[39m test/presentation/panels.test.ts [2m([22m[2m16 tests[22m[2m)[22m[33m 344[2mms[22m[39m
+ [31m❯[39m test/extension/activate.test.ts [2m([22m[2m1 test[22m[2m | [22m[31m1 failed[39m[2m)[22m[32m 37[2mms[22m[39m
+[31m   [31m×[31m extension activation[2m > [22mregistra comandos principais sem crash[39m[32m 34[2mms[22m[39m
+[31m     → stored is not iterable[39m
+ [32m✓[39m test/presentation/providers.test.ts [2m([22m[2m30 tests[22m[2m)[22m[33m 697[2mms[22m[39m
+ [32m✓[39m test/infrastructure/StatusBarManager.test.ts [2m([22m[2m20 tests[22m[2m)[22m[32m 53[2mms[22m[39m
+ [32m✓[39m test/infrastructure/GitRegistry.test.ts [2m([22m[2m41 tests[22m[2m)[22m[33m 1229[2mms[22m[39m
+   [33m[2m✓[22m[39m GitRegistry[2m > [22mIPackageRepository[2m > [22mgetRelatedSkills() resolve skills relacionadas [33m 337[2mms[22m[39m
+ [32m✓[39m test/infrastructure/OperationCoordinator.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 39[2mms[22m[39m
+ [32m✓[39m test/infrastructure/CatalogFetcher.network.test.ts [2m([22m[2m14 tests[22m[2m)[22m[32m 39[2mms[22m[39m
+ [32m✓[39m test/presentation/webview.test.ts [2m([22m[2m23 tests[22m[2m)[22m[32m 34[2mms[22m[39m
+ [32m✓[39m test/domain/entities.test.ts [2m([22m[2m33 tests[22m[2m)[22m[32m 23[2mms[22m[39m
+ [32m✓[39m test/infrastructure/McpDocumentAdapter.test.ts [2m([22m[2m23 tests[22m[2m)[22m[32m 20[2mms[22m[39m
+ [32m✓[39m test/infrastructure/CatalogFetcher.test.ts [2m([22m[2m23 tests[22m[2m)[22m[32m 17[2mms[22m[39m
+ [32m✓[39m test/infrastructure/CatalogManifestParser.test.ts [2m([22m[2m44 tests[22m[2m)[22m[32m 28[2mms[22m[39m
+ [32m✓[39m test/infrastructure/HealthChecker.test.ts [2m([22m[2m26 tests[22m[2m)[22m[33m 3282[2mms[22m[39m
+   [33m[2m✓[22m[39m HealthCheckerService[2m > [22mnÃ£o emite error para mcp.json com comentÃ¡rios de linha [33m 366[2mms[22m[39m
+   [33m[2m✓[22m[39m HealthCheckerService[2m > [22mnÃ£o emite findings quando .github/instructions nÃ£o existe [33m 411[2mms[22m[39m
+   [33m[2m✓[22m[39m HealthCheckerService[2m > [22memite warning quando .instructions.md nÃ£o tem applyTo [33m 528[2mms[22m[39m
+   [33m[2m✓[22m[39m HealthCheckerService[2m > [22mnÃ£o emite warning quando .instructions.md tem applyTo [33m 340[2mms[22m[39m
+   [33m[2m✓[22m[39m HealthCheckerService[2m > [22mreporta todos os problemas de metadata do catÃ¡logo no pacote MCP invÃ¡lido [33m 366[2mms[22m[39m
+ [32m✓[39m test/domain/value-objects.test.ts [2m([22m[2m48 tests[22m[2m)[22m[32m 26[2mms[22m[39m
+ [32m✓[39m test/domain/Package.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 8[2mms[22m[39m
+ [32m✓[39m test/infrastructure/ServiceContainer.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 11[2mms[22m[39m
+ [32m✓[39m test/infrastructure/LocalRegistry.test.ts [2m([22m[2m23 tests[22m[2m)[22m[32m 22[2mms[22m[39m
+ [32m✓[39m test/infrastructure/InstallationStrategy.test.ts [2m([22m[2m28 tests[22m[2m)[22m[33m 4425[2mms[22m[39m
+   [33m[2m✓[22m[39m McpMergeStrategy[2m > [22minstall[2m > [22mnormaliza mcp.json cujo conteúdo é null (JSON "null") [33m 518[2mms[22m[39m
+   [33m[2m✓[22m[39m McpMergeStrategy[2m > [22minstall[2m > [22mnormaliza mcp.json com servers inválido (não-objeto) [33m 628[2mms[22m[39m
+   [33m[2m✓[22m[39m McpMergeStrategy[2m > [22minstall[2m > [22mnormaliza mcp.json com apenas comentários (parseJsonWithComments retorna {}) [33m 486[2mms[22m[39m
+   [33m[2m✓[22m[39m McpMergeStrategy[2m > [22minstall[2m > [22mnormaliza mcp.json com mcpServers (chave legada) não-objeto [33m 547[2mms[22m[39m
+   [33m[2m✓[22m[39m McpMergeStrategy[2m > [22minstall[2m > [22mmigra mcp.json legado com mcpServers como objeto [33m 801[2mms[22m[39m
+   [33m[2m✓[22m[39m McpMergeStrategy[2m > [22minstall[2m > [22musa {} como fallback de servers quando package content não tem chave servers/mcpServers [33m 370[2mms[22m[39m
+
+[2m Test Files [22m [1m[31m2 failed[39m[22m[2m | [22m[1m[32m21 passed[39m[22m[90m (23)[39m
+[2m      Tests [22m [1m[31m10 failed[39m[22m[2m | [22m[1m[32m473 passed[39m[22m[90m (483)[39m
+[2m   Start at [22m 11:08:23
+[2m   Duration [22m 7.44s[2m (transform 16.87s, setup 1.94s, collect 22.18s, tests 11.82s, environment 63ms, prepare 10.66s)[22m
+

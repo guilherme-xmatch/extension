@@ -1,0 +1,142 @@
+
+[31m⎯⎯⎯⎯⎯⎯[39m[1m[41m Failed Tests 10 [49m[22m[31m⎯⎯⎯⎯⎯⎯⎯[39m
+
+[41m[1m FAIL [22m[49m test/extension/activate.test.ts[2m > [22mextension activation[2m > [22mregistra comandos principais sem crash
+[31m[1mTypeError[22m: stored is not iterable[39m
+[36m [2m❯[22m OperationCoordinator.initializePersistence src/infrastructure/services/OperationCoordinator.ts:[2m61:43[22m[39m
+    [90m 59| [39m    const stored = context.globalState.get<OperationSnapshot[]>(Operat…
+    [90m 60| [39m    // Merge stored (older) with current in-memory history, keeping mo…
+    [90m 61| [39m    [35mthis[39m[33m.[39m_history [33m=[39m [[33m...[39m[35mthis[39m[33m.[39m_history[33m,[39m [33m...[39mstored]
+    [90m   | [39m                                          [31m^[39m
+    [90m 62| [39m      [33m.[39m[34msort[39m((a[33m,[39m b) [33m=>[39m (b[33m.[39mstartedAt [33m??[39m [34m0[39m) [33m-[39m (a[33m.[39mstartedAt [33m??[39m [34m0[39m))
+    [90m 63| [39m      [33m.[39m[34mslice[39m([34m0[39m[33m,[39m [33mOperationCoordinator[39m[33m.[39m[33mHISTORY_LIMIT[39m)[33m;[39m
+[90m [2m❯[22m activate src/extension.ts:[2m56:14[22m[39m
+[90m [2m❯[22m test/extension/activate.test.ts:[2m32:5[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/10]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m test/infrastructure/PublishService.test.ts[2m > [22mPublishService[2m > [22mimportCustomMcp[2m > [22mimporta 1 server com sucesso, retorna 1 Package e salva no registry
+[31m[1mSyntaxError[22m: Unterminated string in JSON at position 48 (line 1 column 49)[39m
+[36m [2m❯[22m Function.parseJsonFile src/infrastructure/services/McpDocumentAdapter.ts:[2m89:28[22m[39m
+    [90m 87| [39m      [33m.[39m[34mreplace[39m([36m/\/\*[\s\S]*?\*\//g[39m[33m,[39m [32m''[39m)
+    [90m 88| [39m      [33m.[39m[34mtrim[39m()[33m;[39m
+    [90m 89| [39m    [35mreturn[39m stripped [33m?[39m [33mJSON[39m[33m.[39m[34mparse[39m(stripped) [33m:[39m {}[33m;[39m
+    [90m   | [39m                           [31m^[39m
+    [90m 90| [39m  }
+    [90m 91| [39m}
+[90m [2m❯[22m PublishService.readMcpDocument src/infrastructure/services/PublishService.ts:[2m217:40[22m[39m
+[90m [2m❯[22m PublishService.importCustomMcp src/infrastructure/services/PublishService.ts:[2m24:29[22m[39m
+[90m [2m❯[22m test/infrastructure/PublishService.test.ts:[2m67:38[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/10]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m test/infrastructure/PublishService.test.ts[2m > [22mPublishService[2m > [22mimportCustomMcp[2m > [22mparseia JSON com comentários de linha corretamente, sem lançar erro
+[31m[1mSyntaxError[22m: Bad control character in string literal in JSON at position 68 (line 4 column 49)[39m
+[36m [2m❯[22m Function.parseJsonFile src/infrastructure/services/McpDocumentAdapter.ts:[2m89:28[22m[39m
+    [90m 87| [39m      [33m.[39m[34mreplace[39m([36m/\/\*[\s\S]*?\*\//g[39m[33m,[39m [32m''[39m)
+    [90m 88| [39m      [33m.[39m[34mtrim[39m()[33m;[39m
+    [90m 89| [39m    [35mreturn[39m stripped [33m?[39m [33mJSON[39m[33m.[39m[34mparse[39m(stripped) [33m:[39m {}[33m;[39m
+    [90m   | [39m                           [31m^[39m
+    [90m 90| [39m  }
+    [90m 91| [39m}
+[90m [2m❯[22m PublishService.readMcpDocument src/infrastructure/services/PublishService.ts:[2m217:40[22m[39m
+[90m [2m❯[22m PublishService.importCustomMcp src/infrastructure/services/PublishService.ts:[2m24:29[22m[39m
+[90m [2m❯[22m test/infrastructure/PublishService.test.ts:[2m87:38[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/10]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m test/infrastructure/PublishService.test.ts[2m > [22mPublishService[2m > [22mimportCustomMcp[2m > [22mimporta 2 servers e chama saveWorkspaceCustomPackage 2 vezes
+[31m[1mSyntaxError[22m: Unterminated string in JSON at position 52 (line 1 column 53)[39m
+[36m [2m❯[22m Function.parseJsonFile src/infrastructure/services/McpDocumentAdapter.ts:[2m89:28[22m[39m
+    [90m 87| [39m      [33m.[39m[34mreplace[39m([36m/\/\*[\s\S]*?\*\//g[39m[33m,[39m [32m''[39m)
+    [90m 88| [39m      [33m.[39m[34mtrim[39m()[33m;[39m
+    [90m 89| [39m    [35mreturn[39m stripped [33m?[39m [33mJSON[39m[33m.[39m[34mparse[39m(stripped) [33m:[39m {}[33m;[39m
+    [90m   | [39m                           [31m^[39m
+    [90m 90| [39m  }
+    [90m 91| [39m}
+[90m [2m❯[22m PublishService.readMcpDocument src/infrastructure/services/PublishService.ts:[2m217:40[22m[39m
+[90m [2m❯[22m PublishService.importCustomMcp src/infrastructure/services/PublishService.ts:[2m24:29[22m[39m
+[90m [2m❯[22m test/infrastructure/PublishService.test.ts:[2m100:38[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/10]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m test/infrastructure/PublishService.test.ts[2m > [22mPublishService[2m > [22mimportCustomMcp[2m > [22mJSON com campo mcpServers (alternativo a servers) → importa normalmente
+[31m[1mSyntaxError[22m: Unterminated string in JSON at position 51 (line 1 column 52)[39m
+[36m [2m❯[22m Function.parseJsonFile src/infrastructure/services/McpDocumentAdapter.ts:[2m89:28[22m[39m
+    [90m 87| [39m      [33m.[39m[34mreplace[39m([36m/\/\*[\s\S]*?\*\//g[39m[33m,[39m [32m''[39m)
+    [90m 88| [39m      [33m.[39m[34mtrim[39m()[33m;[39m
+    [90m 89| [39m    [35mreturn[39m stripped [33m?[39m [33mJSON[39m[33m.[39m[34mparse[39m(stripped) [33m:[39m {}[33m;[39m
+    [90m   | [39m                           [31m^[39m
+    [90m 90| [39m  }
+    [90m 91| [39m}
+[90m [2m❯[22m PublishService.readMcpDocument src/infrastructure/services/PublishService.ts:[2m217:40[22m[39m
+[90m [2m❯[22m PublishService.importCustomMcp src/infrastructure/services/PublishService.ts:[2m24:29[22m[39m
+[90m [2m❯[22m test/infrastructure/PublishService.test.ts:[2m115:38[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/10]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m test/infrastructure/PublishService.test.ts[2m > [22mPublishService[2m > [22mimportCustomMcp[2m > [22mJSON com servers vazio → throw com mensagem de validação (linhas 222-223)
+[31m[1mAssertionError[22m: expected [Function] to throw error including 'O arquivo mcp.json não possui servido…' but got 'Nenhum servidor MCP encontrado no doc…'[39m
+
+Expected: [32m"[7mO arquivo mcp.json[27m n[7mã[27mo [7mpossui servidores válidos[27m."[39m
+Received: [31m"[7mNenhum servidor MCP encontrado[27m no [7mdocumento (formato Copilot)[27m."[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/10]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m test/infrastructure/PublishService.test.ts[2m > [22mPublishService[2m > [22mimportCustomMcp[2m > [22mJSON sem campo inputs → normalizado como array vazio (linha 229)
+[31m[1mSyntaxError[22m: Unterminated string in JSON at position 48 (line 1 column 49)[39m
+[36m [2m❯[22m Function.parseJsonFile src/infrastructure/services/McpDocumentAdapter.ts:[2m89:28[22m[39m
+    [90m 87| [39m      [33m.[39m[34mreplace[39m([36m/\/\*[\s\S]*?\*\//g[39m[33m,[39m [32m''[39m)
+    [90m 88| [39m      [33m.[39m[34mtrim[39m()[33m;[39m
+    [90m 89| [39m    [35mreturn[39m stripped [33m?[39m [33mJSON[39m[33m.[39m[34mparse[39m(stripped) [33m:[39m {}[33m;[39m
+    [90m   | [39m                           [31m^[39m
+    [90m 90| [39m  }
+    [90m 91| [39m}
+[90m [2m❯[22m PublishService.readMcpDocument src/infrastructure/services/PublishService.ts:[2m217:40[22m[39m
+[90m [2m❯[22m PublishService.importCustomMcp src/infrastructure/services/PublishService.ts:[2m24:29[22m[39m
+[90m [2m❯[22m test/infrastructure/PublishService.test.ts:[2m143:38[22m[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/10]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m test/infrastructure/PublishService.test.ts[2m > [22mPublishService[2m > [22mpublishPackage[2m > [22mserver válido → mkdirSync chamado 2x e writeFileSync chamado 4x
+[31m[1mAssertionError[22m: expected "spy" to be called 2 times, but got 0 times[39m
+[36m [2m❯[22m test/infrastructure/PublishService.test.ts:[2m198:28[22m[39m
+    [90m196| [39m
+    [90m197| [39m      [90m// artifactRoot + packageRoot (1 servidor)[39m
+    [90m198| [39m      [34mexpect[39m(fs[33m.[39mmkdirSync)[33m.[39m[34mtoHaveBeenCalledTimes[39m([34m2[39m)[33m;[39m
+    [90m   | [39m                           [31m^[39m
+    [90m199| [39m      [90m// manifest.json + mcp.json + README.md + details.md (1 servidor)[39m
+    [90m200| [39m      [34mexpect[39m(fs[33m.[39mwriteFileSync)[33m.[39m[34mtoHaveBeenCalledTimes[39m([34m4[39m)[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/10]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m test/infrastructure/PublishService.test.ts[2m > [22mPublishService[2m > [22mpublishPackage[2m > [22mchoice → Abrir pasta: revealFileInOS executado (branch linha 222)
+[31m[1mAssertionError[22m: expected "spy" to be called with arguments: [ 'revealFileInOS', …(1) ][90m
+
+Number of calls: [1m0[22m
+[31m[39m
+[36m [2m❯[22m test/infrastructure/PublishService.test.ts:[2m210:57[22m[39m
+    [90m208| [39m      await service.publishPackage(vscode.Uri.file('/workspace/mcp.jso…
+    [90m209| [39m
+    [90m210| [39m      expect(vi.mocked(vscode.commands.executeCommand)).toHaveBeenCall…
+    [90m   | [39m                                                        [31m^[39m
+    [90m211| [39m        [32m'revealFileInOS'[39m[33m,[39m
+    [90m212| [39m        expect[33m.[39m[34mobjectContaining[39m({ fsPath[33m:[39m expect[33m.[39m[34many[39m([33mString[39m) })[33m,[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/10]⎯[22m[39m
+
+[41m[1m FAIL [22m[49m test/infrastructure/PublishService.test.ts[2m > [22mPublishService[2m > [22mpublishPackage[2m > [22mchoice → Abrir repositório oficial: openExternal chamado (branch linha 229)
+[31m[1mAssertionError[22m: expected "spy" to be called with arguments: [ ObjectContaining{…} ][90m
+
+Number of calls: [1m0[22m
+[31m[39m
+[36m [2m❯[22m test/infrastructure/PublishService.test.ts:[2m223:50[22m[39m
+    [90m221| [39m      await service.publishPackage(vscode.Uri.file('/workspace/mcp.jso…
+    [90m222| [39m
+    [90m223| [39m      [34mexpect[39m(vi[33m.[39m[34mmocked[39m(vscode[33m.[39menv[33m.[39mopenExternal))[33m.[39m[34mtoHaveBeenCalledWith[39m(
+    [90m   | [39m                                                 [31m^[39m
+    [90m224| [39m        expect.objectContaining({ fsPath: expect.stringContaining('Des…
+    [90m225| [39m      )[33m;[39m
+
+[31m[2m⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[10/10]⎯[22m[39m
+

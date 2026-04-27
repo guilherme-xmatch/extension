@@ -15,9 +15,9 @@ import { Package } from '../../domain/entities/Package';
 import { Bundle } from '../../domain/entities/Bundle';
 
 // ─── Exports ──────────────────────────────────────────────────────────────────
-// Both arrays are intentionally empty. Package data is loaded at runtime from
-// the external DescomplicAI registry. LocalRegistry accepts injected data for
-// testing.
+// Ambos os arrays são intencionalmente vazios. Os dados dos pacotes são carregados
+// em tempo de execução a partir do registro externo DescomplicAI.
+// O LocalRegistry aceita dados injetados para fins de teste.
 
 export const LOCAL_CATALOG_PACKAGES: readonly Package[] = Object.freeze<Package[]>([]);
 

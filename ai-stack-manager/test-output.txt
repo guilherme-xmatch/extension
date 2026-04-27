@@ -1,0 +1,101 @@
+﻿
+[1m[46m RUN [49m[22m [36mv3.2.4 [39m[90mC:/Users/Guilherme Campos/Desktop/2026/4. Extens├úo/ai-stack-manager[39m
+      [2mCoverage enabled with [22m[33mv8[39m
+
+ [31mÔØ»[39m test/infrastructure/CatalogManifestParser.test.ts [2m([22m[2m44 tests[22m[2m | [22m[31m1 failed[39m[2m)[22m[32m 35[2mms[22m[39m
+   [32mÔ£ô[39m CatalogManifestParser.parseJsonWithComments[2m > [22mparses plain JSON[32m 4[2mms[22m[39m
+   [32mÔ£ô[39m CatalogManifestParser.parseJsonWithComments[2m > [22mstrips single-line // comments[32m 0[2mms[22m[39m
+   [32mÔ£ô[39m CatalogManifestParser.parseJsonWithComments[2m > [22mstrips multi-line /* */ comments[32m 0[2mms[22m[39m
+   [32mÔ£ô[39m CatalogManifestParser.parseJsonWithComments[2m > [22mreturns {} for empty/whitespace input[32m 0[2mms[22m[39m
+   [32mÔ£ô[39m CatalogManifestParser.parseJsonWithComments[2m > [22mthrows on malformed JSON[32m 2[2mms[22m[39m
+   [32mÔ£ô[39m CatalogManifestParser.validateManifest[2m > [22maccepts a valid manifest[32m 1[2mms[22m[39m
+   [32mÔ£ô[39m CatalogManifestParser.validateManifest[2m > [22mrejects unknown type[32m 1[2mms[22m[39m
+   [32mÔ£ô[39m CatalogManifestParser.validateManifest[2m > [22maccepts all valid types[32m 1[2mms[22m[39m
+   [32mÔ£ô[39m CatalogManifestParser.validateManifest[2m > [22mrejects invalid ID format (uppercase)[32m 0[2mms[22m[39m
+   [32mÔ£ô[39m CatalogManifestParser.validateManifest[2m > [22mrejects manifest with path traversal in source paths[32m 0[2mms[22m[39m
+   [32mÔ£ô[39m CatalogManifestParser.validateManifest[2m > [22mrejects manifest with absolute path in files[32m 0[2mms[22m[39m
+   [32mÔ£ô[39m CatalogManifestParser.validateManifest[2m > [22mrejects manifest with unsafe URL (via isUrlSafe callback)[32m 0[2mms[22m[39m
+   [32mÔ£ô[39m CatalogManifestParser.validateManifest[2m > [22maccepts manifest without optional URLs/paths[32m 0[2mms[22m[39m
+   [32mÔ£ô[39m CatalogManifestParser.isSafeRelativePath[2m > [22maccepts normal relative paths[32m 0[2mms[22m[39m
+   [32mÔ£ô[39m CatalogManifestParser.isSafeRelativePath[2m > [22mrejects path traversal with ..[32m 0[2mms[22m[39m
+   [32mÔ£ô[39m CatalogManifestParser.isSafeRelativePath[2m > [22mrejects absolute paths[32m 0[2mms[22m[39m
+   [32mÔ£ô[39m CatalogManifestParser.isSafeRelativePath[2m > [22mrejects null bytes[32m 0[2mms[22m[39m
+   [32mÔ£ô[39m CatalogManifestParser.isSafeRelativePath[2m > [22mrejects empty string[32m 0[2mms[22m[39m
+   [32mÔ£ô[39m CatalogManifestParser.asString[2m > [22mreturns trimmed string for string input[32m 0[2mms[22m[39m
+   [32mÔ£ô[39m CatalogManifestParser.asString[2m > [22mreturns empty string for non-string types[32m 0[2mms[22m[39m
+   [32mÔ£ô[39m CatalogManifestParser.asStringArray[2m > [22mreturns filtered array of trimmed strings[32m 0[2mms[22m[39m
+   [32mÔ£ô[39m CatalogManifestParser.asStringArray[2m > [22mwraps single string in array[32m 0[2mms[22m[39m
+   [32mÔ£ô[39m CatalogManifestParser.asStringArray[2m > [22mfilters out non-string items in array[32m 0[2mms[22m[39m
+   [32mÔ£ô[39m CatalogManifestParser.asStringArray[2m > [22mfilters out empty strings[32m 0[2mms[22m[39m
+   [32mÔ£ô[39m CatalogManifestParser.asStringArray[2m > [22mreturns empty array for non-string types[32m 0[2mms[22m[39m
+   [32mÔ£ô[39m CatalogManifestParser.asAuthor[2m > [22mreturns string author directly[32m 0[2mms[22m[39m
+   [32mÔ£ô[39m CatalogManifestParser.asAuthor[2m > [22mreturns name from object author[32m 0[2mms[22m[39m
+   [32mÔ£ô[39m CatalogManifestParser.asAuthor[2m > [22mreturns default for missing/invalid input[32m 0[2mms[22m[39m
+   [32mÔ£ô[39m CatalogManifestParser.asBoolean[2m > [22mreturns boolean values as-is[32m 0[2mms[22m[39m
+   [32mÔ£ô[39m CatalogManifestParser.asBoolean[2m > [22mreturns fallback for non-boolean[32m 0[2mms[22m[39m
+   [32mÔ£ô[39m CatalogManifestParser.asMaturity[2m > [22maccepts valid maturity values[32m 0[2mms[22m[39m
+   [32mÔ£ô[39m CatalogManifestParser.asMaturity[2m > [22mfalls back to stable for unknown/missing values[32m 0[2mms[22m[39m
+   [32mÔ£ô[39m CatalogManifestParser.asInstallTargets[2m > [22mparses valid targets[32m 1[2mms[22m[39m
+   [32mÔ£ô[39m CatalogManifestParser.asInstallTargets[2m > [22muses merge-mcp-servers strategy when specified[32m 0[2mms[22m[39m
+   [32mÔ£ô[39m CatalogManifestParser.asInstallTargets[2m > [22mskips targets without target path[32m 0[2mms[22m[39m
+   [32mÔ£ô[39m CatalogManifestParser.asInstallTargets[2m > [22mreturns empty array for non-array input[32m 0[2mms[22m[39m
+   [32mÔ£ô[39m CatalogManifestParser.slugify[2m > [22mlowercases and replaces spaces[32m 0[2mms[22m[39m
+   [32mÔ£ô[39m CatalogManifestParser.slugify[2m > [22mremoves special characters[32m 0[2mms[22m[39m
+   [32mÔ£ô[39m CatalogManifestParser.slugify[2m > [22mcollapses multiple hyphens[32m 0[2mms[22m[39m
+   [32mÔ£ô[39m CatalogManifestParser.slugify[2m > [22mstrips leading/trailing hyphens[32m 0[2mms[22m[39m
+   [32mÔ£ô[39m CatalogManifestParser.slugify[2m > [22mreturns "package" for empty/invalid input[32m 0[2mms[22m[39m
+   [32mÔ£ô[39m CatalogManifestParser.toDisplayName[2m > [22mconverts slug to title case[32m 1[2mms[22m[39m
+[31m   [31m├ù[31m CatalogManifestParser.toDisplayName[2m > [22mhandles already-formatted names[39m[32m 13[2mms[22m[39m
+[31m     ÔåÆ expected 'API Design' to be 'Api Design' // Object.is equality[39m
+   [32mÔ£ô[39m CatalogManifestParser.toRelativePath[2m > [22mreturns posix-style relative path[32m 0[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/OperationCoordinator.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 27[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/ServiceContainer.test.ts [2m([22m[2m7 tests[22m[2m)[22m[32m 11[2mms[22m[39m
+ [32mÔ£ô[39m test/domain/Package.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 7[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/CatalogFetcher.test.ts [2m([22m[2m23 tests[22m[2m)[22m[32m 16[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/LocalRegistry.test.ts [2m([22m[2m23 tests[22m[2m)[22m[32m 24[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/HealthChecker.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 38[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/FileInstaller.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 47[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/WorkspaceScanner.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 49[2mms[22m[39m
+ [32mÔ£ô[39m test/infrastructure/GitRegistry.test.ts [2m([22m[2m2 tests[22m[2m)[22m[32m 44[2mms[22m[39m
+ [32mÔ£ô[39m test/extension/activate.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 16[2mms[22m[39m
+node.exe : 
+No linha:1 caractere:1
++ & "C:\Program Files\nodejs/node.exe" "C:\Users\Guilherme Campos\AppDa ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+[31mÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»[39m[1m[41m Failed Tests 1 
+[49m[22m[31mÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»[39m
+
+[41m[1m FAIL [22m[49m 
+test/infrastructure/CatalogManifestParser.test.ts[2m > 
+[22mCatalogManifestParser.toDisplayName[2m > [22mhandles already-formatted 
+names
+[31m[1mAssertionError[22m: expected 'API Design' to be 'Api Design' // 
+Object.is equality[39m
+
+Expected: [32m"A[7mpi[27m Design"[39m
+Received: [31m"A[7mPI[27m Design"[39m
+
+[36m [2mÔØ»[22m 
+test/infrastructure/CatalogManifestParser.test.ts:[2m299:63[22m[39m
+    [90m297| [39m
+    [90m298| [39m  [34mit[39m([32m'handles already-formatted 
+names'[39m[33m,[39m () [33m=>[39m {
+    [90m299| [39m    expect(CatalogManifestParser.toDisplayName('API 
+Design')).toBe('ApÔÇª
+    [90m   | [39m                                                            
+  [31m^[39m
+    [90m300| [39m  })[33m;[39m
+    [90m301| [39m})[33m;[39m
+
+[31m[2mÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»ÔÄ»Ô
+Ä»[1/1]ÔÄ»[22m[39m
+
+
+[2m Test Files [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m10 passed[39m[22m[90m (11)[39m
+[2m      Tests [22m [1m[31m1 failed[39m[22m[2m | [22m[1m[32m108 passed[39m[22m[90m (109)[39m
+[2m   Start at [22m 14:17:05
+[2m   Duration [22m 2.42s[2m (transform 1.75s, setup 867ms, collect 4.64s, tests 314ms, environment 4ms, prepare 3.87s)[22m
+

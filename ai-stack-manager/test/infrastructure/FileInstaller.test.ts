@@ -98,7 +98,7 @@ describe('FileInstaller', () => {
     });
     cleanup = workspace.cleanup;
     setWorkspaceRoot(workspace.root);
-    queueWarningMessageResponse('Remove'); // confirmação do diálogo modal
+    queueWarningMessageResponse('Remover'); // confirmação do diálogo modal
 
     const installer = new FileInstaller();
     await installer.uninstall(makeAgentPkg());
@@ -127,19 +127,19 @@ describe('FileInstaller', () => {
   it('install lança erro quando nenhum workspace está aberto', async () => {
     setWorkspaceRoot(undefined);
     const installer = new FileInstaller();
-    await expect(installer.install(makeAgentPkg())).rejects.toThrow(/No workspace folder/i);
+    await expect(installer.install(makeAgentPkg())).rejects.toThrow(/Nenhuma pasta de workspace/i);
   });
 
   it('uninstall lança erro quando nenhum workspace está aberto', async () => {
     setWorkspaceRoot(undefined);
     const installer = new FileInstaller();
-    await expect(installer.uninstall(makeAgentPkg())).rejects.toThrow(/No workspace folder/i);
+    await expect(installer.uninstall(makeAgentPkg())).rejects.toThrow(/Nenhuma pasta de workspace/i);
   });
 
   it('installMany lança erro quando nenhum workspace está aberto', async () => {
     setWorkspaceRoot(undefined);
     const installer = new FileInstaller();
-    await expect(installer.installMany([makeAgentPkg()])).rejects.toThrow(/No workspace folder/i);
+    await expect(installer.installMany([makeAgentPkg()])).rejects.toThrow(/Nenhuma pasta de workspace/i);
   });
 
   // ─── onProgress callback ─────────────────────────────────────────────────────
@@ -164,7 +164,7 @@ describe('FileInstaller', () => {
     });
     cleanup = workspace.cleanup;
     setWorkspaceRoot(workspace.root);
-    queueWarningMessageResponse('Remove');
+    queueWarningMessageResponse('Remover');
 
     const progress: Array<{ current: number; total: number }> = [];
     const installer = new FileInstaller();

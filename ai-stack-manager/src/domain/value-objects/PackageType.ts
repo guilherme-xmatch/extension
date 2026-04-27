@@ -5,7 +5,7 @@
  */
 
 export class PackageType {
-  // Singleton instances for each type
+  // Instâncias singleton para cada tipo
   static readonly Agent = new PackageType('agent', 'Agent', '$(hubot)', '.github/agents');
   static readonly Skill = new PackageType('skill', 'Skill', '$(mortar-board)', '.github/skills');
   static readonly MCP = new PackageType('mcp', 'MCP Server', '$(plug)', '.vscode');
@@ -19,7 +19,7 @@ export class PackageType {
     public readonly defaultDirectory: string,
   ) {}
 
-  /** Parse string to PackageType */
+  /** Converte string para PackageType */
   static fromString(value: string): PackageType {
     const map: Record<string, PackageType> = {
       'agent': PackageType.Agent,
@@ -30,12 +30,12 @@ export class PackageType {
     };
     const result = map[value.toLowerCase()];
     if (!result) {
-      throw new Error(`Unknown package type: "${value}". Valid types: ${Object.keys(map).join(', ')}`);
+      throw new Error(`Tipo de pacote desconhecido: "${value}". Tipos válidos: ${Object.keys(map).join(', ')}`);
     }
     return result;
   }
 
-  /** All available package types */
+  /** Todos os tipos de pacote disponíveis */
   static all(): PackageType[] {
     return [
       PackageType.Agent,
@@ -46,7 +46,7 @@ export class PackageType {
     ];
   }
 
-  /** CSS class name for UI styling */
+  /** Nome de classe CSS para estilização da UI */
   get cssClass(): string {
     return `type-${this.value}`;
   }

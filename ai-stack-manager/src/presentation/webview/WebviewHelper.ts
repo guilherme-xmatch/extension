@@ -114,7 +114,7 @@ export class WebviewHelper {
       vscode.Uri.joinPath(extensionUri, 'media', 'webview', 'animations.css')
     );
 
-    // Encode state as base64(encodeURIComponent(JSON)) — safe for data-attribute, no script injection
+    // Codifica o estado em base64(encodeURIComponent(JSON)) — seguro para data-attribute, sem injeção de script
     const safeState = Buffer.from(encodeURIComponent(JSON.stringify(initialState ?? {}))).toString('base64');
 
     return /*html*/`<!DOCTYPE html>
@@ -151,7 +151,7 @@ export class WebviewHelper {
   <script nonce="${nonce}">
     const vscode = acquireVsCodeApi();
     const _stateRoot = document.getElementById('app-root');
-    // Decode state from data-attribute: base64 → encodeURIComponent(JSON) → JSON
+    // Decodifica o estado do data-attribute: base64 → encodeURIComponent(JSON) → JSON
     const initialState = JSON.parse(decodeURIComponent(atob(_stateRoot ? (_stateRoot.dataset.state || 'JTdCJTdE') : 'JTdCJTdE')));
     const persistedState = vscode.getState() || {};
     const app = {

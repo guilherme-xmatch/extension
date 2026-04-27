@@ -1,13 +1,13 @@
 ﻿/**
- * AI Stack Manager â€” Main Stylesheet
- * 
- * Design System: ItaÃº Engineering
- * Colors: Orange (#EC7000) + Navy (#003366)
- * Features: Glassmorphism, dark/light theme-aware, CSS custom properties
- * 
- * Theme awareness via VS Code CSS variables:
+ * AI Stack Manager — Folha de Estilos Principal
+ *
+ * Design System: Itaú Engineering
+ * Cores: Laranja (#EC7000) + Marinho (#003366)
+ * Recursos: Glassmorphism, adaptação dark/light, propriedades CSS customizadas
+ *
+ * Adaptação de tema via variáveis CSS do VS Code:
  * - --vscode-foreground, --vscode-editor-background, etc.
- * - Works automatically with any VS Code theme
+ * - Funciona automaticamente com qualquer tema do VS Code
  */
 
 /* 
@@ -23,11 +23,11 @@
 }
 
 /*
-   FALLBACK CSS CUSTOM PROPERTIES
-   --border-color is NOT supplied by VS Code themes. The WebviewHelper :root
-   block only defines --itau-* tokens, so any structural tokens must live here.
-   Falls back gracefully: dark themes get a subtle white border, light themes
-   get a subtle black border, via --vscode-widget-border.
+   PROPRIEDADES CSS CUSTOMIZADAS FALLBACK
+   --border-color não é fornecida pelos temas do VS Code. O bloco :root do WebviewHelper
+   só define tokens --itau-*, portanto qualquer token estrutural precisa estar aqui.
+   Fallback elegante: temas escuros recebem uma borda branca sutil, temas claros
+   recebem uma borda preta sutil, via --vscode-widget-border.
 */
 :root {
   --border-color: var(--vscode-widget-border, rgba(255, 255, 255, 0.08));
@@ -41,8 +41,8 @@ body {
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   overflow-x: hidden;
-  /* Smooth programmatic scroll (e.g. restoring position after re-render).
-     Instant by default; overridden to 'smooth' only for the restore RAF. */
+  /* Scroll programático suave (ex.: restaurando posição após re-render).
+     Instantâneo por padrão; substituído para 'smooth' apenas no RAF de restauração. */
   scroll-behavior: auto;
 }
 
@@ -923,10 +923,10 @@ body {
   position: sticky;
   top: 0;
   z-index: 100;
-  /* CSS containment: limits browser reflow/repaint to this element's subtree.
-     When the scrollable content below repaints, the header stays isolated. */
+  /* Contenment CSS: limita reflow/repaint do navegador à subárvore deste elemento.
+     Quando o conteúdo scrollável abaixo repinta, o header fica isolado. */
   contain: layout style;
-  /* GPU layer promotion so the sticky header composites independently from scroll. */
+  /* Promoção de camada GPU para que o sticky header componha independentemente do scroll. */
   will-change: transform;
 }
 
@@ -941,10 +941,10 @@ body {
   width: 32px;
   height: 32px;
   perspective: 1000px;
-  /* Promote the stack icon to its own GPU layer to prevent repaints
-     from propagating to sibling elements during animations. */
+  /* Promove o ícone de pilha para sua própria camada GPU, evitando que
+     repintas se propaguem para elementos irmãos durante animações. */
   will-change: transform;
-  /* Preserve 3D context for the stacked layers */
+  /* Preserva contexto 3D para as camadas empilhadas */
   transform-style: preserve-3d;
 }
 
@@ -952,8 +952,8 @@ body {
   position: absolute;
   width: 24px;
   height: 24px;
-  /* Hint browser to use compositor thread for these animated elements.
-     They animate transform + opacity — both compositor-only properties. */
+  /* Indica ao navegador para usar a thread do compositor nesses elementos animados.
+     Eles animam transform + opacity — ambas propriedades exclusivas do compositor. */
   will-change: transform, opacity;
   border-radius: 4px;
   background: linear-gradient(135deg, var(--itau-primary), var(--itau-primary-light));

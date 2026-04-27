@@ -84,7 +84,7 @@ describe('FileCopyStrategy', () => {
       const workspace = await createTempWorkspace({ '.github/agents/test.agent.md': '# original' });
       cleanup = workspace.cleanup;
       setWorkspaceRoot(workspace.root);
-      queueWarningMessageResponse('Overwrite');
+      queueWarningMessageResponse('Sobrescrever');
 
       const strategy = new FileCopyStrategy();
       await strategy.install(workspace.root, makeAgent(), 'prompt');
@@ -97,7 +97,7 @@ describe('FileCopyStrategy', () => {
       const workspace = await createTempWorkspace({ '.github/agents/test.agent.md': '# original' });
       cleanup = workspace.cleanup;
       setWorkspaceRoot(workspace.root);
-      queueWarningMessageResponse('Skip');
+      queueWarningMessageResponse('Pular');
 
       const strategy = new FileCopyStrategy();
       await strategy.install(workspace.root, makeAgent(), 'prompt');

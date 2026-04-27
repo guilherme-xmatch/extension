@@ -1,8 +1,8 @@
 import * as vscode from 'vscode';
 
 /**
- * Glob patterns that represent DescomplicAI package files.
- * Any create / change / delete in these files triggers a debounced workspace refresh.
+ * Padrões glob que representam arquivos de pacotes DescomplicAI.
+ * Qualquer criação / alteração / exclusão nesses arquivos dispara um refresh debounced do workspace.
  */
 const FILE_PATTERNS: string[] = [
   '**/*.agent.md',
@@ -13,10 +13,10 @@ const FILE_PATTERNS: string[] = [
 ];
 
 /**
- * Watches DescomplicAI package files in the workspace and fires a debounced callback
- * whenever any of them are created, modified, or deleted.
+ * Observa arquivos de pacotes DescomplicAI no workspace e dispara um callback debounced
+ * sempre que qualquer um deles é criado, modificado ou excluído.
  *
- * Usage:
+ * Uso:
  * ```ts
  * const watcher = new WorkspaceFileWatcher(async () => {
  *   await catalogProvider.refresh();
@@ -44,7 +44,7 @@ export class WorkspaceFileWatcher implements vscode.Disposable {
     }
   }
 
-  /** Reset the debounce timer on every file event. */
+  /** Reinicia o timer de debounce a cada evento de arquivo. */
   private _schedule(): void {
     if (this._timer !== undefined) {
       clearTimeout(this._timer);
