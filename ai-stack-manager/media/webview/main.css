@@ -22,6 +22,17 @@
   padding: 0;
 }
 
+/*
+   FALLBACK CSS CUSTOM PROPERTIES
+   --border-color is NOT supplied by VS Code themes. The WebviewHelper :root
+   block only defines --itau-* tokens, so any structural tokens must live here.
+   Falls back gracefully: dark themes get a subtle white border, light themes
+   get a subtle black border, via --vscode-widget-border.
+*/
+:root {
+  --border-color: var(--vscode-widget-border, rgba(255, 255, 255, 0.08));
+}
+
 body {
   font-family: var(--vscode-font-family, 'Segoe UI', system-ui, -apple-system, sans-serif);
   font-size: var(--vscode-font-size, 13px);
@@ -30,6 +41,9 @@ body {
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   overflow-x: hidden;
+  /* Smooth programmatic scroll (e.g. restoring position after re-render).
+     Instant by default; overridden to 'smooth' only for the restore RAF. */
+  scroll-behavior: auto;
 }
 
 .dai-shell-root {
@@ -547,6 +561,16 @@ body {
   font-weight: 600;
 }
 
+.dai-outdated-badge {
+  font-size: 9px;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: rgba(100, 180, 255, 0.15);
+  color: var(--itau-info);
+  font-weight: 700;
+  border: 1px solid rgba(100, 180, 255, 0.3);
+}
+
 /* 
    HEALTH VIEW
     */
@@ -767,6 +791,16 @@ body {
   background: rgba(255, 82, 82, 0.25);
 }
 
+.dai-btn-warning {
+  background: rgba(100, 180, 255, 0.12);
+  color: var(--itau-info);
+  border: 1px solid rgba(100, 180, 255, 0.25);
+}
+
+.dai-btn-warning:hover {
+  background: rgba(100, 180, 255, 0.25);
+}
+
 .dai-btn-ghost {
   background: transparent;
   color: var(--vscode-foreground);
@@ -889,6 +923,11 @@ body {
   position: sticky;
   top: 0;
   z-index: 100;
+  /* CSS containment: limits browser reflow/repaint to this element's subtree.
+     When the scrollable content below repaints, the header stays isolated. */
+  contain: layout style;
+  /* GPU layer promotion so the sticky header composites independently from scroll. */
+  will-change: transform;
 }
 
 .dai-logo-animated {
@@ -902,12 +941,20 @@ body {
   width: 32px;
   height: 32px;
   perspective: 1000px;
+  /* Promote the stack icon to its own GPU layer to prevent repaints
+     from propagating to sibling elements during animations. */
+  will-change: transform;
+  /* Preserve 3D context for the stacked layers */
+  transform-style: preserve-3d;
 }
 
 .dai-stack-layer {
   position: absolute;
   width: 24px;
   height: 24px;
+  /* Hint browser to use compositor thread for these animated elements.
+     They animate transform + opacity — both compositor-only properties. */
+  will-change: transform, opacity;
   border-radius: 4px;
   background: linear-gradient(135deg, var(--itau-primary), var(--itau-primary-light));
   transform-style: preserve-3d;

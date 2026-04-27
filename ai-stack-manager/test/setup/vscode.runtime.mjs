@@ -160,6 +160,7 @@ vi.mock('vscode', () => {
     showErrorMessage: vi.fn(async () => undefined),
     showTextDocument: vi.fn(async (document) => ({ document })),
     withProgress: vi.fn(async (_options, task) => task({ report: vi.fn() })),
+    registerUriHandler: vi.fn(() => ({ dispose: vi.fn() })),
   };
 
   const workspace = {

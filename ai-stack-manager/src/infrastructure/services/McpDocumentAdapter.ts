@@ -82,8 +82,10 @@ export class McpDocumentAdapter {
    * Reads and parses a JSON file, stripping single-line and block comments (JSONC).
    */
   static parseJsonFile(content: string): unknown {
+    // Only strip // comments that start a line (possibly preceded by whitespace).
+    // This avoids accidentally stripping // inside string values such as URLs.
     const stripped = content
-      .replace(/\/\/.*$/gm, '')
+      .replace(/^\s*\/\/.*$/gm, '')
       .replace(/\/\*[\s\S]*?\*\//g, '')
       .trim();
     return stripped ? JSON.parse(stripped) : {};

@@ -24,7 +24,7 @@ describe('extension activation', () => {
       extensionUri: vscode.Uri.file(workspace.root),
       subscriptions: [] as { dispose(): void }[],
       globalState: {
-        get: () => false,
+        get: () => [],   // return empty array so spread in OperationCoordinator is safe
         update: async () => undefined,
       },
     } as unknown as vscode.ExtensionContext;

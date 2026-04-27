@@ -130,7 +130,7 @@ describe('PublishService', () => {
           vscode.Uri.file('/workspace/mcp.json'),
           mockRegistry as unknown as GitRegistry,
         ),
-      ).rejects.toThrow('O arquivo mcp.json não possui servidores válidos.');
+      ).rejects.toThrow('Nenhum servidor MCP encontrado no documento');
     });
 
     it('JSON sem campo inputs → normalizado como array vazio (linha 229)', async () => {

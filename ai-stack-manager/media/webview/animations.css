@@ -136,6 +136,45 @@ body.dai-hydrated .animate-scale-in {
   transform: none !important;
 }
 
+/* ═══════════════════════════════════════════════════
+   LOGO — FIRE ONCE, NEVER AGAIN
+   ════════════════════════════════════════════════════
+   The animated logo (stack layers + brand name) has direct
+   CSS animations (stack-drop-1/2/3, type-in) that are NOT
+   covered by the .animate-* class guards above.
+
+   Root cause: `app.patchState` / `app.setState` replaces
+   the entire innerHTML, recreating all DOM nodes. When a new
+   .dai-layer-* element is inserted into the DOM, its CSS
+   animation starts from scratch — even after hydration.
+
+   Fix: Once `body.dai-hydrated` is present (set on first render),
+   suppress ALL logo animations and lock the elements into their
+   final resting state. The logo has already played; it must not
+   play again on scroll updates, install progress ticks, or any
+   other state update triggered re-render.
+   ═══════════════════════════════════════════════════ */
+body.dai-hydrated .dai-layer-1,
+body.dai-hydrated .dai-layer-2,
+body.dai-hydrated .dai-layer-3 {
+  animation: none !important;
+  /* Restore each layer's final visual state (matches the 100% keyframe end values). */
+  opacity: 0.9 !important;
+}
+
+body.dai-hydrated .dai-brand {
+  animation: none !important;
+  /* Restore final state of the type-in animation. */
+  opacity: 1 !important;
+  transform: translateX(0) !important;
+  filter: blur(0) !important;
+}
+
+body.dai-hydrated .dai-tagline {
+  animation: none !important;
+  opacity: 1 !important;
+}
+
 /* Score ring animation */
 .dai-score-progress {
   animation: score-draw 1.2s cubic-bezier(0.4, 0, 0.2, 1) both;
@@ -198,4 +237,61 @@ body.dai-hydrated .animate-scale-in {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
+}
+
+/* ═══════════════════════════════════════════════════
+   LOGO — SITUATIONAL ANIMATIONS
+   Triggered by JS via class addition/removal.
+   Event-driven only — never loop on idle.
+   Fully suppressed by prefers-reduced-motion (covered
+   by the global reduce rule above).
+   ═══════════════════════════════════════════════════ */
+
+/* ── 1. Working indicator ─────────────────────────
+   Applied to .dai-stack-icon while an operation runs.
+   The middle layer (dai-layer-2) rotates continuously
+   on the Y axis, giving a "spinning plate" effect
+   that uses only compositor-safe transform.
+   Removed by JS when the operation completes.         */
+@keyframes logo-working {
+  from { transform: rotateX(60deg) rotateZ(-45deg) rotateY(0deg)   translateZ(0px); }
+  to   { transform: rotateX(60deg) rotateZ(-45deg) rotateY(360deg) translateZ(0px); }
+}
+
+.dai-logo-working .dai-layer-2 {
+  animation: logo-working 1.2s linear infinite !important;
+  /* Keep the layer visible during the spin */
+  opacity: 0.95 !important;
+}
+
+/* ── 2. Success flash ─────────────────────────────
+   Applied once to .dai-stack-icon when an install/
+   operation succeeds.  The three layers briefly
+   scale up together, with a green tint on the shadow.
+   Class is removed by JS after the animation ends
+   (via the animationend event).                      */
+@keyframes logo-success {
+  0%   { transform: scale(1);    filter: drop-shadow(0 0 0px  rgba(0,230,118,0));   }
+  40%  { transform: scale(1.18); filter: drop-shadow(0 0 8px  rgba(0,230,118,0.7)); }
+  70%  { transform: scale(0.96); filter: drop-shadow(0 0 4px  rgba(0,230,118,0.3)); }
+  100% { transform: scale(1);    filter: drop-shadow(0 0 0px  rgba(0,230,118,0));   }
+}
+
+.dai-logo-success {
+  animation: logo-success 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) both !important;
+}
+
+/* ── 3. Error flash ───────────────────────────────
+   Brief horizontal shake on critical errors.
+   Minimal, single occurrence.                        */
+@keyframes logo-error {
+  0%, 100% { transform: translateX(0); }
+  20%       { transform: translateX(-4px); }
+  40%       { transform: translateX(4px);  }
+  60%       { transform: translateX(-3px); }
+  80%       { transform: translateX(2px);  }
+}
+
+.dai-logo-error {
+  animation: logo-error 0.4s ease-in-out both !important;
 }

@@ -24,6 +24,9 @@ import { CatalogViewProvider } from './presentation/providers/CatalogViewProvide
 import { InstalledViewProvider } from './presentation/providers/InstalledViewProvider';
 import { HealthViewProvider } from './presentation/providers/HealthViewProvider';
 import { WorkflowPanel } from './presentation/panels/WorkflowPanel';
+import { StackDiffPanel } from './presentation/panels/StackDiffPanel';
+import { ScaffoldWizardPanel } from './presentation/panels/ScaffoldWizardPanel';
+import { HealthCheckScheduler, getSchedulerIntervalMs } from './infrastructure/services/HealthCheckScheduler';
 import { InsightsPanel } from './presentation/panels/InsightsPanel';
 import { ConfigPanel } from './presentation/panels/ConfigPanel';
 import { InsightsGenerator } from './infrastructure/services/InsightsGenerator';
@@ -241,43 +244,30 @@ export function activate(context: vscode.ExtensionContext): void {
     }),
 
     vscode.commands.registerCommand('dai.scaffold', async () => {
-      const typeChoice = await vscode.window.showQuickPick(
-        [
-          { label: '$(hubot) Agent', value: 'agent' },
-          { label: '$(mortar-board) Skill', value: 'skill' },
-          { label: '$(book) Instruction', value: 'instruction' },
-          { label: '$(comment-discussion) Prompt', value: 'prompt' },
-        ],
-        { placeHolder: 'Qual tipo de pacote você quer criar?' },
-      );
-      if (!typeChoice) { return; }
-      const name = await vscode.window.showInputBox({ prompt: `Nome para o novo ${typeChoice.value}`, placeHolder: 'ex. meu-agent-customizado', validateInput: (v) => { if (!v) { return 'Obrigatório'; } if (!/^[a-z0-9-]+$/.test(v)) { return 'apenas letras minúsculas e hífens'; } return null; } });
-      if (!name) { return; }
-      const description = await vscode.window.showInputBox({ prompt: `Descrição para "${name}"`, placeHolder: 'Breve descrição...' });
-      const root = vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
-      if (!root) { vscode.window.showErrorMessage('Nenhum workspace aberto.'); return; }
-
-      const templates: Record<string, { path: string; content: string }> = {
-        agent: { path: `.github/agents/${name}.agent.md`, content: `---\nname: ${name}\ndescription: >\n  ${description ?? 'Agent customizado.'}\ntools:\n  - read\n  - edit\n  - search\nagents: []\nuser-invocable: false\n---\n\n# ${name}\n\n${description ?? 'Agent customizado.'}\n` },
-        skill: { path: `.github/skills/${name}/SKILL.md`, content: `---\nname: ${name}\ndescription: "${description ?? 'Skill customizada.'}"\n---\n\n# ${name}\n\n> ${description ?? 'Skill customizada.'}\n` },
-        instruction: { path: `.github/instructions/${name}.instructions.md`, content: `---\napplyTo: "*"\n---\n# ${name}\n\n${description ?? 'Instruction customizada.'}\n` },
-        prompt: { path: `.github/prompts/${name}.prompt.md`, content: `---\ndescription: "${description ?? 'Prompt customizado.'}"\nagent: agent\n---\n\n# ${name}\n\n${description ?? 'Prompt customizado.'}\n` },
-      };
-      const template = templates[typeChoice.value];
-      if (!template) { return; }
-
-      const fullPath = vscode.Uri.file(`${root}/${template.path}`);
-      const dirPath = vscode.Uri.file(path.dirname(fullPath.fsPath));
-      await vscode.workspace.fs.createDirectory(dirPath);
-      await vscode.workspace.fs.writeFile(fullPath, Buffer.from(template.content, 'utf-8'));
-      const doc = await vscode.workspace.openTextDocument(fullPath);
-      await vscode.window.showTextDocument(doc);
-      vscode.window.showInformationMessage(`✨ Criado ${typeChoice.value}: ${name}`);
-      await catalogProvider.refresh(); await installedProvider.refresh();
+      ScaffoldWizardPanel.createOrShow(context.extensionUri);
     }),
 
     vscode.commands.registerCommand('dai.openWorkflow', async () => {
-      WorkflowPanel.createOrShow(context.extensionUri);
+      WorkflowPanel.createOrShow(context.extensionUri, registry, scanner);
+    }),
+
+    vscode.commands.registerCommand('dai.stackDiff', async (targetBundleId?: string) => {
+      // Allow pre-selecting a bundle (e.g. from chat /diff command)
+      let bundleId = targetBundleId;
+      if (!bundleId) {
+        const bundles = await registry.getAllBundles();
+        const items = bundles.map(b => ({
+          label:       `${b.icon}  ${b.displayName}`,
+          description: b.description,
+          id:          b.id,
+        }));
+        const selected = await vscode.window.showQuickPick(items, {
+          placeHolder: 'Selecione o bundle para comparar com seu workspace atual…',
+        });
+        if (!selected) { return; }
+        bundleId = selected.id;
+      }
+      StackDiffPanel.createOrShow(context.extensionUri, registry, scanner, bundleId);
     }),
 
     vscode.commands.registerCommand('dai.openInsights', async () => {
@@ -367,15 +357,175 @@ export function activate(context: vscode.ExtensionContext): void {
       const prompt = request.prompt.trim();
 
       if (cmd === 'recommend' || (!cmd && prompt.toLowerCase().includes('recommend'))) {
+        // ── 1. Gather workspace intelligence in parallel ──────────────────────
+        const [allPkgs, bundles, profiles, installedIds] = await Promise.all([
+          registry.getAll(),
+          registry.getAllBundles(),
+          scanner.detectProjectProfile(),
+          scanner.getInstalledPackageIds(),
+        ]);
+
+        const installedSet = new Set(installedIds);
+        const statusIcon = (id: string) => installedSet.has(id) ? '✅' : '📦';
+
         stream.markdown('## 📊 Análise do Workspace\n\n');
-        stream.markdown('Baseado no seu projeto, aqui estão os **pacotes recomendados**:\n\n');
-        const allPkgs = await registry.getAll();
-        const bundles = await registry.getAllBundles();
-        stream.markdown('### 🚀 Começo Rápido (Bundles)\n');
-        for (const b of bundles) { stream.markdown(`- **${b.displayName}** — ${b.description} (${b.packageCount} pacotes)\n`); }
-        stream.markdown('\n### ⚡ Agents Individuais\n');
-        for (const p of allPkgs.filter((p: Package) => p.isAgent)) { stream.markdown(`- ${p.categoryEmoji} **${p.displayName}** — ${p.description}\n`); }
-        stream.markdown('\n> 💡 Use `/install <nome>` para instalar qualquer pacote.\n');
+
+        // ── 2. Show detected project profile (or generic intro) ───────────────
+        if (profiles.length > 0) {
+          // Sort by confidence descending, pick highest
+          const sorted = [...profiles].sort((a, b) => b.confidence - a.confidence);
+          const best   = sorted[0];
+          const pct    = Math.round(best.confidence * 100);
+
+          stream.markdown(`**Perfil detectado:** ${best.profile} — ${pct}% de confiança\n\n`);
+          if (best.detectedSignals.length > 0) {
+            const signals = best.detectedSignals.slice(0, 5).map(s => `\`${s}\``).join(', ');
+            stream.markdown(`> 📁 Sinais: ${signals}\n\n`);
+          }
+          if (best.reason) {
+            stream.markdown(`> ℹ️ ${best.reason}\n\n`);
+          }
+
+          // ── 3. Show recommended bundle with per-package install status ────────
+          const recommendedBundle = bundles.find(b => b.id === best.bundleId);
+          if (recommendedBundle) {
+            stream.markdown(`---\n\n### 🎯 Bundle Recomendado — **${recommendedBundle.displayName}**\n\n`);
+            stream.markdown(`> ${recommendedBundle.description}\n\n`);
+
+            // Table of packages in the bundle
+            stream.markdown('| Pacote | Tipo | Status |\n');
+            stream.markdown('|--------|------|--------|\n');
+            let installedCount = 0;
+            for (const pkgId of recommendedBundle.packageIds) {
+              const pkg = allPkgs.find((p: Package) => p.id === pkgId);
+              if (pkg) {
+                const icon   = statusIcon(pkgId);
+                const isInst = installedSet.has(pkgId);
+                if (isInst) { installedCount++; }
+                stream.markdown(`| ${pkg.categoryEmoji || pkg.typeIcon} **${pkg.displayName}** | ${pkg.agentMeta?.category.label ?? pkg.type.label} | ${icon} ${isInst ? 'Instalado' : 'Pendente'} |\n`);
+              }
+            }
+
+            const total    = recommendedBundle.packageCount;
+            const pending  = total - installedCount;
+            stream.markdown(`\n**Cobertura atual:** ${installedCount}/${total} pacotes instalados`);
+
+            if (pending > 0) {
+              stream.markdown(`\n\n💡 Para instalar os **${pending} pacote(s) pendente(s)**, use:\n`);
+              stream.markdown('```\nDescomplicAI: Instalar Bundle\n```\n');
+              stream.markdown(`na Command Palette (\`Ctrl+Shift+P\`) e selecione **${recommendedBundle.displayName}**.\n`);
+            } else {
+              stream.markdown(' 🎉\n\n> Você já tem todos os pacotes deste bundle instalados!\n');
+            }
+          }
+        } else {
+          // No project profile detected — show generic intro
+          stream.markdown('Nenhum perfil de projeto reconhecido foi detectado.\n');
+          stream.markdown('Aqui está um resumo do catálogo completo:\n\n');
+        }
+
+        // ── 4. Complete catalog listing ───────────────────────────────────────
+        stream.markdown('\n---\n\n### 📦 Catálogo Completo\n\n');
+
+        // Bundles section
+        stream.markdown('#### 🚀 Bundles (pacotes combinados)\n\n');
+        for (const b of bundles) {
+          const bundlePkgIds = b.packageIds;
+          const bundleInstalled = bundlePkgIds.filter(id => installedSet.has(id)).length;
+          stream.markdown(`- **${b.displayName}** (${bundleInstalled}/${b.packageCount} instalados) — ${b.description}\n`);
+        }
+
+        // Agents section
+        const agents = allPkgs.filter((p: Package) => p.isAgent);
+        if (agents.length > 0) {
+          stream.markdown('\n#### 🤖 Agents\n\n');
+          for (const p of agents) {
+            stream.markdown(`- ${statusIcon(p.id)} ${p.categoryEmoji} **${p.displayName}** — ${p.description}\n`);
+          }
+        }
+
+        // Skills section
+        const skills = allPkgs.filter((p: Package) => p.type.value === 'skill');
+        if (skills.length > 0) {
+          stream.markdown('\n#### 📐 Skills\n\n');
+          for (const p of skills) {
+            stream.markdown(`- ${statusIcon(p.id)} **${p.displayName}** — ${p.description}\n`);
+          }
+        }
+
+        // MCPs section
+        const mcps = allPkgs.filter((p: Package) => p.type.value === 'mcp');
+        if (mcps.length > 0) {
+          stream.markdown('\n#### 🔌 MCP Servers\n\n');
+          for (const p of mcps) {
+            stream.markdown(`- ${statusIcon(p.id)} **${p.displayName}** — ${p.description}\n`);
+          }
+        }
+
+        const totalInstalled = installedIds.length;
+        const totalAvailable = allPkgs.length;
+        stream.markdown(`\n---\n\n> 📈 **${totalInstalled}/${totalAvailable}** pacotes instalados no workspace  \n`);
+        stream.markdown('> 💬 Use `/explain <nome>` para detalhes sobre um pacote específico.\n');
+        stream.markdown('> 📊 Use `/diff <bundle>` para comparar seu workspace com um bundle.\n');
+        return;
+      }
+
+      if (cmd === 'diff') {
+        // Resolve optional bundle name argument (e.g. "/diff backend")
+        const allBundles = await registry.getAllBundles();
+        const query      = prompt.toLowerCase().trim();
+        const target     = query
+          ? allBundles.find(b =>
+              b.id.includes(query) ||
+              b.name.toLowerCase().includes(query) ||
+              b.displayName.toLowerCase().includes(query),
+            )
+          : undefined;
+
+        if (query && !target) {
+          stream.markdown(`❌ Bundle **"${prompt}"** não encontrado. Bundles disponíveis:\n`);
+          for (const b of allBundles) {
+            stream.markdown(`- **${b.displayName}** (\`${b.id}\`)\n`);
+          }
+          return;
+        }
+
+        // Open the visual panel (passes bundleId or undefined to auto-pick)
+        stream.markdown(`## 📊 Stack Diff\n\n`);
+        if (target) {
+          stream.markdown(`Abrindo comparação com **${target.displayName}**…\n\n`);
+        } else {
+          stream.markdown('Abrindo Stack Diff — selecione o bundle no painel que será aberto.\n\n');
+        }
+        void vscode.commands.executeCommand('dai.stackDiff', target?.id);
+
+        // Also show a quick Markdown summary in chat
+        const [allPkgs2, installedIds2] = await Promise.all([
+          registry.getAll(),
+          scanner.getInstalledPackageIds(),
+        ]);
+        const { StackDiffBuilder: Builder } = await import('./infrastructure/services/StackDiffBuilder');
+        const chosenBundle = target ?? allBundles[0];
+        if (chosenBundle) {
+          const diff = new Builder().build({ targetBundle: chosenBundle, allPackages: allPkgs2, installedIds: installedIds2 });
+          stream.markdown(`### ${chosenBundle.displayName}\n\n`);
+          stream.markdown(`**Cobertura:** ${diff.coveragePercent}% (${diff.installed.length}/${diff.installed.length + diff.missing.length} pacotes)\n\n`);
+
+          if (diff.installed.length > 0) {
+            stream.markdown('**✅ Instalados:**\n');
+            for (const e of diff.installed) { stream.markdown(`- ${e.categoryEmoji || '📦'} ${e.displayName}\n`); }
+            stream.markdown('\n');
+          }
+          if (diff.missing.length > 0) {
+            stream.markdown('**🆕 Pendentes:**\n');
+            for (const e of diff.missing) { stream.markdown(`- ${e.categoryEmoji || '📦'} ${e.displayName}\n`); }
+            stream.markdown('\n');
+          }
+          if (diff.extras.length > 0) {
+            stream.markdown(`**🔄 Extras (fora do bundle):** ${diff.extras.map(e => e.displayName).join(', ')}\n\n`);
+          }
+          stream.markdown('> 💡 Use o painel visual para mais detalhes e para instalar os pacotes pendentes.\n');
+        }
         return;
       }
 
@@ -451,6 +601,7 @@ export function activate(context: vscode.ExtensionContext): void {
       stream.markdown('## 🧠 DescomplicAI\n\n');
       stream.markdown('Eu posso ajudar você a gerenciar sua infraestrutura de AI agents:\n\n');
       stream.markdown('- `/recommend` — Sugere pacotes e agents para o seu projeto\n');
+      stream.markdown('- `/diff [bundle]` — Compara seu workspace com um bundle específico\n');
       stream.markdown('- `/explain <nome>` — Explica um agent ou pacote específico em detalhes\n');
       stream.markdown('- `/workflow` — Mostra o pipeline e fluxo de trabalho dos agents\n');
       stream.markdown('- `/health` — Executa o health check da sua infraestrutura\n');
@@ -530,15 +681,27 @@ export function activate(context: vscode.ExtensionContext): void {
     })
   );
 
-  // ─── Auto Health Check ───────────────────────
+  // ─── Health Check Scheduler ──────────────────
   const config = vscode.workspace.getConfiguration('descomplicai');
+  const scheduler = new HealthCheckScheduler(
+    healthChecker,
+    context,
+    StatusBarManager.getInstance(),
+  );
+
   if (config.get<boolean>('autoHealthCheck', true)) {
-    setTimeout(() => {
-      void healthProvider.refresh().catch(error => {
-        logger.warn('Falha no auto health check.', { error });
-      });
-    }, 3000);
+    const intervalMs = getSchedulerIntervalMs();
+    scheduler.start(intervalMs);
+    context.subscriptions.push({ dispose: () => scheduler.dispose() });
   }
+
+  // Command: force an immediate health check
+  context.subscriptions.push(
+    vscode.commands.registerCommand('dai.forceHealthCheck', async () => {
+      await healthProvider.refresh();
+      await scheduler.runNow();
+    }),
+  );
 
   const hasShownWelcome = context.globalState.get<boolean>('descomplicai.welcomeShown', false);
   if (config.get<boolean>('showWelcome', true) && !hasShownWelcome) {

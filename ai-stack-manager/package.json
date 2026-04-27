@@ -109,6 +109,16 @@
         "command": "dai.importCustomMcp",
         "title": "DescomplicAI: Importar MCP Customizado",
         "icon": "$(plug)"
+      },
+      {
+        "command": "dai.stackDiff",
+        "title": "DescomplicAI: Stack Diff — Comparar com Bundle",
+        "icon": "$(diff)"
+      },
+      {
+        "command": "dai.forceHealthCheck",
+        "title": "DescomplicAI: Verificar Infraestrutura Agora",
+        "icon": "$(pulse)"
       }
     ],
     "chatParticipants": [
@@ -159,6 +169,12 @@
           "type": "boolean",
           "default": true,
           "description": "Executar automaticamente o health check ao abrir um workspace."
+        },
+        "descomplicai.healthCheckIntervalHours": {
+          "type": "number",
+          "default": 6,
+          "minimum": 0,
+          "description": "Intervalo (em horas) entre health checks automáticos. Use 0 para desativar."
         },
         "descomplicai.showWelcome": {
           "type": "boolean",

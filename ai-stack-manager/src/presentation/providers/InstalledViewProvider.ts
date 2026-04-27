@@ -104,7 +104,7 @@ export class InstalledViewProvider implements vscode.WebviewViewProvider {
     await Promise.all(
       allPackages.map(async (pkg) => {
         const status = await this._scanner.getInstallStatus(pkg);
-        if (status === InstallStatus.Installed || status === InstallStatus.Partial) {
+        if (status === InstallStatus.Installed || status === InstallStatus.Partial || status === InstallStatus.Outdated) {
           installed.push({ pkg, status });
         }
       })
@@ -182,6 +182,7 @@ export class InstalledViewProvider implements vscode.WebviewViewProvider {
             </div>
             <div class="dai-installed-actions">
               ${status === InstallStatus.Partial ? '<span class="dai-partial-badge">Incompleto</span>' : ''}
+              ${status === InstallStatus.Outdated ? '<span class="dai-outdated-badge">↑ Atualizar</span>' : ''}
               ${pkg.type.value === 'agent' ? `<button class="dai-btn dai-btn-ghost dai-btn-sm" data-config="${pkg.id}" title="Configurar Agente">⚙️</button>` : ''}
               ${pkg.docs.links[0] ? `<button class="dai-btn dai-btn-ghost dai-btn-sm" data-link="${pkg.docs.links[0].url}" title="Abrir documentação">🔗</button>` : ''}
               <button class="dai-btn dai-btn-ghost dai-btn-sm" data-open="${pkg.primaryFilePath}" title="Abrir arquivo">📂</button>

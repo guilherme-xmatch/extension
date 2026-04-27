@@ -54,6 +54,7 @@ export class CatalogViewProvider implements vscode.WebviewViewProvider {
   public static readonly viewType = 'dai-catalog';
   private _view?: vscode.WebviewView;
   private _initialized = false;
+  private _operationUpdateTimer?: ReturnType<typeof setTimeout>;
   private readonly _logger = AppLogger.getInstance();
 
   constructor(
@@ -63,9 +64,14 @@ export class CatalogViewProvider implements vscode.WebviewViewProvider {
     private readonly _installer: IInstaller,
     private readonly _operations: IOperationCoordinator,
   ) {
+    // Debounce operation banner updates to avoid re-rendering the full catalog
+    // on every single progress tick (0%→10%→25%→...→100%) during installs/syncs.
     this._operations.onDidChangeCurrentOperation(() => {
       if (this._view) {
-        void this.updateView();
+        clearTimeout(this._operationUpdateTimer);
+        this._operationUpdateTimer = setTimeout(() => {
+          void this.updateView();
+        }, 80);
       }
     });
   }
@@ -286,6 +292,8 @@ export class CatalogViewProvider implements vscode.WebviewViewProvider {
 
   private renderAgentCard(pkg: Package, status: InstallStatus, index: number): string {
     const isInstalled = status === InstallStatus.Installed;
+    const isOutdated = status === InstallStatus.Outdated;
+    const isInstalledOrOutdated = isInstalled || isOutdated;
     const meta = pkg.agentMeta;
     const catColor = meta?.category.color ?? '#EC7000';
     const catEmoji = meta?.category.emoji ?? '⚡';
@@ -296,11 +304,12 @@ export class CatalogViewProvider implements vscode.WebviewViewProvider {
     const skillCount = meta?.relatedSkills.length ?? 0;
 
     return /*html*/`
-    <div class="dai-card ${this.animClass('animate-slide-in')} ${isInstalled ? 'installed' : ''} ${hasNetwork ? 'has-network' : ''}" style="--delay: ${index * 0.04}s; --cat-color: ${catColor}" data-pkg-id="${pkg.id}">
+    <div class="dai-card ${this.animClass('animate-slide-in')} ${isInstalledOrOutdated ? 'installed' : ''} ${hasNetwork ? 'has-network' : ''}" style="--delay: ${index * 0.04}s; --cat-color: ${catColor}" data-pkg-id="${pkg.id}">
       <!-- Card Header -->
       <div class="dai-card-header">
         <div class="dai-card-badge" style="--badge-color: ${catColor}">${catEmoji} ${catLabel.toUpperCase()}</div>
         <span class="dai-card-version">v${pkg.version.toString()}</span>
+        ${isOutdated ? '<span class="dai-outdated-badge">&#8593; Atualizar</span>' : ''}
       </div>
 
       <!-- Card Body -->
@@ -317,7 +326,7 @@ export class CatalogViewProvider implements vscode.WebviewViewProvider {
         <span class="dai-meta-item" title="Maturidade">🏷️ ${pkg.maturityLabel}</span>
       </div>
 
-      ${isInstalled ? '<div class="dai-installed-indicator">✓ Instalado</div>' : ''}
+      ${isInstalledOrOutdated ? `<div class="dai-installed-indicator">${isOutdated ? '&#8593; Atualização Disponível' : '&#10003; Instalado'}</div>` : ''}
 
       <!-- Expandable Detalhes (toggled via JS) -->
       <div class="dai-card-details" id="details-${pkg.id}">
@@ -346,8 +355,11 @@ export class CatalogViewProvider implements vscode.WebviewViewProvider {
       <!-- Actions -->
       <div class="dai-card-actions">
         <button class="dai-btn dai-btn-ghost dai-btn-sm" data-toggle-details="${pkg.id}">▼ Detalhes</button>
-        ${isInstalled
-          ? `<button class="dai-btn dai-btn-danger dai-btn-sm" data-uninstall="${pkg.id}">✕</button>`
+        ${isOutdated
+          ? `<button class="dai-btn dai-btn-warning dai-btn-sm" data-install="${pkg.id}">↑ Atualizar</button>
+             <button class="dai-btn dai-btn-danger dai-btn-sm" data-uninstall="${pkg.id}">✕</button>`
+          : isInstalled
+            ? `<button class="dai-btn dai-btn-danger dai-btn-sm" data-uninstall="${pkg.id}">✕</button>`
           : hasNetwork
             ? `<button class="dai-btn dai-btn-primary dai-btn-sm" data-install-network="${pkg.id}">⬇ Instalar Rede</button>`
             : `<button class="dai-btn dai-btn-primary dai-btn-sm" data-install="${pkg.id}">⬇ Instalar</button>`
@@ -396,12 +408,14 @@ export class CatalogViewProvider implements vscode.WebviewViewProvider {
       </div>
       <div class="dai-packages-list">
         ${pkgs.map((pkg, i) => {
-          const isInstalled = (statusMap.get(pkg.id) ?? InstallStatus.NotInstalled) === InstallStatus.Installed;
+          const pkgStatus = statusMap.get(pkg.id) ?? InstallStatus.NotInstalled;
+          const isInstalled = pkgStatus === InstallStatus.Installed;
+          const isOutdated = pkgStatus === InstallStatus.Outdated;
           return /*html*/`
-          <div class="dai-card dai-card-compact ${this.animClass('animate-slide-in')} ${isInstalled ? 'installed' : ''}" style="--delay: ${i * 0.04}s; --cat-color: ${pkg.type.color}">
+          <div class="dai-card dai-card-compact ${this.animClass('animate-slide-in')} ${isInstalled || isOutdated ? 'installed' : ''}" style="--delay: ${i * 0.04}s; --cat-color: ${pkg.type.color}">
             <div class="dai-card-header">
               <div class="dai-card-badge" style="--badge-color: ${pkg.type.color}">${pkg.typeLabel.toUpperCase()}</div>
-              ${isInstalled ? '<span class="dai-installed-indicator-sm">✓</span>' : ''}
+              ${isOutdated ? '<span class="dai-outdated-badge">↑ Atualizar</span>' : isInstalled ? '<span class="dai-installed-indicator-sm">✓</span>' : ''}
             </div>
             <div class="dai-card-body">
               <span class="dai-card-name">${pkg.displayName}</span>
@@ -410,9 +424,12 @@ export class CatalogViewProvider implements vscode.WebviewViewProvider {
             </div>
             <div class="dai-card-actions">
               <div class="dai-card-tags">${pkg.tags.slice(0, 3).map(t => `<span class="dai-tag">${t}</span>`).join('')}</div>
-              ${isInstalled
-                ? `<button class="dai-btn dai-btn-danger dai-btn-sm" data-uninstall="${pkg.id}">✕</button>`
-                : `<button class="dai-btn dai-btn-primary dai-btn-sm" data-install="${pkg.id}">⬇</button>`}
+              ${isOutdated
+                ? `<button class="dai-btn dai-btn-warning dai-btn-sm" data-install="${pkg.id}">↑ Atualizar</button>
+                   <button class="dai-btn dai-btn-danger dai-btn-sm" data-uninstall="${pkg.id}">✕</button>`
+                : isInstalled
+                  ? `<button class="dai-btn dai-btn-danger dai-btn-sm" data-uninstall="${pkg.id}">✕</button>`
+                  : `<button class="dai-btn dai-btn-primary dai-btn-sm" data-install="${pkg.id}">⬇</button>`}
             </div>
           </div>`;
         }).join('')}
@@ -424,30 +441,42 @@ export class CatalogViewProvider implements vscode.WebviewViewProvider {
   // EVENT HANDLERS
   // ═══════════════════════════════════════════
 
+  /** Notify the webview logo controller of an operation result. */
+  private postLogoResult(result: 'success' | 'error' | 'reset'): void {
+    if (this._view) {
+      void this._view.webview.postMessage({ type: 'logoResult', result });
+    }
+  }
+
   private async handleInstall(packageId: string): Promise<void> {
     const pkg = await this._registry.findById(packageId);
     if (!pkg) { return; }
 
     const packagesToInstall = await this.resolvePackagesForInstall(pkg);
-    await this._operations.run({
-      kind: packagesToInstall.length > 1 ? 'bundle-install' : 'package-install',
-      label: packagesToInstall.length > 1 ? `Instalando ${packagesToInstall.length} pacotes` : `Instalando ${pkg.displayName}`,
-      targetId: pkg.id,
-      refreshTargets: ['catalog', 'installed'],
-    }, async (operation) => {
-      if (packagesToInstall.length > 1) {
-        await this._installer.installMany(packagesToInstall, {
-          onProgress: (progress) => {
-            operation.setProgress((progress.current / progress.total) * 100, progress.label);
-          },
-        });
-      } else {
-        operation.setProgress(10, pkg.displayName);
-        await this._installer.install(pkg, {
-          onProgress: () => operation.setProgress(100, pkg.displayName),
-        });
-      }
-    });
+    try {
+      await this._operations.run({
+        kind: packagesToInstall.length > 1 ? 'bundle-install' : 'package-install',
+        label: packagesToInstall.length > 1 ? `Instalando ${packagesToInstall.length} pacotes` : `Instalando ${pkg.displayName}`,
+        targetId: pkg.id,
+        refreshTargets: ['catalog', 'installed'],
+      }, async (operation) => {
+        if (packagesToInstall.length > 1) {
+          await this._installer.installMany(packagesToInstall, {
+            onProgress: (progress) => {
+              operation.setProgress((progress.current / progress.total) * 100, progress.label);
+            },
+          });
+        } else {
+          operation.setProgress(10, pkg.displayName);
+          await this._installer.install(pkg, {
+            onProgress: () => operation.setProgress(100, pkg.displayName),
+          });
+        }
+      });
+      this.postLogoResult('success');
+    } catch {
+      this.postLogoResult('error');
+    }
   }
 
   private async handleInstallNetwork(packageId: string): Promise<void> {
@@ -472,47 +501,65 @@ export class CatalogViewProvider implements vscode.WebviewViewProvider {
     );
 
     if (choice?.startsWith('Instalar Rede')) {
-      await this._operations.run({
-        kind: 'bundle-install',
-        label: `Instalando rede ${pkg.displayName}`,
-        targetId: pkg.id,
-        refreshTargets: ['catalog', 'installed'],
-      }, async (operation) => {
-        await this._installer.installMany(unique, {
-          onProgress: (progress) => {
-            operation.setProgress((progress.current / progress.total) * 100, progress.label);
-          },
+      try {
+        await this._operations.run({
+          kind: 'bundle-install',
+          label: `Instalando rede ${pkg.displayName}`,
+          targetId: pkg.id,
+          refreshTargets: ['catalog', 'installed'],
+        }, async (operation) => {
+          await this._installer.installMany(unique, {
+            onProgress: (progress) => {
+              operation.setProgress((progress.current / progress.total) * 100, progress.label);
+            },
+          });
         });
-      });
+        this.postLogoResult('success');
+      } catch {
+        this.postLogoResult('error');
+      }
     } else if (choice === 'Apenas este Agent') {
-      await this._operations.run({
-        kind: 'package-install',
-        label: `Instalando ${pkg.displayName}`,
-        targetId: pkg.id,
-        refreshTargets: ['catalog', 'installed'],
-      }, async (operation) => {
-        operation.setProgress(10, pkg.displayName);
-        await this._installer.install(pkg, {
-          onProgress: () => operation.setProgress(100, pkg.displayName),
+      try {
+        await this._operations.run({
+          kind: 'package-install',
+          label: `Instalando ${pkg.displayName}`,
+          targetId: pkg.id,
+          refreshTargets: ['catalog', 'installed'],
+        }, async (operation) => {
+          operation.setProgress(10, pkg.displayName);
+          await this._installer.install(pkg, {
+            onProgress: () => operation.setProgress(100, pkg.displayName),
+          });
         });
-      });
+        this.postLogoResult('success');
+      } catch {
+        this.postLogoResult('error');
+      }
+    } else {
+      // User dismissed dialog — reset logo to idle state
+      this.postLogoResult('reset');
     }
   }
 
   private async handleUninstall(packageId: string): Promise<void> {
     const pkg = await this._registry.findById(packageId);
     if (!pkg) { return; }
-    await this._operations.run({
-      kind: 'package-uninstall',
-      label: `Removendo ${pkg.displayName}`,
-      targetId: pkg.id,
-      refreshTargets: ['catalog', 'installed'],
-    }, async (operation) => {
-      operation.setProgress(10, pkg.displayName);
-      await this._installer.uninstall(pkg, {
-        onProgress: () => operation.setProgress(100, pkg.displayName),
+    try {
+      await this._operations.run({
+        kind: 'package-uninstall',
+        label: `Removendo ${pkg.displayName}`,
+        targetId: pkg.id,
+        refreshTargets: ['catalog', 'installed'],
+      }, async (operation) => {
+        operation.setProgress(10, pkg.displayName);
+        await this._installer.uninstall(pkg, {
+          onProgress: () => operation.setProgress(100, pkg.displayName),
+        });
       });
-    });
+      this.postLogoResult('success');
+    } catch {
+      this.postLogoResult('error');
+    }
   }
 
   private async handleInstallBundle(bundleId: string): Promise<void> {
@@ -524,18 +571,23 @@ export class CatalogViewProvider implements vscode.WebviewViewProvider {
       if (pkg) { packages.push(pkg); }
     }
     if (packages.length > 0) {
-      await this._operations.run({
-        kind: 'bundle-install',
-        label: `Instalando bundle ${bundle.displayName}`,
-        targetId: bundle.id,
-        refreshTargets: ['catalog', 'installed'],
-      }, async (operation) => {
-        await this._installer.installMany(packages, {
-          onProgress: (progress) => {
-            operation.setProgress((progress.current / progress.total) * 100, progress.label);
-          },
+      try {
+        await this._operations.run({
+          kind: 'bundle-install',
+          label: `Instalando bundle ${bundle.displayName}`,
+          targetId: bundle.id,
+          refreshTargets: ['catalog', 'installed'],
+        }, async (operation) => {
+          await this._installer.installMany(packages, {
+            onProgress: (progress) => {
+              operation.setProgress((progress.current / progress.total) * 100, progress.label);
+            },
+          });
         });
-      });
+        this.postLogoResult('success');
+      } catch {
+        this.postLogoResult('error');
+      }
     }
   }
 
@@ -547,15 +599,39 @@ export class CatalogViewProvider implements vscode.WebviewViewProvider {
     return /*js*/`
     let searchTimeout;
     const render = (state) => state.html || '<div class="dai-container"><div class="dai-empty"><span class="dai-empty-text">Sem dados</span></div></div>';
+
+    // ── Logo animation: handle messages from extension ────────────────────────
+    // The extension sends { type: 'logoResult', result: 'success'|'error'|'reset' }
+    // after an operation completes. Handled via the framework's onMessage hook.
+    function onMessage(message) {
+      if (message.type === 'logoResult') {
+        const anim = window.__daiLogoAnim;
+        if (!anim) { return; }
+        if (message.result === 'success') { anim.succeed(); }
+        else if (message.result === 'error')   { anim.fail();    }
+        else                                   { anim.reset();   }
+      }
+    }
+
     const bind = (state, app) => {
       const scrollingEl = document.scrollingElement;
-      if (scrollingEl && typeof state.scrollTop === 'number') {
-        requestAnimationFrame(() => { scrollingEl.scrollTop = state.scrollTop; });
+      // Restore scroll from the persisted vscode.getState() entry — decoupled from app re-renders.
+      // This prevents the scroll position from being included in the extension-side state,
+      // which would cause the page to jump to the top on every operation progress update.
+      const persistedScrollTop = (vscode.getState() || {}).scrollTop;
+      if (scrollingEl && typeof persistedScrollTop === 'number' && persistedScrollTop > 0) {
+        requestAnimationFrame(() => { scrollingEl.scrollTop = persistedScrollTop; });
       }
 
+      // Persist scroll position directly to vscode.getState() WITHOUT calling patchState.
+      // patchState triggers a full innerHTML re-render, which destroys and recreates all
+      // DOM elements (including the animated logo) on every single pixel of scroll.
       window.onscroll = () => {
         const el = document.scrollingElement;
-        app.patchState({ scrollTop: el ? el.scrollTop : 0 });
+        const scrollTop = el ? el.scrollTop : 0;
+        const vs = vscode.getState() || {};
+        vscode.setState({ ...vs, scrollTop });
+        app.state.scrollTop = scrollTop;
       };
 
       const searchInput = app.root.querySelector('#search-input');
@@ -624,6 +700,67 @@ export class CatalogViewProvider implements vscode.WebviewViewProvider {
         link.addEventListener('click', (event) => {
           event.preventDefault();
           app.postMessage({ command: 'openExternal', url: link.getAttribute('href') });
+        });
+      });
+
+      // ── Logo animation controller ─────────────────────────
+      // Triggered only during real operations — never on idle or scroll.
+      // Respects prefers-reduced-motion via the global CSS rule.
+      // All classes are removed after the animation ends so re-renders
+      // don't accidentally replay them (guards against dai-hydrated edge cases).
+      window.__daiLogoAnim = window.__daiLogoAnim || {
+        _el: null,
+        _workingTimeout: null,
+
+        get el() {
+          if (!this._el) { this._el = document.querySelector('.dai-stack-icon'); }
+          return this._el;
+        },
+
+        /** Call when an operation starts */
+        startWorking() {
+          const el = this.el;
+          if (!el) { return; }
+          el.classList.remove('dai-logo-success', 'dai-logo-error');
+          el.classList.add('dai-logo-working');
+        },
+
+        /** Call when an operation finishes successfully */
+        succeed() {
+          const el = this.el;
+          if (!el) { return; }
+          el.classList.remove('dai-logo-working', 'dai-logo-error');
+          el.classList.add('dai-logo-success');
+          el.addEventListener('animationend', function onEnd() {
+            el.classList.remove('dai-logo-success');
+            el.removeEventListener('animationend', onEnd);
+          }, { once: true });
+        },
+
+        /** Call when an operation finishes with an error */
+        fail() {
+          const el = this.el;
+          if (!el) { return; }
+          el.classList.remove('dai-logo-working', 'dai-logo-success');
+          el.classList.add('dai-logo-error');
+          el.addEventListener('animationend', function onEnd() {
+            el.classList.remove('dai-logo-error');
+            el.removeEventListener('animationend', onEnd);
+          }, { once: true });
+        },
+
+        /** Call when an operation is cancelled or the panel refreshes without result */
+        reset() {
+          const el = this.el;
+          if (!el) { return; }
+          el.classList.remove('dai-logo-working', 'dai-logo-success', 'dai-logo-error');
+        },
+      };
+
+      // Hook install/uninstall buttons so the logo responds in real time
+      app.root.querySelectorAll('[data-install], [data-install-network], [data-uninstall], [data-bundle-id]').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          window.__daiLogoAnim.startWorking();
         });
       });
     };

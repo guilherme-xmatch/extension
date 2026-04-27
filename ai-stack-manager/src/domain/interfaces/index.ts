@@ -42,7 +42,21 @@ export interface IWorkspaceScanner {
   getInstalledPackageIds(): Promise<string[]>;
   /** Check if workspace has a .github directory */
   hasGitHubDirectory(): Promise<boolean>;
-  detectProjectProfile(): Promise<{ profile: string; bundleId: string; confidence: number; }[]>;
+  /**
+   * Detects the project profile from workspace files and recommends bundle IDs.
+   * - `profile`          — Human-readable project type (e.g. "Backend API", "Python Service")
+   * - `bundleId`         — Catalog bundle that best matches this profile
+   * - `confidence`       — 0–1 match certainty; higher = stronger signal
+   * - `reason`           — One-line explanation of why the profile was detected
+   * - `detectedSignals`  — List of file/dependency names that triggered the detection
+   */
+  detectProjectProfile(): Promise<Array<{
+    profile: string;
+    bundleId: string;
+    confidence: number;
+    reason: string;
+    detectedSignals: string[];
+  }>>;
 }
 
 /** Installs and uninstalls packages in the workspace */
