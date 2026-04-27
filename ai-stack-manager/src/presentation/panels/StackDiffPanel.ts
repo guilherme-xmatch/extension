@@ -18,7 +18,51 @@
 
 import * as vscode from 'vscode';
 import { IPackageRepository, IWorkspaceScanner } from '../../domain/interfaces';
-import { StackDiffBuilder, StackDiff } from '../../infrastructure/services/StackDiffBuilder';
+import { StackDiffBuilder, StackDiff, PackageDiffEntry } from '../../infrastructure/services/StackDiffBuilder';
+
+// ─── Pure helpers ──────────────────────────────────────────────────────────────
+
+/** Generates a Markdown report from a `StackDiff` snapshot.
+ *  Exported so it can be unit-tested independently of the VS Code API.
+ */
+export function generateMarkdown(diff: StackDiff): string {
+  const { targetBundle, installed, missing, extras, coveragePercent } = diff;
+  const date = new Date().toLocaleDateString('pt-BR', { year: 'numeric', month: '2-digit', day: '2-digit' });
+  const total = installed.length + missing.length;
+
+  const tableRow = (e: PackageDiffEntry): string =>
+    `| ${e.categoryEmoji} ${e.displayName} | ${e.typeLabel} | ${e.description} |`;
+
+  const table = (entries: PackageDiffEntry[]): string => {
+    if (entries.length === 0) { return '_Nenhum._'; }
+    return [
+      '| Pacote | Tipo | Descrição |',
+      '|--------|------|-----------|',
+      ...entries.map(tableRow),
+    ].join('\n');
+  };
+
+  return [
+    `# Stack Diff — ${targetBundle.displayName}`,
+    '',
+    `> **Cobertura: ${Math.round(coveragePercent)}%** — ${installed.length} de ${total} pacotes instalados`,
+    '',
+    `## ✅ Instalados (${installed.length})`,
+    '',
+    table(installed),
+    '',
+    `## 🆕 Pendentes (${missing.length})`,
+    '',
+    table(missing),
+    '',
+    `## 🔄 Extras — fora do bundle (${extras.length})`,
+    '',
+    table(extras),
+    '',
+    '---',
+    `*Gerado por DescomplicAI em ${date}*`,
+  ].join('\n');
+}
 
 export class StackDiffPanel {
   public static currentPanel: StackDiffPanel | undefined;
@@ -29,6 +73,7 @@ export class StackDiffPanel {
   private readonly _scanner:      IWorkspaceScanner;
   private readonly _builder:      StackDiffBuilder;
   private _targetBundleId:        string | undefined;
+  private _currentDiff:           StackDiff | null = null;
   private _disposables:           vscode.Disposable[] = [];
 
   private constructor(
@@ -57,6 +102,18 @@ export class StackDiffPanel {
       if (e.type === 'refresh') { await this.update(); }
       if (e.type === 'installBundle') {
         void vscode.commands.executeCommand('dai.installBundle');
+      }
+      if (e.type === 'copyMarkdown') {
+        if (!this._currentDiff) { return; }
+        const md = generateMarkdown(this._currentDiff);
+        await vscode.env.clipboard.writeText(md);
+        void vscode.window.showInformationMessage('📋 Diff copiado para a área de transferência!');
+      }
+      if (e.type === 'exportMarkdown') {
+        if (!this._currentDiff) { return; }
+        const md = generateMarkdown(this._currentDiff);
+        const doc = await vscode.workspace.openTextDocument({ content: md, language: 'markdown' });
+        await vscode.window.showTextDocument(doc);
       }
     }, null, this._disposables);
   }
@@ -127,6 +184,7 @@ export class StackDiffPanel {
       this._targetBundleId = targetBundle.id;
 
       const diff = this._builder.build({ targetBundle, allPackages, installedIds });
+      this._currentDiff = diff;
 
       this._panel.webview.html = this._getHtmlForWebview(
         this._panel.webview,
@@ -285,6 +343,8 @@ export class StackDiffPanel {
     <h1>Stack Diff</h1>
     <select id="bundle-select" class="sd-bundle-select"></select>
     <button class="sd-btn" id="btn-install">⬇️ Instalar Pendentes</button>
+    <button class="sd-btn" id="btn-copy-md" style="background:var(--vscode-button-secondaryBackground);color:var(--vscode-button-secondaryForeground)">📋 Copiar Markdown</button>
+    <button class="sd-btn" id="btn-export-md" style="background:var(--vscode-button-secondaryBackground);color:var(--vscode-button-secondaryForeground)">💾 Exportar .md</button>
     <button class="sd-btn" id="btn-refresh" style="background:var(--vscode-button-secondaryBackground);color:var(--vscode-button-secondaryForeground)">↺ Atualizar</button>
   </div>
 
@@ -327,6 +387,12 @@ export class StackDiffPanel {
     });
     document.getElementById('btn-install').addEventListener('click', () => {
       vscode.postMessage({ type: 'installBundle' });
+    });
+    document.getElementById('btn-copy-md').addEventListener('click', () => {
+      vscode.postMessage({ type: 'copyMarkdown' });
+    });
+    document.getElementById('btn-export-md').addEventListener('click', () => {
+      vscode.postMessage({ type: 'exportMarkdown' });
     });
 
     /* ── Coverage ── */
