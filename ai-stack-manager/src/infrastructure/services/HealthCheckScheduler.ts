@@ -17,7 +17,7 @@
 
 import * as vscode from 'vscode';
 import { IHealthChecker } from '../../domain/interfaces';
-import { HealthReport, HealthSeverity } from '../../domain/entities/HealthReport';
+import { HealthReport } from '../../domain/entities/HealthReport';
 import { AppLogger } from './AppLogger';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -32,7 +32,7 @@ export interface IStatusBarBridge {
 
 /** Snapshot persistido em globalState */
 interface PersistedState {
-  lastRunTime: number;   // timestamp Unix (ms)
+  lastRunTime: number; // timestamp Unix (ms)
   lastErrorCount: number;
 }
 
@@ -47,8 +47,8 @@ export class HealthCheckScheduler {
   private _isRunning = false;
 
   constructor(
-    private readonly _checker:    IHealthChecker,
-    private readonly _context:    vscode.ExtensionContext,
+    private readonly _checker: IHealthChecker,
+    private readonly _context: vscode.ExtensionContext,
     private readonly _statusBar?: IStatusBarBridge,
   ) {}
 
@@ -140,8 +140,8 @@ export class HealthCheckScheduler {
 
   private _handleResult(report: HealthReport): void {
     const errorCount = report.errors.length;
-    const warnCount  = report.warnings.length;
-    const prev       = this._loadState();
+    const warnCount = report.warnings.length;
+    const prev = this._loadState();
 
     if (errorCount === 0 && warnCount === 0) {
       this._statusBar?.setSuccess('Infraestrutura saudável ✓');
@@ -158,22 +158,27 @@ export class HealthCheckScheduler {
     // Notifica somente quando os erros são novos (contagem aumentou vs. última execução)
     const prevErrors = prev?.lastErrorCount ?? 0;
     if (errorCount > prevErrors) {
-      const titles = report.errors.slice(0, 3).map(f => f.title).join(', ');
-      void vscode.window.showWarningMessage(
-        `🔴 DescomplicAI Health: ${errorCount} problema(s) crítico(s) encontrado(s). ${titles}`,
-        'Ver Relatório',
-        'Ignorar',
-      ).then(choice => {
-        if (choice === 'Ver Relatório') {
-          void vscode.commands.executeCommand('dai-health.focus');
-        }
-      });
+      const titles = report.errors
+        .slice(0, 3)
+        .map((f) => f.title)
+        .join(', ');
+      void vscode.window
+        .showWarningMessage(
+          `🔴 DescomplicAI Health: ${errorCount} problema(s) crítico(s) encontrado(s). ${titles}`,
+          'Ver Relatório',
+          'Ignorar',
+        )
+        .then((choice) => {
+          if (choice === 'Ver Relatório') {
+            void vscode.commands.executeCommand('dai-health.focus');
+          }
+        });
     }
   }
 
   private _persistState(report: HealthReport): void {
     const state: PersistedState = {
-      lastRunTime:   Date.now(),
+      lastRunTime: Date.now(),
       lastErrorCount: report.errors.length,
     };
     void this._context.globalState.update(STATE_KEY, state);
@@ -188,8 +193,11 @@ export class HealthCheckScheduler {
 
 /** Lê o intervalo configurado (em ms) para o agendador de health check. */
 export function getSchedulerIntervalMs(): number {
-  const hours = vscode.workspace.getConfiguration('descomplicai')
+  const hours = vscode.workspace
+    .getConfiguration('descomplicai')
     .get<number>('healthCheckIntervalHours', 6);
-  if (!hours || hours <= 0) { return 0; }
+  if (!hours || hours <= 0) {
+    return 0;
+  }
   return hours * 60 * 60 * 1000;
 }

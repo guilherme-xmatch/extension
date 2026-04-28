@@ -24,7 +24,9 @@
     "descomplicai"
   ],
   "main": "./out/extension.js",
-  "activationEvents": ["onUri"],
+  "activationEvents": [
+    "onUri"
+  ],
   "contributes": {
     "viewsContainers": {
       "activitybar": [
@@ -231,23 +233,19 @@
     "configure:origin": "powershell -ExecutionPolicy Bypass -File ./scripts/configure-git-origin.ps1",
     "check:github-prereqs": "powershell -ExecutionPolicy Bypass -File ./scripts/check-github-prereqs.ps1",
     "apply:branch-protection": "powershell -ExecutionPolicy Bypass -File ./scripts/apply-branch-protection.ps1",
-    "clean": "rimraf out coverage vitest.config.js vitest.config.js.map vitest.config.d.ts vitest.config.d.ts.map"
+    "clean": "rimraf out coverage vitest.config.js vitest.config.js.map vitest.config.d.ts vitest.config.d.ts.map \"cov_*.txt\" \"coverage*.txt\" \"test-output.txt\" \"test/**/*.js\" \"test/**/*.js.map\" \"test/**/*.d.ts\" \"test/**/*.d.ts.map\""
   },
   "devDependencies": {
     "@eslint/js": "^9.20.0",
-    "@types/adm-zip": "^0.5.8",
     "@types/node": "^20.0.0",
     "@types/vscode": "^1.100.0",
     "@typescript-eslint/eslint-plugin": "^8.24.0",
     "@typescript-eslint/parser": "^8.24.0",
+    "@vitest/coverage-v8": "^3.2.4",
     "eslint": "^9.20.1",
     "globals": "^15.15.0",
     "rimraf": "^6.0.1",
     "typescript": "^5.7.0",
-    "vitest": "^3.2.4",
-    "@vitest/coverage-v8": "^3.2.4"
-  },
-  "dependencies": {
-    "adm-zip": "^0.5.17"
+    "vitest": "^3.2.4"
   }
 }

@@ -27,8 +27,6 @@ npm run apply:branch-protection
 - Plano de execução atual: `docs/implementation/P1-hardening-execution-plan.md`
 - Checklist manual de branch protection: `docs/implementation/branch-protection-manual-checklist.md`
 - Schema do catálogo público: `docs/catalog-schema/README.md`
-- Controle operacional atual: `tasks.md`
-- Log resumido do progresso: `TODO.log`
 
 ## Observação operacional
 

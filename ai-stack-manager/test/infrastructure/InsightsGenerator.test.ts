@@ -2,7 +2,7 @@
  * Tests for InsightsGenerator and GitHubMetricsService.
  */
 
-import { describe, it, expect, vi, afterEach, beforeEach } from 'vitest';
+import { describe, it, expect, afterEach, beforeEach } from 'vitest';
 import { InsightsGenerator } from '../../src/infrastructure/services/InsightsGenerator';
 import { GitHubMetricsService } from '../../src/infrastructure/services/GitHubMetricsService';
 import { Package, InstallStatus } from '../../src/domain/entities/Package';
@@ -65,7 +65,7 @@ describe('InsightsGenerator', () => {
     expect(report.coverageScore).toBe(0);
     expect(report.securityAlerts).toHaveLength(0);
     expect(report.missingDependencies).toHaveLength(0);
-    expect(Object.values(report.coverage).every(v => v === false)).toBe(true);
+    expect(Object.values(report.coverage).every((v) => v === false)).toBe(true);
   });
 
   it('conta apenas agents instalados (Installed + Partial)', async () => {
@@ -110,7 +110,13 @@ describe('InsightsGenerator', () => {
 
   it('coverage.triage = true para agent com workflowPhase "orchestrator"', async () => {
     const agent = makeAgent('agent-orch', {
-      agentMeta: { workflowPhase: 'orchestrator', delegatesTo: [], relatedSkills: [], tools: [], category: 'orchestrator' },
+      agentMeta: {
+        workflowPhase: 'orchestrator',
+        delegatesTo: [],
+        relatedSkills: [],
+        tools: [],
+        category: 'orchestrator',
+      },
     });
     const registry: IPackageRepository = { ...emptyRegistry, getAll: async () => [agent] };
     const gen = new InsightsGenerator(registry, alwaysInstalledScanner);
@@ -121,7 +127,13 @@ describe('InsightsGenerator', () => {
 
   it('coverage.triage = true para workflowPhase "triage"', async () => {
     const agent = makeAgent('agent-triage', {
-      agentMeta: { workflowPhase: 'triage', delegatesTo: [], relatedSkills: [], tools: [], category: 'specialist' },
+      agentMeta: {
+        workflowPhase: 'triage',
+        delegatesTo: [],
+        relatedSkills: [],
+        tools: [],
+        category: 'specialist',
+      },
     });
     const registry: IPackageRepository = { ...emptyRegistry, getAll: async () => [agent] };
     const gen = new InsightsGenerator(registry, alwaysInstalledScanner);
@@ -131,7 +143,13 @@ describe('InsightsGenerator', () => {
 
   it('coverage.plan = true para workflowPhase "plan"', async () => {
     const agent = makeAgent('agent-plan', {
-      agentMeta: { workflowPhase: 'plan', delegatesTo: [], relatedSkills: [], tools: [], category: 'planner' },
+      agentMeta: {
+        workflowPhase: 'plan',
+        delegatesTo: [],
+        relatedSkills: [],
+        tools: [],
+        category: 'planner',
+      },
     });
     const registry: IPackageRepository = { ...emptyRegistry, getAll: async () => [agent] };
     const gen = new InsightsGenerator(registry, alwaysInstalledScanner);
@@ -141,7 +159,13 @@ describe('InsightsGenerator', () => {
 
   it('coverage.design = true para workflowPhase "architect"', async () => {
     const agent = makeAgent('agent-arch', {
-      agentMeta: { workflowPhase: 'architect', delegatesTo: [], relatedSkills: [], tools: [], category: 'specialist' },
+      agentMeta: {
+        workflowPhase: 'architect',
+        delegatesTo: [],
+        relatedSkills: [],
+        tools: [],
+        category: 'specialist',
+      },
     });
     const registry: IPackageRepository = { ...emptyRegistry, getAll: async () => [agent] };
     const gen = new InsightsGenerator(registry, alwaysInstalledScanner);
@@ -151,7 +175,13 @@ describe('InsightsGenerator', () => {
 
   it('coverage.execute = true para workflowPhase "specialist"', async () => {
     const agent = makeAgent('agent-spec', {
-      agentMeta: { workflowPhase: 'specialist', delegatesTo: [], relatedSkills: [], tools: [], category: 'specialist' },
+      agentMeta: {
+        workflowPhase: 'specialist',
+        delegatesTo: [],
+        relatedSkills: [],
+        tools: [],
+        category: 'specialist',
+      },
     });
     const registry: IPackageRepository = { ...emptyRegistry, getAll: async () => [agent] };
     const gen = new InsightsGenerator(registry, alwaysInstalledScanner);
@@ -161,7 +191,13 @@ describe('InsightsGenerator', () => {
 
   it('coverage.validate = true para workflowPhase "test"', async () => {
     const agent = makeAgent('agent-test', {
-      agentMeta: { workflowPhase: 'test', delegatesTo: [], relatedSkills: [], tools: [], category: 'guardian' },
+      agentMeta: {
+        workflowPhase: 'test',
+        delegatesTo: [],
+        relatedSkills: [],
+        tools: [],
+        category: 'guardian',
+      },
     });
     const registry: IPackageRepository = { ...emptyRegistry, getAll: async () => [agent] };
     const gen = new InsightsGenerator(registry, alwaysInstalledScanner);
@@ -171,7 +207,13 @@ describe('InsightsGenerator', () => {
 
   it('coverage.critic = true para workflowPhase "critic"', async () => {
     const agent = makeAgent('agent-critic', {
-      agentMeta: { workflowPhase: 'critic', delegatesTo: [], relatedSkills: [], tools: [], category: 'guardian' },
+      agentMeta: {
+        workflowPhase: 'critic',
+        delegatesTo: [],
+        relatedSkills: [],
+        tools: [],
+        category: 'guardian',
+      },
     });
     const registry: IPackageRepository = { ...emptyRegistry, getAll: async () => [agent] };
     const gen = new InsightsGenerator(registry, alwaysInstalledScanner);
@@ -181,12 +223,60 @@ describe('InsightsGenerator', () => {
 
   it('coverageScore é 100 quando todas as dimensões estão cobertas', async () => {
     const agents = [
-      makeAgent('a1', { agentMeta: { workflowPhase: 'triage', delegatesTo: [], relatedSkills: [], tools: [], category: 'orchestrator' } }),
-      makeAgent('a2', { agentMeta: { workflowPhase: 'plan', delegatesTo: [], relatedSkills: [], tools: [], category: 'planner' } }),
-      makeAgent('a3', { agentMeta: { workflowPhase: 'design', delegatesTo: [], relatedSkills: [], tools: [], category: 'specialist' } }),
-      makeAgent('a4', { agentMeta: { workflowPhase: 'execute', delegatesTo: [], relatedSkills: [], tools: [], category: 'specialist' } }),
-      makeAgent('a5', { agentMeta: { workflowPhase: 'validate', delegatesTo: [], relatedSkills: [], tools: [], category: 'guardian' } }),
-      makeAgent('a6', { agentMeta: { workflowPhase: 'critic', delegatesTo: [], relatedSkills: [], tools: [], category: 'guardian' } }),
+      makeAgent('a1', {
+        agentMeta: {
+          workflowPhase: 'triage',
+          delegatesTo: [],
+          relatedSkills: [],
+          tools: [],
+          category: 'orchestrator',
+        },
+      }),
+      makeAgent('a2', {
+        agentMeta: {
+          workflowPhase: 'plan',
+          delegatesTo: [],
+          relatedSkills: [],
+          tools: [],
+          category: 'planner',
+        },
+      }),
+      makeAgent('a3', {
+        agentMeta: {
+          workflowPhase: 'design',
+          delegatesTo: [],
+          relatedSkills: [],
+          tools: [],
+          category: 'specialist',
+        },
+      }),
+      makeAgent('a4', {
+        agentMeta: {
+          workflowPhase: 'execute',
+          delegatesTo: [],
+          relatedSkills: [],
+          tools: [],
+          category: 'specialist',
+        },
+      }),
+      makeAgent('a5', {
+        agentMeta: {
+          workflowPhase: 'validate',
+          delegatesTo: [],
+          relatedSkills: [],
+          tools: [],
+          category: 'guardian',
+        },
+      }),
+      makeAgent('a6', {
+        agentMeta: {
+          workflowPhase: 'critic',
+          delegatesTo: [],
+          relatedSkills: [],
+          tools: [],
+          category: 'guardian',
+        },
+      }),
     ];
     const registry: IPackageRepository = { ...emptyRegistry, getAll: async () => agents };
     const gen = new InsightsGenerator(registry, alwaysInstalledScanner);
@@ -196,7 +286,13 @@ describe('InsightsGenerator', () => {
 
   it('emite securityAlert quando agent tem ferramenta de terminal', async () => {
     const agent = makeAgent('agent-terminal', {
-      agentMeta: { workflowPhase: 'execute', delegatesTo: [], relatedSkills: [], tools: ['runInTerminal'], category: 'specialist' },
+      agentMeta: {
+        workflowPhase: 'execute',
+        delegatesTo: [],
+        relatedSkills: [],
+        tools: ['runInTerminal'],
+        category: 'specialist',
+      },
     });
     const registry: IPackageRepository = { ...emptyRegistry, getAll: async () => [agent] };
     const gen = new InsightsGenerator(registry, alwaysInstalledScanner);
@@ -209,7 +305,13 @@ describe('InsightsGenerator', () => {
 
   it('emite securityAlert quando agent tem ferramenta de edição de arquivo', async () => {
     const agent = makeAgent('agent-edit', {
-      agentMeta: { workflowPhase: 'execute', delegatesTo: [], relatedSkills: [], tools: ['editFiles'], category: 'specialist' },
+      agentMeta: {
+        workflowPhase: 'execute',
+        delegatesTo: [],
+        relatedSkills: [],
+        tools: ['editFiles'],
+        category: 'specialist',
+      },
     });
     const registry: IPackageRepository = { ...emptyRegistry, getAll: async () => [agent] };
     const gen = new InsightsGenerator(registry, alwaysInstalledScanner);
@@ -220,8 +322,24 @@ describe('InsightsGenerator', () => {
 
   it('isGuardianPresent = true quando há agent critic presente', async () => {
     const agents = [
-      makeAgent('agent-exec', { agentMeta: { workflowPhase: 'execute', delegatesTo: [], relatedSkills: [], tools: ['execute'], category: 'specialist' } }),
-      makeAgent('agent-guard', { agentMeta: { workflowPhase: 'critic', delegatesTo: [], relatedSkills: [], tools: [], category: 'guardian' } }),
+      makeAgent('agent-exec', {
+        agentMeta: {
+          workflowPhase: 'execute',
+          delegatesTo: [],
+          relatedSkills: [],
+          tools: ['execute'],
+          category: 'specialist',
+        },
+      }),
+      makeAgent('agent-guard', {
+        agentMeta: {
+          workflowPhase: 'critic',
+          delegatesTo: [],
+          relatedSkills: [],
+          tools: [],
+          category: 'guardian',
+        },
+      }),
     ];
     const registry: IPackageRepository = { ...emptyRegistry, getAll: async () => agents };
     const gen = new InsightsGenerator(registry, alwaysInstalledScanner);
@@ -232,7 +350,13 @@ describe('InsightsGenerator', () => {
 
   it('detects ferramenta por prefixo runCommands/', async () => {
     const agent = makeAgent('agent-run', {
-      agentMeta: { workflowPhase: 'execute', delegatesTo: [], relatedSkills: [], tools: ['runCommands/bash'], category: 'specialist' },
+      agentMeta: {
+        workflowPhase: 'execute',
+        delegatesTo: [],
+        relatedSkills: [],
+        tools: ['runCommands/bash'],
+        category: 'specialist',
+      },
     });
     const registry: IPackageRepository = { ...emptyRegistry, getAll: async () => [agent] };
     const gen = new InsightsGenerator(registry, alwaysInstalledScanner);
@@ -243,7 +367,13 @@ describe('InsightsGenerator', () => {
 
   it('detects ferramenta por prefixo edit/', async () => {
     const agent = makeAgent('agent-edit-prefix', {
-      agentMeta: { workflowPhase: 'execute', delegatesTo: [], relatedSkills: [], tools: ['edit/typescript'], category: 'specialist' },
+      agentMeta: {
+        workflowPhase: 'execute',
+        delegatesTo: [],
+        relatedSkills: [],
+        tools: ['edit/typescript'],
+        category: 'specialist',
+      },
     });
     const registry: IPackageRepository = { ...emptyRegistry, getAll: async () => [agent] };
     const gen = new InsightsGenerator(registry, alwaysInstalledScanner);
@@ -273,25 +403,46 @@ describe('InsightsGenerator', () => {
 
   it('não duplica missingDependencies quando mesmo delegate referenciado 2 vezes', async () => {
     const orch1 = makeAgent('agent-orch1', {
-      agentMeta: { workflowPhase: 'orchestrator', delegatesTo: ['missing-dep'], relatedSkills: [], tools: [], category: 'orchestrator' },
+      agentMeta: {
+        workflowPhase: 'orchestrator',
+        delegatesTo: ['missing-dep'],
+        relatedSkills: [],
+        tools: [],
+        category: 'orchestrator',
+      },
     });
     const orch2 = makeAgent('agent-orch2', {
-      agentMeta: { workflowPhase: 'orchestrator', delegatesTo: ['missing-dep'], relatedSkills: [], tools: [], category: 'orchestrator' },
+      agentMeta: {
+        workflowPhase: 'orchestrator',
+        delegatesTo: ['missing-dep'],
+        relatedSkills: [],
+        tools: [],
+        category: 'orchestrator',
+      },
     });
     const registry: IPackageRepository = { ...emptyRegistry, getAll: async () => [orch1, orch2] };
     const gen = new InsightsGenerator(registry, alwaysInstalledScanner);
     const report = await gen.generateReport();
 
-    const occurrences = report.missingDependencies.filter(d => d === 'missing-dep');
+    const occurrences = report.missingDependencies.filter((d) => d === 'missing-dep');
     expect(occurrences).toHaveLength(1);
   });
 
   it('não adiciona missingDependency se delegate estiver instalado', async () => {
     const orchestrator = makeAgent('agent-orch', {
-      agentMeta: { workflowPhase: 'orchestrator', delegatesTo: ['backend'], relatedSkills: [], tools: [], category: 'orchestrator' },
+      agentMeta: {
+        workflowPhase: 'orchestrator',
+        delegatesTo: ['backend'],
+        relatedSkills: [],
+        tools: [],
+        category: 'orchestrator',
+      },
     });
     const delegate = makeAgent('backend');
-    const registry: IPackageRepository = { ...emptyRegistry, getAll: async () => [orchestrator, delegate] };
+    const registry: IPackageRepository = {
+      ...emptyRegistry,
+      getAll: async () => [orchestrator, delegate],
+    };
     const gen = new InsightsGenerator(registry, alwaysInstalledScanner);
     const report = await gen.generateReport();
 
@@ -300,7 +451,13 @@ describe('InsightsGenerator', () => {
 
   it('não emite securityAlert para agent sem ferramentas de risco', async () => {
     const agent = makeAgent('safe-agent', {
-      agentMeta: { workflowPhase: 'plan', delegatesTo: [], relatedSkills: [], tools: ['read', 'search'], category: 'planner' },
+      agentMeta: {
+        workflowPhase: 'plan',
+        delegatesTo: [],
+        relatedSkills: [],
+        tools: ['read', 'search'],
+        category: 'planner',
+      },
     });
     const registry: IPackageRepository = { ...emptyRegistry, getAll: async () => [agent] };
     const gen = new InsightsGenerator(registry, alwaysInstalledScanner);
@@ -316,7 +473,11 @@ describe('GitHubMetricsService', () => {
   let logger: AppLogger;
 
   beforeEach(() => {
-    try { AppLogger.getInstance().dispose(); } catch { /* já limpo */ }
+    try {
+      AppLogger.getInstance().dispose();
+    } catch {
+      /* já limpo */
+    }
     logger = AppLogger.getInstance();
   });
 
@@ -326,17 +487,18 @@ describe('GitHubMetricsService', () => {
     setAuthenticationSession(undefined);
   });
 
-  const makePkg = () => Package.create({
-    id: 'agent-backend',
-    name: 'backend',
-    displayName: 'Backend',
-    description: 'test',
-    type: PackageType.Agent,
-    version: '1.0.0',
-    tags: [],
-    author: 'test',
-    files: [],
-  });
+  const makePkg = () =>
+    Package.create({
+      id: 'agent-backend',
+      name: 'backend',
+      displayName: 'Backend',
+      description: 'test',
+      type: PackageType.Agent,
+      version: '1.0.0',
+      tags: [],
+      author: 'test',
+      files: [],
+    });
 
   it('não faz nada quando metrics.enabled = false (default)', async () => {
     // enabled is false by default — nothing should throw

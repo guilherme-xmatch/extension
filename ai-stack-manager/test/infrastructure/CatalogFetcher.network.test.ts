@@ -17,7 +17,7 @@ vi.mock('fs', () => ({
   // Other fs methods used by CatalogFetcher (not needed here, but prevents import errors)
 }));
 
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import * as https from 'https';
 import * as fs from 'fs';
 import { exec } from 'child_process';
@@ -153,7 +153,12 @@ describe('CatalogFetcher.fetchJson', () => {
   it('rejeita com "sem status" quando statusCode está ausente', async () => {
     const fetcher = new CatalogFetcher(true);
     vi.mocked(https.get).mockImplementationOnce((_url: any, callback: any) => {
-      const response = { statusCode: undefined, resume: vi.fn(), on: vi.fn(), setEncoding: vi.fn() };
+      const response = {
+        statusCode: undefined,
+        resume: vi.fn(),
+        on: vi.fn(),
+        setEncoding: vi.fn(),
+      };
       callback(response);
       return { on: vi.fn() } as any;
     });
@@ -205,10 +210,7 @@ describe('CatalogFetcher.ensureLocalClone', () => {
     const fetcher = new CatalogFetcher();
     await fetcher.ensureLocalClone(REPO_URL, REPO_DIR);
 
-    expect(exec).toHaveBeenCalledWith(
-      expect.stringContaining('git clone'),
-      expect.any(Function),
-    );
+    expect(exec).toHaveBeenCalledWith(expect.stringContaining('git clone'), expect.any(Function));
   });
 
   it('clona quando repoDir existe mas .git não existe', async () => {
@@ -222,10 +224,7 @@ describe('CatalogFetcher.ensureLocalClone', () => {
     const fetcher = new CatalogFetcher();
     await fetcher.ensureLocalClone(REPO_URL, REPO_DIR);
 
-    expect(exec).toHaveBeenCalledWith(
-      expect.stringContaining('git clone'),
-      expect.any(Function),
-    );
+    expect(exec).toHaveBeenCalledWith(expect.stringContaining('git clone'), expect.any(Function));
   });
 
   // ── Dir exists + .git exists ──────────────────────────────────────────────────
@@ -242,7 +241,7 @@ describe('CatalogFetcher.ensureLocalClone', () => {
 
     const execCalls = vi.mocked(exec).mock.calls;
     const hasPullCall = execCalls.some(
-      call => typeof call[0] === 'string' && (call[0] as string).includes('git pull'),
+      (call) => typeof call[0] === 'string' && (call[0] as string).includes('git pull'),
     );
     expect(hasPullCall).toBe(true);
   });
