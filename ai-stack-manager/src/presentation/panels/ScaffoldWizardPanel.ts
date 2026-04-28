@@ -17,52 +17,65 @@
 
 import * as path from 'path';
 import * as vscode from 'vscode';
+import { UxDiagnosticsService } from '../../infrastructure/services/UxDiagnosticsService';
 
 /** Todos os campos possíveis que o wizard pode coletar. */
 export interface ScaffoldFormData {
-  type:         'agent' | 'skill' | 'instruction' | 'prompt';
-  name:         string;            // slug: letras minúsculas e hifens
-  displayName:  string;
-  description:  string;
-  author:       string;
-  tags:         string;            // separadas por vírgula
+  type: 'agent' | 'skill' | 'instruction' | 'prompt';
+  name: string; // slug: letras minúsculas e hifens
+  displayName: string;
+  description: string;
+  author: string;
+  tags: string; // separadas por vírgula
 
   // Específico de agent
-  workflowPhase?:  string;
-  tools?:          string;         // separadas por vírgula
-  userInvocable?:  boolean;
-  delegatesTo?:    string;         // separadas por vírgula
-  relatedSkills?:  string;         // separadas por vírgula
+  workflowPhase?: string;
+  tools?: string; // separadas por vírgula
+  userInvocable?: boolean;
+  delegatesTo?: string; // separadas por vírgula
+  relatedSkills?: string; // separadas por vírgula
 
   // Específico de skill
-  applyToAudience?: string;        // descrição do público-alvo
+  applyToAudience?: string; // descrição do público-alvo
 
   // Específico de instruction
-  applyTo?: string;                // padrão glob
+  applyTo?: string; // padrão glob
 
   // Específico de prompt
-  promptMode?: string;             // ex.: "agent", "chat"
+  promptMode?: string; // ex.: "agent", "chat"
 }
 
 // ─── Geradores de template ───────────────────────────────────────────────────
 
 function generateContent(data: ScaffoldFormData): { filePath: string; content: string } {
   const { type, name, displayName, description, author, tags } = data;
-  const tagList = tags ? tags.split(',').map(t => t.trim()).filter(Boolean) : [];
-  const tagYaml = tagList.length > 0
-    ? tagList.map(t => `  - ${t}`).join('\n')
-    : '  - custom';
+  const tagList = tags
+    ? tags
+        .split(',')
+        .map((t) => t.trim())
+        .filter(Boolean)
+    : [];
+  const tagYaml = tagList.length > 0 ? tagList.map((t) => `  - ${t}`).join('\n') : '  - custom';
 
   switch (type) {
     case 'agent': {
-      const phase       = data.workflowPhase || 'execute';
-      const toolsList   = (data.tools || 'read,edit,search').split(',').map(t => `  - ${t.trim()}`).join('\n');
-      const invocable   = data.userInvocable ? 'true' : 'false';
-      const delegates   = data.delegatesTo
-        ? data.delegatesTo.split(',').map(d => `  - ${d.trim()}`).join('\n')
+      const phase = data.workflowPhase || 'execute';
+      const toolsList = (data.tools || 'read,edit,search')
+        .split(',')
+        .map((t) => `  - ${t.trim()}`)
+        .join('\n');
+      const invocable = data.userInvocable ? 'true' : 'false';
+      const delegates = data.delegatesTo
+        ? data.delegatesTo
+            .split(',')
+            .map((d) => `  - ${d.trim()}`)
+            .join('\n')
         : '';
-      const skills      = data.relatedSkills
-        ? data.relatedSkills.split(',').map(s => `  - ${s.trim()}`).join('\n')
+      const skills = data.relatedSkills
+        ? data.relatedSkills
+            .split(',')
+            .map((s) => `  - ${s.trim()}`)
+            .join('\n')
         : '';
 
       return {
@@ -95,7 +108,7 @@ ${toolsList}${delegates ? '\n  delegatesTo:\n' + delegates : ''}${skills ? '\n  
 
 ## Ferramentas
 
-Este agent tem acesso às seguintes ferramentas: \`${(data.tools || 'read, edit, search')}\`
+Este agent tem acesso às seguintes ferramentas: \`${data.tools || 'read, edit, search'}\`
 
 ## Comportamento
 
@@ -210,37 +223,53 @@ Descreva aqui o formato e o conteúdo esperado na saída.
 export class ScaffoldWizardPanel {
   public static currentPanel: ScaffoldWizardPanel | undefined;
 
-  private readonly _panel:        vscode.WebviewPanel;
+  private readonly _panel: vscode.WebviewPanel;
   private readonly _extensionUri: vscode.Uri;
-  private _disposables:           vscode.Disposable[] = [];
+  private _disposables: vscode.Disposable[] = [];
+  private _hasCreatedPackage = false;
+  private _lastStep = 1;
+  private _isDisposed = false;
 
   private constructor(panel: vscode.WebviewPanel, extensionUri: vscode.Uri) {
-    this._panel        = panel;
+    this._panel = panel;
     this._extensionUri = extensionUri;
 
     this._panel.webview.html = this._getHtmlForWebview(this._panel.webview);
 
     this._panel.onDidDispose(() => this.dispose(), null, this._disposables);
 
-    this._panel.webview.onDidReceiveMessage(async (msg: {
-      type: 'preview' | 'create' | 'close';
-      data?: ScaffoldFormData;
-    }) => {
-      if (msg.type === 'preview' && msg.data) {
-        const { content } = generateContent(msg.data);
-        void this._panel.webview.postMessage({ type: 'previewResult', content });
-        return;
-      }
+    this._panel.webview.onDidReceiveMessage(
+      async (msg: {
+        type: 'preview' | 'create' | 'close' | 'progress';
+        data?: ScaffoldFormData;
+        step?: number;
+      }) => {
+        if (msg.type === 'preview' && msg.data) {
+          const { content } = generateContent(msg.data);
+          void this._panel.webview.postMessage({ type: 'previewResult', content });
+          return;
+        }
 
-      if (msg.type === 'create' && msg.data) {
-        await this._createPackage(msg.data);
-        return;
-      }
+        if (msg.type === 'progress' && typeof msg.step === 'number') {
+          this._lastStep = msg.step;
+          if (msg.step === 1) {
+            this._hasCreatedPackage = false;
+          }
+          return;
+        }
 
-      if (msg.type === 'close') {
-        this.dispose();
-      }
-    }, null, this._disposables);
+        if (msg.type === 'create' && msg.data) {
+          await this._createPackage(msg.data);
+          return;
+        }
+
+        if (msg.type === 'close') {
+          this.dispose();
+        }
+      },
+      null,
+      this._disposables,
+    );
   }
 
   // ─── API Pública ────────────────────────────────────────────────────────────────────────────
@@ -260,7 +289,7 @@ export class ScaffoldWizardPanel {
       'DescomplicAI: Novo Pacote',
       column ?? vscode.ViewColumn.One,
       {
-        enableScripts:  true,
+        enableScripts: true,
         localResourceRoots: [extensionUri],
       },
     );
@@ -269,11 +298,23 @@ export class ScaffoldWizardPanel {
   }
 
   public dispose(): void {
+    if (this._isDisposed) {
+      return;
+    }
+    this._isDisposed = true;
+    if (!this._hasCreatedPackage) {
+      UxDiagnosticsService.getInstance().track('panel.scaffold.abandoned', {
+        surface: 'panel',
+        step: this._lastStep,
+      });
+    }
     ScaffoldWizardPanel.currentPanel = undefined;
     this._panel.dispose();
     while (this._disposables.length) {
       const x = this._disposables.pop();
-      if (x) { x.dispose(); }
+      if (x) {
+        x.dispose();
+      }
     }
   }
 
@@ -289,18 +330,24 @@ export class ScaffoldWizardPanel {
     try {
       const { filePath: relPath, content } = generateContent(data);
       const fullPath = vscode.Uri.file(path.join(root, relPath));
-      const dirPath  = vscode.Uri.file(path.dirname(fullPath.fsPath));
+      const dirPath = vscode.Uri.file(path.dirname(fullPath.fsPath));
 
       await vscode.workspace.fs.createDirectory(dirPath);
       await vscode.workspace.fs.writeFile(fullPath, Buffer.from(content, 'utf-8'));
 
       const doc = await vscode.workspace.openTextDocument(fullPath);
       await vscode.window.showTextDocument(doc);
-      vscode.window.showInformationMessage(`✨ Criado ${data.type}: ${data.name}`);
+      this._hasCreatedPackage = true;
+      vscode.window.showInformationMessage(`Novo ${data.type} criado: ${data.name}.`);
 
       void this._panel.webview.postMessage({ type: 'success', filePath: relPath });
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
+      UxDiagnosticsService.getInstance().track('panel.scaffold.createFailed', {
+        surface: 'panel',
+        category: UxDiagnosticsService.categorizeError(err),
+        step: this._lastStep,
+      });
       void this._panel.webview.postMessage({ type: 'error', message: msg });
     }
   }
@@ -312,7 +359,7 @@ export class ScaffoldWizardPanel {
       vscode.Uri.joinPath(this._extensionUri, 'media', 'webview', 'main.css'),
     );
 
-    return /* html */`<!DOCTYPE html>
+    return /* html */ `<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
@@ -367,12 +414,31 @@ export class ScaffoldWizardPanel {
       font-family: inherit; width: 100%; box-sizing: border-box;
       transition: border-color 0.15s;
     }
-    .sw-input:focus, .sw-textarea:focus { outline: none; border-color: var(--orange); }
-    .sw-input.error { border-color: #f44336; }
+    .sw-input:focus, .sw-textarea:focus, .sw-select:focus {
+      outline: 2px solid rgba(236,112,0,.28);
+      outline-offset: 2px;
+      border-color: var(--orange);
+      box-shadow: 0 0 0 3px rgba(236,112,0,.14);
+    }
+    .sw-input.error, .sw-textarea.error, .sw-select.error { border-color: #f44336; }
+    .sw-field.invalid .sw-label { color: #ffb4ac; }
     .sw-textarea { resize: vertical; min-height: 80px; }
     .sw-hint { font-size: 0.73rem; color: var(--vscode-descriptionForeground); }
     .sw-err { font-size: 0.73rem; color: #f44336; display: none; }
     .sw-err.visible { display: block; }
+    .sw-summary {
+      display: none;
+      padding: 12px 14px;
+      border-radius: 8px;
+      border: 1px solid rgba(255,179,0,.32);
+      background: rgba(255,179,0,.08);
+      color: var(--vscode-foreground);
+      font-size: 0.8rem;
+      line-height: 1.5;
+    }
+    .sw-summary.visible { display: block; }
+    .sw-summary.ok { border-color: rgba(0,200,83,.28); background: rgba(0,200,83,.08); }
+    .sw-summary strong { display: block; margin-bottom: 4px; }
     .sw-checkbox-row { display: flex; align-items: center; gap: 8px; cursor: pointer; }
     .sw-checkbox-row input { width: 16px; height: 16px; cursor: pointer; accent-color: var(--orange); }
 
@@ -380,6 +446,7 @@ export class ScaffoldWizardPanel {
     .sw-preview { background: var(--vscode-editor-background);
       border: 1px solid rgba(255,255,255,.08); border-radius: 8px;
       padding: 16px; overflow: auto; max-height: 380px; }
+    .sw-preview-loading { display: flex; flex-direction: column; gap: 10px; }
     .sw-preview pre { margin: 0; font-size: 0.78rem; white-space: pre-wrap;
       word-break: break-word; font-family: var(--vscode-editor-font-family, monospace); }
 
@@ -408,6 +475,7 @@ export class ScaffoldWizardPanel {
   </style>
 </head>
 <body>
+<div id="dai-toast-region" class="dai-toast-region" aria-live="polite" aria-atomic="false"></div>
 <div class="sw-container">
 
   <!-- Header -->
@@ -450,13 +518,14 @@ export class ScaffoldWizardPanel {
 
   // ── State ──────────────────────────────────────────────
   var currentStep = 1;
-  var formData = {
+  var DEFAULT_FORM_DATA = {
     type: null,
     name: '', displayName: '', description: '', author: '', tags: '',
     workflowPhase: 'execute', tools: 'read,edit,search', userInvocable: false,
     delegatesTo: '', relatedSkills: '',
     applyToAudience: '', applyTo: '**', promptMode: 'agent',
   };
+  var formData = Object.assign({}, DEFAULT_FORM_DATA);
 
   // ── Type definitions ────────────────────────────────────
   var TYPES = [
@@ -474,9 +543,31 @@ export class ScaffoldWizardPanel {
       .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   }
 
+  function showToast(kind, title, message, duration) {
+    var region = document.getElementById('dai-toast-region');
+    if (!region) { return; }
+    var icons = { success: 'OK', warning: '!', error: 'x', info: 'i' };
+    var toast = document.createElement('div');
+    toast.className = 'dai-toast dai-toast-' + (kind || 'info') + ' animate-slide-in';
+    toast.setAttribute('role', kind === 'error' ? 'alert' : 'status');
+    toast.innerHTML = '<span class="dai-toast-icon" aria-hidden="true">' + escHtml(icons[kind] || icons.info) + '</span>'
+      + '<div class="dai-toast-copy"><strong class="dai-toast-title">' + escHtml(title || 'Atualização') + '</strong>'
+      + (message ? '<span class="dai-toast-message">' + escHtml(message) + '</span>' : '')
+      + '</div>'
+      + '<button type="button" class="dai-toast-close" aria-label="Dispensar notificação">Fechar</button>';
+    var dismiss = function () {
+      toast.classList.add('dai-toast-leaving');
+      window.setTimeout(function () { toast.remove(); }, 180);
+    };
+    toast.querySelector('.dai-toast-close').addEventListener('click', dismiss, { once: true });
+    region.appendChild(toast);
+    window.setTimeout(dismiss, duration || 4200);
+  }
+
   // ── Steps indicator ─────────────────────────────────────
   function setStep(n) {
     currentStep = n;
+    vscode.postMessage({ type: 'progress', step: n });
     document.querySelectorAll('.sw-step').forEach(function (el) {
       var s = parseInt(el.dataset.step, 10);
       el.className = 'sw-step ' + (s < n ? 'done' : s === n ? 'active' : 'inactive');
@@ -497,7 +588,7 @@ export class ScaffoldWizardPanel {
     return '<div class="sw-type-grid">'
       + TYPES.map(function (t) {
           return '<div class="sw-type-card' + (formData.type === t.id ? ' selected' : '') + '"'
-            + ' data-type="' + t.id + '">'
+            + ' data-type="' + t.id + '" tabindex="0" role="button" aria-pressed="' + (formData.type === t.id ? 'true' : 'false') + '">'
             + '<div class="sw-type-card-icon">' + t.icon + '</div>'
             + '<div class="sw-type-card-name">' + t.name + '</div>'
             + '<div class="sw-type-card-desc">' + escHtml(t.desc) + '</div>'
@@ -513,12 +604,23 @@ export class ScaffoldWizardPanel {
 
   function bindStep1() {
     document.querySelectorAll('.sw-type-card').forEach(function (card) {
-      card.addEventListener('click', function () {
+      var activate = function () {
         formData.type = this.dataset.type;
-        document.querySelectorAll('.sw-type-card').forEach(function (c) { c.classList.remove('selected'); });
+        document.querySelectorAll('.sw-type-card').forEach(function (c) {
+          c.classList.remove('selected');
+          c.setAttribute('aria-pressed', 'false');
+        });
         this.classList.add('selected');
+        this.setAttribute('aria-pressed', 'true');
         document.getElementById('btn-step1-next').disabled = false;
-      }.bind(card));
+      }.bind(card);
+      card.addEventListener('click', activate);
+      card.addEventListener('keydown', function (event) {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          activate();
+        }
+      });
     });
     document.getElementById('btn-step1-next').addEventListener('click', function () {
       if (formData.type) { setStep(2); }
@@ -537,7 +639,8 @@ export class ScaffoldWizardPanel {
             + PHASES.map(function (p) { return '<option value="' + p + '"' + (formData.workflowPhase === p ? ' selected' : '') + '>' + p + '</option>'; }).join('')
             + '</select>')
         + field('sw-tools','Ferramentas <span>(separadas por vírgula)</span>',
-            '<input class="sw-input" id="sw-tools" value="' + escHtml(formData.tools) + '" placeholder="read,edit,search,run">')
+        '<input class="sw-input" id="sw-tools" value="' + escHtml(formData.tools) + '" placeholder="read,edit,search,run">'
+        + '<div class="sw-err" id="sw-tools-err">Informe pelo menos uma ferramenta para o agent.</div>')
         + field('sw-delegates','Delega para <span>(IDs separados por vírgula)</span>',
             '<input class="sw-input" id="sw-delegates" value="' + escHtml(formData.delegatesTo) + '" placeholder="agent-backend,agent-tester">')
         + field('sw-skills','Skills Relacionadas <span>(IDs separados por vírgula)</span>',
@@ -549,7 +652,8 @@ export class ScaffoldWizardPanel {
       typeSpecific = '<div class="sw-section-title">⚙️ Opções da Instruction</div>'
         + field('sw-applyto','Padrão applyTo <span>(glob)</span>',
             '<input class="sw-input" id="sw-applyto" value="' + escHtml(formData.applyTo) + '" placeholder="**">'
-            + '<div class="sw-hint">Exemplos: <code>**</code> (tudo), <code>**/*.ts</code> (TypeScript), <code>src/**</code></div>');
+            + '<div class="sw-hint">Exemplos: <code>**</code> (tudo), <code>**/*.ts</code> (TypeScript), <code>src/**</code></div>'
+            + '<div class="sw-err" id="sw-applyto-err">Defina um padrão applyTo para a instruction.</div>');
     } else if (formData.type === 'prompt') {
       typeSpecific = '<div class="sw-section-title">⚙️ Opções do Prompt</div>'
         + field('sw-mode','Modo',
@@ -566,20 +670,24 @@ export class ScaffoldWizardPanel {
       + '<div class="sw-section-title">' + (t ? t.icon + ' ' + t.name : '') + ' — Informações Básicas</div>'
       + field('sw-name','Nome do pacote <span>(slug: letras minúsculas e hífens)</span>',
           '<input class="sw-input" id="sw-name" value="' + escHtml(formData.name) + '" placeholder="meu-agent-customizado">'
-          + '<div class="sw-err" id="sw-name-err">apenas letras minúsculas, números e hífens</div>')
+          + '<div class="sw-err" id="sw-name-err">Use apenas letras minúsculas, números e hífens.</div>')
       + field('sw-displayname','Nome de exibição',
-          '<input class="sw-input" id="sw-displayname" value="' + escHtml(formData.displayName) + '" placeholder="Meu Agent Customizado">')
+          '<input class="sw-input" id="sw-displayname" value="' + escHtml(formData.displayName) + '" placeholder="Meu Agent Customizado">'
+          + '<div class="sw-err" id="sw-displayname-err">Informe um nome de exibição com pelo menos 3 caracteres.</div>')
       + field('sw-description','Descrição',
-          '<textarea class="sw-textarea" id="sw-description">' + escHtml(formData.description) + '</textarea>')
+          '<textarea class="sw-textarea" id="sw-description">' + escHtml(formData.description) + '</textarea>'
+          + '<div class="sw-err" id="sw-description-err">Descreva o pacote com pelo menos 12 caracteres.</div>')
       + field('sw-author','Autor',
-          '<input class="sw-input" id="sw-author" value="' + escHtml(formData.author) + '" placeholder="sua-equipe">')
+          '<input class="sw-input" id="sw-author" value="' + escHtml(formData.author) + '" placeholder="sua-equipe">'
+          + '<div class="sw-err" id="sw-author-err">Informe o autor ou equipe responsável.</div>')
       + field('sw-tags','Tags <span>(separadas por vírgula)</span>',
           '<input class="sw-input" id="sw-tags" value="' + escHtml(formData.tags) + '" placeholder="custom,backend">')
       + typeSpecific
+        + '<div class="sw-summary" id="sw-step2-summary" role="alert" aria-live="polite"></div>'
       + '</div>'
       + '<div class="sw-actions">'
       + '<button class="sw-btn sw-btn-secondary" id="btn-step2-back">← Voltar</button>'
-      + '<button class="sw-btn sw-btn-primary" id="btn-step2-next">Prévia →</button>'
+        + '<button class="sw-btn sw-btn-primary" id="btn-step2-next">Prévia →</button>'
       + '</div>';
   }
 
@@ -612,43 +720,158 @@ export class ScaffoldWizardPanel {
     Object.keys(inputs).forEach(function (id) {
       var el = document.getElementById(id);
       if (!el) { return; }
-      el.addEventListener('input', function () { inputs[id](this.value); });
-      el.addEventListener('change', function () { inputs[id](this.value); });
+      var sync = function () {
+        inputs[id](this.value);
+        validateStep2(false);
+      };
+      el.addEventListener('input', sync);
+      el.addEventListener('change', sync);
     });
 
     var invocable = document.getElementById('sw-invocable');
     if (invocable) {
-      invocable.addEventListener('change', function () { formData.userInvocable = this.checked; });
+      invocable.addEventListener('change', function () {
+        formData.userInvocable = this.checked;
+        validateStep2(false);
+      });
     }
 
     document.getElementById('btn-step2-back').addEventListener('click', function () { setStep(1); });
     document.getElementById('btn-step2-next').addEventListener('click', function () {
-      if (validateStep2()) { setStep(3); }
+      if (validateStep2(true)) { setStep(3); }
     });
+    validateStep2(false);
   }
 
-  function validateStep2() {
-    var name    = (formData.name || '').trim();
-    var nameErr = document.getElementById('sw-name-err');
-    var nameIn  = document.getElementById('sw-name');
+  function setFieldError(id, message) {
+    var field = document.getElementById(id);
+    var error = document.getElementById(id + '-err');
+    var wrapper = field ? field.closest('.sw-field') : null;
+    if (!field || !error) { return; }
+    if (message) {
+      field.classList.add('error');
+      field.setAttribute('aria-invalid', 'true');
+      error.textContent = message;
+      error.classList.add('visible');
+      if (wrapper) { wrapper.classList.add('invalid'); }
+      return;
+    }
+    field.classList.remove('error');
+    field.removeAttribute('aria-invalid');
+    error.textContent = '';
+    error.classList.remove('visible');
+    if (wrapper) { wrapper.classList.remove('invalid'); }
+  }
+
+  function updateStep2Summary(errors) {
+    var summary = document.getElementById('sw-step2-summary');
+    if (!summary) { return; }
+    summary.classList.add('visible');
+    if (errors.length > 0) {
+      summary.classList.remove('ok');
+      summary.innerHTML = '<strong>Revise os campos antes de continuar</strong>' + escHtml(errors.join(' • '));
+      return;
+    }
+    summary.classList.add('ok');
+    summary.innerHTML = '<strong>Pronto para gerar a prévia</strong>Os campos obrigatórios passaram na validação local.';
+  }
+
+  function validateStep2(announce) {
+    var errors = [];
+    var firstInvalid = null;
+    var name = (formData.name || '').trim();
+    var displayName = (formData.displayName || '').trim();
+    var description = (formData.description || '').trim();
+    var author = (formData.author || '').trim();
+
     if (!name || !/^[a-z0-9-]+$/.test(name)) {
-      nameErr.classList.add('visible');
-      nameIn.classList.add('error');
-      nameIn.focus();
+      var nameMessage = 'Use apenas letras minúsculas, números e hífens no nome do pacote.';
+      setFieldError('sw-name', nameMessage);
+      errors.push(nameMessage);
+      firstInvalid = firstInvalid || document.getElementById('sw-name');
+    } else {
+      setFieldError('sw-name', '');
+    }
+
+    if (displayName.length < 3) {
+      var displayMessage = 'Informe um nome de exibição com pelo menos 3 caracteres.';
+      setFieldError('sw-displayname', displayMessage);
+      errors.push(displayMessage);
+      firstInvalid = firstInvalid || document.getElementById('sw-displayname');
+    } else {
+      setFieldError('sw-displayname', '');
+    }
+
+    if (description.length < 12) {
+      var descriptionMessage = 'Descreva o pacote com pelo menos 12 caracteres.';
+      setFieldError('sw-description', descriptionMessage);
+      errors.push(descriptionMessage);
+      firstInvalid = firstInvalid || document.getElementById('sw-description');
+    } else {
+      setFieldError('sw-description', '');
+    }
+
+    if (author.length < 2) {
+      var authorMessage = 'Informe o autor ou equipe responsável.';
+      setFieldError('sw-author', authorMessage);
+      errors.push(authorMessage);
+      firstInvalid = firstInvalid || document.getElementById('sw-author');
+    } else {
+      setFieldError('sw-author', '');
+    }
+
+    if (formData.type === 'agent') {
+      var tools = String(formData.tools || '')
+        .split(',')
+        .map(function (item) { return item.trim(); })
+        .filter(Boolean);
+      if (tools.length === 0) {
+        var toolsMessage = 'Informe ao menos uma ferramenta para o agent.';
+        setFieldError('sw-tools', toolsMessage);
+        errors.push(toolsMessage);
+        firstInvalid = firstInvalid || document.getElementById('sw-tools');
+      } else {
+        setFieldError('sw-tools', '');
+      }
+    }
+
+    if (formData.type === 'instruction') {
+      var applyTo = (formData.applyTo || '').trim();
+      if (!applyTo) {
+        var applyMessage = 'Defina um padrão applyTo para a instruction.';
+        setFieldError('sw-applyto', applyMessage);
+        errors.push(applyMessage);
+        firstInvalid = firstInvalid || document.getElementById('sw-applyto');
+      } else {
+        setFieldError('sw-applyto', '');
+      }
+    }
+
+    updateStep2Summary(errors);
+    var nextBtn = document.getElementById('btn-step2-next');
+    if (nextBtn) { nextBtn.disabled = errors.length > 0; }
+    if (announce && errors.length > 0) {
+      showToast('warning', 'Revise os campos obrigatórios', errors[0]);
+      if (firstInvalid && typeof firstInvalid.focus === 'function') {
+        firstInvalid.focus();
+      }
       return false;
     }
-    nameErr.classList.remove('visible');
-    nameIn.classList.remove('error');
-    if (!formData.displayName) { formData.displayName = name; }
-    if (!formData.description) { formData.description = name + ' — pacote customizado'; }
-    return true;
+    return errors.length === 0;
   }
 
   // ── Step 3: Preview ─────────────────────────────────────
   function renderStep3() {
     return '<div class="sw-form">'
       + '<div class="sw-section-title">📄 Pré-visualização do Arquivo</div>'
-      + '<div class="sw-preview" id="sw-preview-box"><pre id="sw-preview-content">Gerando prévia…</pre></div>'
+      + '<div class="sw-preview" id="sw-preview-box" aria-live="polite">'
+      + '<div class="sw-preview-loading" id="sw-preview-loading">'
+      + '<div class="dai-skeleton-line" data-size="lg" style="width:68%"></div>'
+      + '<div class="dai-skeleton-line" style="width:94%"></div>'
+      + '<div class="dai-skeleton-line" style="width:88%"></div>'
+      + '<div class="dai-skeleton-line" style="width:76%"></div>'
+      + '</div>'
+      + '<pre id="sw-preview-content" hidden>Gerando prévia…</pre></div>'
       + '</div>'
       + '<div class="sw-actions">'
       + '<button class="sw-btn sw-btn-secondary" id="btn-step3-back">← Editar</button>'
@@ -666,6 +889,10 @@ export class ScaffoldWizardPanel {
   }
 
   function requestPreview() {
+    var preview = document.getElementById('sw-preview-content');
+    var loading = document.getElementById('sw-preview-loading');
+    if (preview) { preview.hidden = true; }
+    if (loading) { loading.hidden = false; }
     vscode.postMessage({ type: 'preview', data: formData });
   }
 
@@ -675,11 +902,17 @@ export class ScaffoldWizardPanel {
 
     if (msg.type === 'previewResult') {
       var pre = document.getElementById('sw-preview-content');
-      if (pre) { pre.textContent = msg.content; }
+      var loading = document.getElementById('sw-preview-loading');
+      if (loading) { loading.hidden = true; }
+      if (pre) {
+        pre.hidden = false;
+        pre.textContent = msg.content;
+      }
       return;
     }
 
     if (msg.type === 'success') {
+      showToast('success', 'Pacote criado com sucesso', 'O novo arquivo já está disponível no editor.');
       var el = document.getElementById('sw-content');
       el.innerHTML = '<div class="sw-success">'
         + '<div class="sw-success-icon">🎉</div>'
@@ -690,9 +923,7 @@ export class ScaffoldWizardPanel {
         + '</div>';
       document.querySelectorAll('.sw-step').forEach(function (s) { s.className = 'sw-step done'; });
       document.getElementById('btn-create-another').addEventListener('click', function () {
-        formData = { type: null, name: '', displayName: '', description: '', author: '', tags: '',
-          workflowPhase: 'execute', tools: 'read,edit,search', userInvocable: false,
-          delegatesTo: '', relatedSkills: '', applyToAudience: '', applyTo: '**', promptMode: 'agent' };
+        formData = Object.assign({}, DEFAULT_FORM_DATA);
         setStep(1);
       });
       return;
@@ -701,13 +932,7 @@ export class ScaffoldWizardPanel {
     if (msg.type === 'error') {
       var btn = document.getElementById('btn-step3-create');
       if (btn) { btn.disabled = false; btn.textContent = '✨ Criar Pacote'; }
-      var box = document.getElementById('sw-preview-box');
-      if (box) {
-        var errDiv = document.createElement('div');
-        errDiv.style.cssText = 'color:#f44336;font-size:.8rem;margin-top:8px;';
-        errDiv.textContent = '❌ Erro: ' + msg.message;
-        box.appendChild(errDiv);
-      }
+      showToast('error', 'Falha ao criar pacote', msg.message || 'Não foi possível concluir a criação do pacote.');
     }
   });
 

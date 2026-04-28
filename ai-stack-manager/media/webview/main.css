@@ -10,7 +10,7 @@
  * - Funciona automaticamente com qualquer tema do VS Code
  */
 
-/* 
+/*
    RESET & BASE
     */
 
@@ -50,7 +50,7 @@ body {
   min-height: 100vh;
 }
 
-/* 
+/*
    CONTAINER
     */
 
@@ -61,7 +61,7 @@ body {
   gap: 12px;
 }
 
-/* 
+/*
    HEADER & LOGO
     */
 
@@ -109,7 +109,7 @@ body {
   font-weight: 400;
 }
 
-/* 
+/*
    SEARCH
     */
 
@@ -171,7 +171,7 @@ body {
   background: rgba(255, 255, 255, 0.1);
 }
 
-/* 
+/*
    FILTER CHIPS
     */
 
@@ -209,7 +209,7 @@ body {
   font-weight: 600;
 }
 
-/* 
+/*
    SECTION HEADERS
     */
 
@@ -243,7 +243,7 @@ body {
   font-weight: 600;
 }
 
-/* 
+/*
    BUNDLE CARDS
     */
 
@@ -316,7 +316,7 @@ body {
   font-weight: 500;
 }
 
-/* 
+/*
    PACKAGE CARDS
     */
 
@@ -476,7 +476,7 @@ body {
   text-decoration: none;
 }
 
-/* 
+/*
    INSTALLED VIEW
     */
 
@@ -571,7 +571,7 @@ body {
   border: 1px solid rgba(100, 180, 255, 0.3);
 }
 
-/* 
+/*
    HEALTH VIEW
     */
 
@@ -732,7 +732,7 @@ body {
   margin-top: 2px;
 }
 
-/* 
+/*
    BUTTONS
     */
 
@@ -848,7 +848,7 @@ body {
   margin-top: -50px;
 }
 
-/* 
+/*
    SPINNER
     */
 
@@ -862,7 +862,7 @@ body {
   animation: spin 0.6s linear infinite;
 }
 
-/* 
+/*
    EMPTY STATE
     */
 
@@ -891,7 +891,7 @@ body {
   opacity: 0.35;
 }
 
-/* 
+/*
    SCROLLBAR STYLING
     */
 
@@ -912,7 +912,7 @@ body {
   background: rgba(236, 112, 0, 0.4);
 }
 
-/* 
+/*
    DESCOMPLICAI BRAND & ANIMATED LOGO
     */
 
@@ -965,13 +965,13 @@ body {
 .dai-layer-1 {
   transform: rotateX(60deg) rotateZ(-45deg) translateZ(-8px);
   animation: stack-drop-1 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
-  background: linear-gradient(135deg, #003366, #448AFF);
+  background: linear-gradient(135deg, #003366, #448aff);
 }
 
 .dai-layer-2 {
   transform: rotateX(60deg) rotateZ(-45deg) translateZ(0px);
   animation: stack-drop-2 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) 0.2s both;
-  background: linear-gradient(135deg, #7C4DFF, #AB47BC);
+  background: linear-gradient(135deg, #7c4dff, #ab47bc);
 }
 
 .dai-layer-3 {
@@ -993,13 +993,13 @@ body {
 }
 
 .dai-brand-ai {
-  background: linear-gradient(90deg, var(--itau-primary), #FFB300);
+  background: linear-gradient(90deg, var(--itau-primary), #ffb300);
   background-clip: text;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
-/* 
+/*
    EXPANDABLE CARDS & NETWORK TREE
     */
 
@@ -1109,7 +1109,7 @@ body {
   border-radius: 3px;
 }
 
-/* 
+/*
    NEW KEYFRAMES
     */
 
@@ -1253,7 +1253,7 @@ body {
 .dai-card:hover {
   border-color: rgba(255, 255, 255, 0.12);
   background: var(--vscode-list-hoverBackground, rgba(255, 255, 255, 0.04));
-  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
 .dai-card.installed {
@@ -1280,7 +1280,7 @@ body {
   gap: 8px;
   margin: 8px 0;
   padding-top: 8px;
-  border-top: 1px solid rgba(255,255,255,0.05);
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .dai-meta-item {
@@ -1307,9 +1307,9 @@ body {
   display: none;
   margin-top: 12px;
   padding: 12px;
-  background: rgba(0,0,0,0.15);
+  background: rgba(0, 0, 0, 0.15);
   border-radius: 6px;
-  border: 1px solid var(--vscode-widget-border, rgba(255,255,255,0.05));
+  border: 1px solid var(--vscode-widget-border, rgba(255, 255, 255, 0.05));
   animation: slide-down 0.2s ease-out forwards;
 }
 
@@ -1351,13 +1351,13 @@ body {
   font-family: var(--vscode-editor-font-family, monospace);
   padding: 2px 6px;
   border-radius: 4px;
-  background: rgba(255,255,255,0.08);
+  background: rgba(255, 255, 255, 0.08);
   color: var(--vscode-foreground);
 }
 
 .dai-complexity-bar {
   height: 6px;
-  background: rgba(255,255,255,0.1);
+  background: rgba(255, 255, 255, 0.1);
   border-radius: 3px;
   overflow: hidden;
   margin-top: 4px;
@@ -1379,7 +1379,7 @@ body {
 .dai-network-tree {
   margin: 6px 0;
   padding-left: 8px;
-  border-left: 1px solid rgba(255,255,255,0.1);
+  border-left: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .dai-network-node {
@@ -1392,7 +1392,7 @@ body {
 }
 
 .dai-node-connector {
-  color: rgba(255,255,255,0.2);
+  color: rgba(255, 255, 255, 0.2);
 }
 
 .dai-network-hint {
@@ -1498,22 +1498,25 @@ body {
 .dai-slider-switch {
   position: absolute;
   cursor: pointer;
-  top: 0; left: 0; right: 0; bottom: 0;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   background-color: var(--vscode-editorWidget-background);
-  transition: .4s;
+  transition: 0.4s;
   border-radius: 20px;
   border: 1px solid var(--vscode-widget-border);
 }
 
 .dai-slider-switch:before {
   position: absolute;
-  content: "";
+  content: '';
   height: 14px;
   width: 14px;
   left: 2px;
   bottom: 2px;
   background-color: var(--vscode-foreground);
-  transition: .4s;
+  transition: 0.4s;
   border-radius: 50%;
 }
 
@@ -1525,4 +1528,1016 @@ input:checked + .dai-slider-switch {
 input:checked + .dai-slider-switch:before {
   transform: translateX(16px);
   background-color: #fff;
+}
+
+/*
+   UI ELEVATION OVERRIDES
+*/
+
+:root {
+  --dai-surface-1: rgba(255, 255, 255, 0.04);
+  --dai-surface-2: rgba(255, 255, 255, 0.08);
+  --dai-surface-3: rgba(255, 255, 255, 0.12);
+  --dai-border-soft: rgba(255, 255, 255, 0.12);
+  --dai-border-strong: rgba(var(--dai-accent-rgb), 0.28);
+  --dai-text-muted: var(--vscode-descriptionForeground, rgba(255, 255, 255, 0.76));
+  --dai-text-subtle: rgba(255, 255, 255, 0.66);
+  --dai-surface-glass: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.05),
+    rgba(255, 255, 255, 0.02)
+  );
+}
+
+body.vscode-light {
+  --dai-surface-1: rgba(0, 0, 0, 0.03);
+  --dai-surface-2: rgba(0, 0, 0, 0.055);
+  --dai-surface-3: rgba(0, 0, 0, 0.08);
+  --dai-border-soft: rgba(0, 0, 0, 0.12);
+  --dai-text-subtle: rgba(0, 0, 0, 0.64);
+  --dai-surface-glass: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.94),
+    rgba(255, 255, 255, 0.78)
+  );
+}
+
+body.vscode-high-contrast,
+body.vscode-high-contrast-light {
+  --dai-surface-1: transparent;
+  --dai-surface-2: transparent;
+  --dai-surface-3: transparent;
+  --dai-border-soft: var(--vscode-contrastBorder, var(--vscode-focusBorder, currentColor));
+  --dai-border-strong: var(--vscode-focusBorder, currentColor);
+}
+
+body {
+  color: var(--vscode-foreground);
+  background:
+    radial-gradient(circle at top left, rgba(var(--dai-accent-rgb), 0.12), transparent 34%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.02), transparent 24%),
+    var(--vscode-editor-background);
+}
+
+body.vscode-light {
+  background:
+    radial-gradient(circle at top left, rgba(var(--dai-accent-rgb), 0.09), transparent 34%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(255, 255, 255, 0.84)),
+    var(--vscode-editor-background);
+}
+
+.dai-container {
+  gap: 16px;
+  padding: 0 12px 20px;
+}
+
+.dai-header {
+  margin-top: 12px;
+  padding: 18px 16px 14px;
+  border: 1px solid var(--dai-border-soft);
+  border-radius: var(--dai-radius-lg);
+  background:
+    linear-gradient(135deg, rgba(var(--dai-accent-rgb), 0.18), transparent 52%),
+    var(--dai-surface-glass), var(--vscode-editor-background);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  box-shadow: var(--dai-shadow-sm);
+}
+
+.dai-logo-hero,
+.dai-logo-animated {
+  align-items: flex-start;
+  gap: 14px;
+}
+
+.dai-header-mark,
+.dai-health-mark {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.dai-logo-text {
+  gap: 6px;
+  min-width: 0;
+}
+
+.dai-brand-kicker,
+.dai-health-kicker,
+.dai-operation-kicker {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--dai-text-muted);
+}
+
+.dai-brand {
+  font-size: 20px;
+  font-weight: 800;
+  line-height: 1;
+  color: var(--vscode-foreground);
+}
+
+.dai-brand-ai {
+  background: linear-gradient(90deg, var(--itau-primary), var(--itau-primary-light));
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.dai-logo-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.dai-tagline,
+.dai-bundle-desc,
+.dai-card-desc,
+.dai-card-inline-meta,
+.dai-installed-path,
+.dai-empty-hint,
+.dai-health-subtitle,
+.dai-finding-message,
+.dai-form-hint,
+.dai-rec-msg,
+.dai-network-hint,
+.dai-cat-desc,
+.dai-alert-desc,
+.alert-desc {
+  opacity: 1;
+  color: var(--dai-text-muted);
+}
+
+.dai-tag {
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: var(--dai-surface-2);
+  color: var(--vscode-foreground);
+  opacity: 1;
+}
+
+.dai-status-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 28px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--dai-border-soft);
+  background: var(--dai-surface-2);
+  color: var(--vscode-foreground);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.dai-status-pill-ready {
+  border-color: rgba(var(--dai-success-rgb), 0.32);
+  background: rgba(var(--dai-success-rgb), 0.14);
+  color: var(--itau-success);
+}
+
+.dai-status-pill-active {
+  border-color: rgba(var(--dai-accent-rgb), 0.34);
+  background: rgba(var(--dai-accent-rgb), 0.14);
+  color: var(--itau-primary-light);
+}
+
+.dai-status-pill-warning {
+  border-color: rgba(var(--dai-warning-rgb), 0.32);
+  background: rgba(var(--dai-warning-rgb), 0.14);
+  color: var(--itau-warning);
+}
+
+.dai-status-pill-idle {
+  border-color: var(--dai-border-soft);
+  background: var(--dai-surface-1);
+  color: var(--dai-text-muted);
+}
+
+.dai-search-wrapper {
+  min-height: 44px;
+}
+
+.dai-search-input {
+  min-height: 42px;
+  padding: 11px 38px 11px 34px;
+  border-radius: 14px;
+  border-color: var(--dai-border-soft);
+  background: var(--dai-surface-glass);
+  color: var(--vscode-input-foreground, inherit);
+}
+
+.dai-search-input::placeholder {
+  color: var(--dai-text-subtle);
+  opacity: 1;
+}
+
+.dai-search-clear {
+  min-height: 28px;
+  min-width: 28px;
+}
+
+.dai-filters {
+  gap: 6px;
+}
+
+.dai-filter-chip {
+  min-height: 30px;
+  padding: 5px 12px;
+  border-radius: 999px;
+  border-color: var(--dai-border-soft);
+  opacity: 1;
+  color: var(--dai-text-muted);
+}
+
+.dai-filter-chip:hover,
+.dai-filter-chip:focus-visible {
+  background: rgba(var(--dai-accent-rgb), 0.12);
+  color: var(--vscode-foreground);
+}
+
+.dai-filter-chip.active {
+  box-shadow: 0 10px 24px rgba(var(--dai-accent-rgb), 0.22);
+}
+
+.dai-section-header {
+  gap: 12px;
+  align-items: center;
+}
+
+.dai-section-title {
+  color: var(--dai-text-muted);
+  opacity: 1;
+}
+
+.dai-section-count {
+  padding: 3px 9px;
+  border-radius: 999px;
+}
+
+.dai-recommendation-banner,
+.dai-operation-banner,
+.dai-installed-summary,
+.dai-health-hero,
+.dai-health-score,
+.dai-bundle-card,
+.dai-card,
+.dai-installed-item,
+.dai-finding,
+.alert-item,
+.dai-empty {
+  border: 1px solid var(--dai-border-soft);
+  background: var(--dai-surface-glass);
+  box-shadow: var(--dai-shadow-sm);
+}
+
+.dai-recommendation-banner {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 12px;
+  align-items: center;
+  margin: 0;
+  padding: 14px 16px;
+  border-radius: 16px;
+  border-color: rgba(var(--dai-accent-rgb), 0.26);
+  background:
+    linear-gradient(135deg, rgba(var(--dai-accent-rgb), 0.14), transparent 54%),
+    var(--dai-surface-glass), var(--vscode-editor-background);
+}
+
+.dai-rec-icon {
+  font-size: 20px;
+  margin-top: 0;
+}
+
+.dai-rec-content {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.dai-rec-msg b {
+  color: var(--vscode-foreground);
+}
+
+.dai-operation-banner {
+  padding: 14px 16px;
+  border-radius: 16px;
+  border-color: rgba(var(--dai-accent-rgb), 0.28);
+  background:
+    linear-gradient(135deg, rgba(var(--dai-accent-rgb), 0.12), transparent 58%),
+    var(--dai-surface-glass), var(--vscode-editor-background);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.dai-operation-head {
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.dai-operation-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.dai-operation-label {
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.dai-operation-message {
+  font-size: 12px;
+  color: var(--dai-text-muted);
+  line-height: 1.45;
+}
+
+.dai-progress-track {
+  height: 8px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.dai-progress-value {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--itau-primary-dark), var(--itau-primary-light));
+  box-shadow: 0 0 20px rgba(var(--dai-accent-rgb), 0.34);
+  transition: width var(--dai-duration-slow) var(--dai-ease-standard);
+}
+
+.dai-bundle-card,
+.dai-card {
+  border-radius: 18px;
+  padding: 14px;
+  margin-bottom: 0;
+  overflow: hidden;
+}
+
+.dai-bundle-card:hover,
+.dai-card:hover,
+.dai-installed-item:hover,
+.dai-finding:hover,
+.alert-item:hover {
+  border-color: var(--dai-border-strong);
+  transform: translateY(-2px);
+  box-shadow: var(--dai-shadow-md);
+}
+
+.dai-bundle-content,
+.dai-card-body {
+  gap: 6px;
+}
+
+.dai-bundle-name,
+.dai-card-name,
+.dai-installed-name,
+.dai-finding-title {
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.dai-card-header {
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.dai-card-version {
+  position: static;
+  display: inline-flex;
+  margin-top: 6px;
+  font-size: 10px;
+  color: var(--dai-text-muted);
+  opacity: 1;
+}
+
+.dai-card-badge {
+  padding: 4px 9px;
+  border-radius: 999px;
+}
+
+.dai-card-meta {
+  margin: 10px 0 0;
+  padding-top: 10px;
+  flex-wrap: wrap;
+  gap: 6px;
+  border-top-color: var(--dai-border-soft);
+}
+
+.dai-meta-item {
+  min-height: 24px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: var(--dai-surface-1);
+  color: var(--dai-text-muted);
+}
+
+.dai-installed-indicator {
+  margin-top: 10px;
+  color: var(--itau-success);
+}
+
+.dai-card-details {
+  margin-top: 14px;
+  padding: 14px;
+  border-radius: 14px;
+  border-color: var(--dai-border-soft);
+  background: rgba(0, 0, 0, 0.14);
+}
+
+body.vscode-light .dai-card-details {
+  background: rgba(255, 255, 255, 0.74);
+}
+
+.dai-card-details.open {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.dai-detail-label,
+.dai-form-label {
+  color: var(--dai-text-muted);
+}
+
+.dai-detail-value {
+  color: var(--vscode-foreground);
+}
+
+.dai-tool-chip,
+.dai-link-chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 4px 9px;
+  border-radius: 999px;
+  border: 1px solid var(--dai-border-soft);
+  background: var(--dai-surface-1);
+  color: var(--vscode-foreground);
+}
+
+.dai-link-chip:hover,
+.dai-link-chip:focus-visible {
+  border-color: var(--dai-border-strong);
+  color: var(--vscode-foreground);
+}
+
+.dai-complexity-bar {
+  height: 8px;
+  border-radius: 999px;
+}
+
+.dai-card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.dai-card-actions > .dai-card-tags {
+  margin-right: auto;
+}
+
+.dai-installed-summary {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 12px;
+  align-items: center;
+  padding: 16px;
+  border-radius: 16px;
+}
+
+.dai-summary-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+}
+
+.dai-summary-number {
+  font-size: 28px;
+}
+
+.dai-summary-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.dai-summary-label {
+  color: var(--dai-text-muted);
+  opacity: 1;
+}
+
+.dai-installed-item {
+  padding: 14px;
+  border-radius: 16px;
+  border-left-width: 4px;
+  align-items: flex-start;
+}
+
+.dai-installed-actions {
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.dai-installed-path {
+  max-width: 100%;
+}
+
+.dai-health-hero,
+.dai-health-score {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 20px 18px;
+  border-radius: 18px;
+  text-align: center;
+}
+
+.dai-health-stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  padding: 0;
+  border: none;
+}
+
+.dai-stat {
+  padding: 12px;
+  border-radius: 14px;
+  border: 1px solid var(--dai-border-soft);
+  background: var(--dai-surface-glass);
+}
+
+.dai-score-number {
+  font-size: 32px;
+}
+
+.dai-score-text,
+.dai-score-label,
+.dai-stat-label,
+.dai-finding-category,
+.dai-form-hint {
+  opacity: 1;
+  color: var(--dai-text-muted);
+}
+
+.dai-score-ring svg {
+  filter: drop-shadow(0 16px 30px rgba(var(--dai-accent-rgb), 0.12));
+}
+
+.dai-finding {
+  border-radius: 16px;
+  padding: 12px;
+  transition:
+    transform var(--dai-duration-base) var(--dai-ease-standard),
+    box-shadow var(--dai-duration-base) var(--dai-ease-standard),
+    border-color var(--dai-duration-base) var(--dai-ease-standard);
+}
+
+.dai-finding.severity-error {
+  border-color: rgba(var(--dai-error-rgb), 0.28);
+  box-shadow: inset 3px 0 0 rgba(var(--dai-error-rgb), 0.86);
+}
+
+.dai-finding.severity-warning {
+  border-color: rgba(var(--dai-warning-rgb), 0.28);
+  box-shadow: inset 3px 0 0 rgba(var(--dai-warning-rgb), 0.82);
+}
+
+.dai-finding.severity-ok {
+  border-color: rgba(var(--dai-success-rgb), 0.24);
+  box-shadow: inset 3px 0 0 rgba(var(--dai-success-rgb), 0.78);
+}
+
+.dai-finding.severity-info {
+  border-color: rgba(var(--dai-info-rgb), 0.24);
+  box-shadow: inset 3px 0 0 rgba(var(--dai-info-rgb), 0.74);
+}
+
+.alert-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.alert-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px 14px;
+  border-radius: 14px;
+}
+
+.alert-title {
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.alert-desc {
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+.alert-item.ok {
+  border-color: rgba(var(--dai-success-rgb), 0.22);
+}
+
+.alert-item.warning {
+  border-color: rgba(var(--dai-error-rgb), 0.22);
+}
+
+.dai-btn {
+  min-height: 34px;
+  padding: 7px 12px;
+  border-radius: 12px;
+  border: 1px solid transparent;
+  box-shadow: none;
+}
+
+.dai-btn-sm {
+  min-height: 30px;
+  padding: 6px 10px;
+  border-radius: 10px;
+}
+
+.dai-btn-lg {
+  min-height: 40px;
+}
+
+.dai-btn-primary,
+.dai-btn-bundle {
+  background: linear-gradient(135deg, var(--itau-primary-dark), var(--itau-primary-light));
+  box-shadow: 0 12px 24px rgba(var(--dai-accent-rgb), 0.22);
+}
+
+.dai-btn-primary:hover,
+.dai-btn-bundle:hover {
+  box-shadow: 0 16px 28px rgba(var(--dai-accent-rgb), 0.3);
+}
+
+.dai-btn-ghost {
+  color: var(--vscode-foreground);
+  opacity: 1;
+  background: var(--dai-surface-1);
+  border-color: var(--dai-border-soft);
+}
+
+.dai-btn-ghost:hover {
+  background: var(--dai-surface-2);
+}
+
+.dai-btn-warning {
+  background: rgba(var(--dai-warning-rgb), 0.14);
+  color: var(--itau-warning);
+  border-color: rgba(var(--dai-warning-rgb), 0.28);
+}
+
+.dai-btn-danger {
+  background: rgba(var(--dai-error-rgb), 0.14);
+  color: var(--itau-error);
+  border-color: rgba(var(--dai-error-rgb), 0.24);
+}
+
+.dai-btn-loading {
+  opacity: 0.84;
+}
+
+.dai-input,
+.dai-slider-switch,
+.dai-search-input,
+.dai-filter-chip,
+.dai-btn,
+.dai-link-chip {
+  transition:
+    border-color var(--dai-duration-base) var(--dai-ease-standard),
+    background-color var(--dai-duration-base) var(--dai-ease-standard),
+    box-shadow var(--dai-duration-base) var(--dai-ease-standard),
+    transform var(--dai-duration-base) var(--dai-ease-standard);
+}
+
+.dai-btn:focus-visible,
+.dai-input:focus-visible,
+.dai-search-input:focus-visible,
+.dai-filter-chip:focus-visible,
+.dai-link-chip:focus-visible,
+.dai-search-clear:focus-visible {
+  outline: none;
+  border-color: var(--itau-primary) !important;
+  box-shadow: var(--dai-shadow-focus);
+}
+
+.dai-empty {
+  padding: 26px 18px;
+  border-radius: 18px;
+}
+
+@media (max-width: 420px) {
+  .dai-container {
+    padding: 0 8px 16px;
+  }
+
+  .dai-header,
+  .dai-recommendation-banner,
+  .dai-operation-head,
+  .dai-installed-summary,
+  .dai-installed-item,
+  .dai-card-actions {
+    grid-template-columns: 1fr;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .dai-recommendation-banner {
+    grid-template-columns: 1fr;
+  }
+
+  .dai-summary-meta,
+  .dai-logo-meta,
+  .dai-installed-actions {
+    justify-content: flex-start;
+  }
+
+  .dai-health-stats {
+    grid-template-columns: 1fr;
+  }
+
+  .dai-card-actions > .dai-card-tags {
+    margin-right: 0;
+  }
+}
+
+.dai-toast-region {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: min(360px, calc(100vw - 32px));
+  z-index: 900;
+  pointer-events: none;
+}
+
+.dai-toast {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 12px 14px;
+  border-radius: 16px;
+  border: 1px solid var(--dai-border-soft);
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.02)),
+    var(--vscode-editor-background);
+  box-shadow: var(--dai-shadow-md);
+  pointer-events: auto;
+}
+
+.dai-toast-success {
+  border-color: rgba(var(--dai-success-rgb), 0.34);
+}
+
+.dai-toast-warning {
+  border-color: rgba(var(--dai-warning-rgb), 0.34);
+}
+
+.dai-toast-error {
+  border-color: rgba(var(--dai-error-rgb), 0.36);
+}
+
+.dai-toast-info {
+  border-color: rgba(var(--dai-info-rgb), 0.28);
+}
+
+.dai-toast-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  min-height: 28px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  background: var(--dai-surface-2);
+  color: var(--vscode-foreground);
+}
+
+.dai-toast-success .dai-toast-icon {
+  background: rgba(var(--dai-success-rgb), 0.14);
+  color: var(--itau-success);
+}
+
+.dai-toast-warning .dai-toast-icon {
+  background: rgba(var(--dai-warning-rgb), 0.16);
+  color: var(--itau-warning);
+}
+
+.dai-toast-error .dai-toast-icon {
+  background: rgba(var(--dai-error-rgb), 0.16);
+  color: var(--itau-error);
+}
+
+.dai-toast-info .dai-toast-icon {
+  background: rgba(var(--dai-info-rgb), 0.16);
+  color: var(--itau-info);
+}
+
+.dai-toast-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.dai-toast-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--vscode-foreground);
+}
+
+.dai-toast-message {
+  font-size: 11px;
+  line-height: 1.45;
+  color: var(--dai-text-muted);
+}
+
+.dai-toast-close {
+  border: none;
+  background: transparent;
+  color: var(--dai-text-muted);
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.dai-toast-close:hover,
+.dai-toast-close:focus-visible {
+  color: var(--vscode-foreground);
+}
+
+.dai-toast-leaving {
+  opacity: 0;
+  transform: translateY(-6px);
+  transition:
+    opacity 160ms ease,
+    transform 160ms ease;
+}
+
+.dai-form-summary {
+  display: none;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(var(--dai-warning-rgb), 0.28);
+  background: rgba(var(--dai-warning-rgb), 0.12);
+  color: var(--vscode-foreground);
+}
+
+.dai-form-summary.visible {
+  display: flex;
+}
+
+.dai-form-summary[data-tone='success'] {
+  border-color: rgba(var(--dai-success-rgb), 0.28);
+  background: rgba(var(--dai-success-rgb), 0.12);
+}
+
+.dai-form-summary-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  min-height: 24px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 800;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.dai-form-summary-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.dai-form-summary-title {
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.dai-form-summary-message {
+  font-size: 11px;
+  line-height: 1.45;
+  color: var(--dai-text-muted);
+}
+
+.dai-field-error {
+  display: none;
+  margin-top: 6px;
+  font-size: 11px;
+  line-height: 1.4;
+  color: var(--itau-error);
+}
+
+.dai-field-error.visible {
+  display: block;
+}
+
+.dai-input-invalid,
+.dai-input[aria-invalid='true'],
+.dai-slider[aria-invalid='true'] {
+  border-color: rgba(var(--dai-error-rgb), 0.5) !important;
+  box-shadow: 0 0 0 3px rgba(var(--dai-error-rgb), 0.14) !important;
+}
+
+.dai-skeleton-block,
+.dai-skeleton-line,
+.dai-skeleton-pill {
+  position: relative;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.dai-skeleton-block::after,
+.dai-skeleton-line::after,
+.dai-skeleton-pill::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.18) 50%,
+    transparent 100%
+  );
+  animation: shimmer 1.45s ease-in-out infinite;
+}
+
+.dai-skeleton-block {
+  min-height: 120px;
+  border-radius: 18px;
+  border: 1px solid var(--dai-border-soft);
+}
+
+.dai-skeleton-line {
+  min-height: 12px;
+  border-radius: 999px;
+}
+
+.dai-skeleton-pill {
+  min-height: 28px;
+  min-width: 96px;
+  border-radius: 999px;
+}
+
+.dai-skeleton-line[data-size='lg'] {
+  min-height: 18px;
+}
+
+.dai-skeleton-line[data-size='sm'] {
+  min-height: 9px;
+}
+
+@media (max-width: 420px) {
+  .dai-toast-region {
+    top: 12px;
+    right: 12px;
+    left: 12px;
+    width: auto;
+  }
+
+  .dai-toast {
+    grid-template-columns: auto 1fr;
+  }
+
+  .dai-toast-close {
+    grid-column: 2;
+    justify-self: flex-end;
+  }
 }

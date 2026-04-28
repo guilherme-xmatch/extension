@@ -198,6 +198,23 @@
           "default": 0.2,
           "description": "Temperatura global para os agentes ZM1 (0.0 a 1.0)."
         },
+        "descomplicai.tokenLimit": {
+          "type": "number",
+          "default": 4096,
+          "minimum": 256,
+          "maximum": 128000,
+          "description": "Limite padrão de tokens por requisição para agentes configuráveis."
+        },
+        "descomplicai.autoApproveTerminal": {
+          "type": "boolean",
+          "default": false,
+          "description": "Permite auto-aprovação de comandos de terminal para agentes configurados explicitamente."
+        },
+        "descomplicai.allowExternalFsAccess": {
+          "type": "boolean",
+          "default": false,
+          "description": "Permite que agentes configurados leiam arquivos fora do workspace atual."
+        },
         "descomplicai.autoResolveDependencies": {
           "type": "boolean",
           "default": true,
@@ -217,6 +234,11 @@
           "type": "string",
           "default": "DescomplicAI",
           "description": "Repositório GitHub usado para coletar eventos de instalação agregados."
+        },
+        "descomplicai.uxDiagnostics.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Armazena localmente sinais agregados de UX, como abandonos, falhas recorrentes e ações repetidas, sem registrar conteúdo do usuário."
         }
       }
     }

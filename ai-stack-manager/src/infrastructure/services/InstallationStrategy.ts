@@ -27,8 +27,14 @@ async function fileExists(uri: vscode.Uri): Promise<boolean> {
   }
 }
 
-async function removeEmptyParent(dirPath: string, rootPath: string, logger: AppLogger): Promise<void> {
-  if (dirPath === rootPath || dirPath.length <= rootPath.length) { return; }
+async function removeEmptyParent(
+  dirPath: string,
+  rootPath: string,
+  logger: AppLogger,
+): Promise<void> {
+  if (dirPath === rootPath || dirPath.length <= rootPath.length) {
+    return;
+  }
   try {
     const uri = vscode.Uri.file(dirPath);
     const entries = await vscode.workspace.fs.readDirectory(uri);
@@ -57,15 +63,19 @@ export class FileCopyStrategy implements IInstallationStrategy {
       const exists = await fileExists(uri);
 
       if (exists) {
-        if (existingFileMode === 'skip') { continue; }
+        if (existingFileMode === 'skip') {
+          continue;
+        }
 
         const choice = await vscode.window.showWarningMessage(
-          `O arquivo "${file.relativePath}" já existe. Sobrescrever?`,
+          `O arquivo "${file.relativePath}" já existe no workspace. Escolha como deseja continuar.`,
           { modal: true },
           'Sobrescrever',
           'Pular',
         );
-        if (choice !== 'Sobrescrever') { continue; }
+        if (choice !== 'Sobrescrever') {
+          continue;
+        }
       }
 
       const dirUri = vscode.Uri.file(path.dirname(fullPath));
@@ -116,18 +126,23 @@ export class McpMergeStrategy implements IInstallationStrategy {
       normalized.servers[serverName] = serverConfig;
     }
     for (const input of mcpConfig.inputs) {
-      if (!normalized.inputs.some(e => e.id === input.id)) {
+      if (!normalized.inputs.some((e) => e.id === input.id)) {
         normalized.inputs.push(input);
       }
     }
 
-    await vscode.workspace.fs.writeFile(mcpUri, Buffer.from(JSON.stringify(normalized, null, 2), 'utf-8'));
+    await vscode.workspace.fs.writeFile(
+      mcpUri,
+      Buffer.from(JSON.stringify(normalized, null, 2), 'utf-8'),
+    );
   }
 
   async uninstall(root: string, pkg: Package): Promise<void> {
     const mcpPath = path.join(root, '.vscode', 'mcp.json');
     const mcpUri = vscode.Uri.file(mcpPath);
-    if (!(await fileExists(mcpUri))) { return; }
+    if (!(await fileExists(mcpUri))) {
+      return;
+    }
 
     const existing = await this.readJsonWithComments(mcpUri, { servers: {}, inputs: [] });
     const normalized = this.normalizeMcpDocument(existing);
@@ -143,7 +158,10 @@ export class McpMergeStrategy implements IInstallationStrategy {
       return;
     }
 
-    await vscode.workspace.fs.writeFile(mcpUri, Buffer.from(JSON.stringify(normalized, null, 2), 'utf-8'));
+    await vscode.workspace.fs.writeFile(
+      mcpUri,
+      Buffer.from(JSON.stringify(normalized, null, 2), 'utf-8'),
+    );
   }
 
   private extractMcpConfig(pkg: Package): McpDocument {
@@ -156,18 +174,26 @@ export class McpMergeStrategy implements IInstallationStrategy {
     return {
       servers: parsed.servers || parsed.mcpServers || {},
       inputs: Array.isArray(parsed.inputs)
-        ? parsed.inputs.filter(input => typeof input?.id === 'string')
+        ? parsed.inputs.filter((input) => typeof input?.id === 'string')
         : [],
     };
   }
 
   private normalizeMcpDocument(value: unknown): McpDocument {
-    const raw = (value && typeof value === 'object') ? value as Record<string, unknown> : {};
-    const servers = raw.servers && typeof raw.servers === 'object' ? raw.servers as Record<string, unknown> : {};
-    const legacyServers = raw.mcpServers && typeof raw.mcpServers === 'object' ? raw.mcpServers as Record<string, unknown> : {};
+    const raw = value && typeof value === 'object' ? (value as Record<string, unknown>) : {};
+    const servers =
+      raw.servers && typeof raw.servers === 'object'
+        ? (raw.servers as Record<string, unknown>)
+        : {};
+    const legacyServers =
+      raw.mcpServers && typeof raw.mcpServers === 'object'
+        ? (raw.mcpServers as Record<string, unknown>)
+        : {};
     const inputs = Array.isArray(raw.inputs)
-      ? raw.inputs.filter((input): input is { id: string; [key: string]: unknown } =>
-          Boolean(input) && typeof (input as { id?: unknown }).id === 'string')
+      ? raw.inputs.filter(
+          (input): input is { id: string; [key: string]: unknown } =>
+            Boolean(input) && typeof (input as { id?: unknown }).id === 'string',
+        )
       : [];
     return { servers: { ...legacyServers, ...servers }, inputs };
   }

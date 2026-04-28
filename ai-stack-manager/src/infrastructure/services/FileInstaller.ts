@@ -30,70 +30,103 @@ export class FileInstaller implements IInstaller {
   async install(pkg: Package, options?: InstallExecutionOptions): Promise<void> {
     return this.runExclusive(async () => {
       const root = this.workspaceRoot;
-      if (!root) { throw new Error('Nenhuma pasta de workspace aberta. Abra uma pasta primeiro.'); }
+      if (!root) {
+        throw new Error('Nenhuma pasta de workspace aberta. Abra uma pasta primeiro.');
+      }
 
       options?.onProgress?.({ current: 0, total: 1, packageId: pkg.id, label: pkg.displayName });
       await this.strategyFor(pkg).install(root, pkg, 'prompt');
       await this._tracker?.trackInstall(pkg);
-      new LockFileService(root).addOrUpdate({ id: pkg.id, version: pkg.version.toString(), sourceOfficial: pkg.source.official });
+      new LockFileService(root).addOrUpdate({
+        id: pkg.id,
+        version: pkg.version.toString(),
+        sourceOfficial: pkg.source.official,
+      });
       options?.onProgress?.({ current: 1, total: 1, packageId: pkg.id, label: pkg.displayName });
 
-      vscode.window.showInformationMessage(`✅ "${pkg.displayName}" instalado com sucesso!`);
+      vscode.window.showInformationMessage(`"${pkg.displayName}" foi instalado com sucesso.`);
     });
   }
 
   async uninstall(pkg: Package, options?: InstallExecutionOptions): Promise<void> {
     return this.runExclusive(async () => {
       const root = this.workspaceRoot;
-      if (!root) { throw new Error('Nenhuma pasta de workspace aberta.'); }
+      if (!root) {
+        throw new Error('Nenhuma pasta de workspace aberta.');
+      }
 
       const confirm = await vscode.window.showWarningMessage(
-        `Remover "${pkg.displayName}" e todos os seus arquivos?`,
+        `Remover "${pkg.displayName}" e todos os arquivos instalados por este pacote?`,
         { modal: true },
         'Remover',
         'Cancelar',
       );
-      if (confirm !== 'Remover') { return; }
+      if (confirm !== 'Remover') {
+        return;
+      }
 
       options?.onProgress?.({ current: 0, total: 1, packageId: pkg.id, label: pkg.displayName });
       await this.strategyFor(pkg).uninstall(root, pkg);
       new LockFileService(root).remove(pkg.id);
       options?.onProgress?.({ current: 1, total: 1, packageId: pkg.id, label: pkg.displayName });
 
-      vscode.window.showInformationMessage(`🗑️ "${pkg.displayName}" desinstalado.`);
+      vscode.window.showInformationMessage(`"${pkg.displayName}" foi removido do workspace.`);
     });
   }
 
   async installMany(packages: Package[], options?: InstallExecutionOptions): Promise<void> {
     return this.runExclusive(async () => {
       const root = this.workspaceRoot;
-      if (!root) { throw new Error('Nenhuma pasta de workspace aberta.'); }
+      if (!root) {
+        throw new Error('Nenhuma pasta de workspace aberta.');
+      }
 
-      const uniquePackages = [...new Map(packages.map(pkg => [pkg.id, pkg])).values()];
+      const uniquePackages = [...new Map(packages.map((pkg) => [pkg.id, pkg])).values()];
       let installed = 0;
       const total = uniquePackages.length;
 
       await vscode.window.withProgress(
-        { location: vscode.ProgressLocation.Notification, title: `Instalando bundle (${total} pacotes)...`, cancellable: false },
+        {
+          location: vscode.ProgressLocation.Notification,
+          title: `Instalando bundle (${total} pacotes)...`,
+          cancellable: false,
+        },
         async (progress) => {
           for (const pkg of uniquePackages) {
-            progress.report({ message: `${pkg.displayName} (${installed + 1}/${total})`, increment: (100 / total) });
-            options?.onProgress?.({ current: installed + 1, total, packageId: pkg.id, label: pkg.displayName });
+            progress.report({
+              message: `${pkg.displayName} (${installed + 1}/${total})`,
+              increment: 100 / total,
+            });
+            options?.onProgress?.({
+              current: installed + 1,
+              total,
+              packageId: pkg.id,
+              label: pkg.displayName,
+            });
             await this.strategyFor(pkg).install(root, pkg, 'skip');
             await this._tracker?.trackInstall(pkg);
-            new LockFileService(root).addOrUpdate({ id: pkg.id, version: pkg.version.toString(), sourceOfficial: pkg.source.official });
+            new LockFileService(root).addOrUpdate({
+              id: pkg.id,
+              version: pkg.version.toString(),
+              sourceOfficial: pkg.source.official,
+            });
             installed++;
           }
         },
       );
 
-      vscode.window.showInformationMessage(`✅ Bundle instalado! ${installed} pacotes prontos.`);
+      vscode.window.showInformationMessage(
+        `Bundle instalado com sucesso. ${installed} pacote(s) estão prontos.`,
+      );
     });
   }
 
   private runExclusive<T>(operation: () => Promise<T>): Promise<T> {
     const run = this._operationQueue.then(operation, operation);
-    this._operationQueue = run.then(() => undefined, () => undefined);
+    this._operationQueue = run.then(
+      () => undefined,
+      () => undefined,
+    );
     return run;
   }
 }

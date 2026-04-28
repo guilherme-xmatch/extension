@@ -3,10 +3,18 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { HealthReport, HealthFinding, HealthSeverity } from '../../src/domain/entities/HealthReport';
+import {
+  HealthReport,
+  HealthFinding,
+  HealthSeverity,
+} from '../../src/domain/entities/HealthReport';
 import { Bundle } from '../../src/domain/entities/Bundle';
 // Import type-only modules so coverage registers the files
-import type { InsightsReport, CoverageMap, SecurityAlert } from '../../src/domain/entities/InsightsReport';
+import type {
+  InsightsReport,
+  CoverageMap,
+  SecurityAlert,
+} from '../../src/domain/entities/InsightsReport';
 import type {
   OperationKind,
   OperationStatus,
@@ -97,10 +105,7 @@ describe('HealthReport', () => {
   });
 
   it('statusEmoji: score < 60 → vermelho', () => {
-    const report = HealthReport.create(
-      [errFinding('e1'), errFinding('e2'), errFinding('e3')],
-      10,
-    );
+    const report = HealthReport.create([errFinding('e1'), errFinding('e2'), errFinding('e3')], 10);
     expect(report.score).toBe(40);
     expect(report.statusEmoji).toContain('🔴');
   });
@@ -119,10 +124,7 @@ describe('HealthReport', () => {
   });
 
   it('statusLabel: Problemas Críticos quando score < 60', () => {
-    const report = HealthReport.create(
-      [errFinding('e1'), errFinding('e2'), errFinding('e3')],
-      0,
-    );
+    const report = HealthReport.create([errFinding('e1'), errFinding('e2'), errFinding('e3')], 0);
     expect(report.statusLabel).toBe('Problemas Críticos');
   });
 
@@ -137,10 +139,7 @@ describe('HealthReport', () => {
   });
 
   it('autoFixableCount retorna apenas os autoFixable=true', () => {
-    const report = HealthReport.create(
-      [errFinding('e1'), warnFinding('w1'), infoFinding('i1')],
-      0,
-    );
+    const report = HealthReport.create([errFinding('e1'), warnFinding('w1'), infoFinding('i1')], 0);
     // errFinding: autoFixable=false, warnFinding: autoFixable=true, infoFinding: autoFixable=false
     expect(report.autoFixableCount).toBe(1);
   });
@@ -260,13 +259,27 @@ describe('InsightsReport types', () => {
   it('InsightsReport completo é construído corretamente', () => {
     const report: InsightsReport = {
       installedAgentsCount: 3,
-      coverage: { triage: true, plan: true, design: false, execute: true, validate: false, critic: false },
+      coverage: {
+        triage: true,
+        plan: true,
+        design: false,
+        execute: true,
+        validate: false,
+        critic: false,
+      },
       coverageScore: 50,
       securityAlerts: [],
       missingDependencies: ['mcp-github'],
+      uxDiagnostics: {
+        enabled: true,
+        trackedFlows: 2,
+        regressions: [],
+        repeatedActions: [],
+      },
     };
     expect(report.coverageScore).toBe(50);
     expect(report.missingDependencies).toHaveLength(1);
+    expect(report.uxDiagnostics?.trackedFlows).toBe(2);
   });
 });
 
@@ -306,8 +319,13 @@ describe('Operation types', () => {
 
   it('OperationContext setProgress e setRefreshing são callable', () => {
     const ctx: OperationContext = {
-      setProgress: (progress: number, message?: string) => { void progress; void message; },
-      setRefreshing: (message?: string) => { void message; },
+      setProgress: (progress: number, message?: string) => {
+        void progress;
+        void message;
+      },
+      setRefreshing: (message?: string) => {
+        void message;
+      },
     };
     expect(() => ctx.setProgress(50, 'halfway')).not.toThrow();
     expect(() => ctx.setRefreshing()).not.toThrow();

@@ -1,12 +1,12 @@
 /**
  * @module presentation/webview/WebviewHelper
- * @description Utilitário compartilhado para geração de HTML de webview com o design system Itaú.
+ * @description Utilitário compartilhado para geração de HTML de webview com o design system da DescomplicAI.
  * Gerencia CSS com suporte a tema, geração de nonce e resolução de URIs de recursos.
  */
 
 import * as vscode from 'vscode';
 
-/** Tokens de Design Itaú */
+/** Tokens de design compartilhados da DescomplicAI. */
 export const ITAU_TOKENS = {
   colors: {
     primary: '#EC7000',
@@ -28,6 +28,12 @@ export const ITAU_TOKENS = {
 };
 
 export class WebviewHelper {
+  private static readonly notificationDefaults = {
+    info: { icon: 'i', title: 'Atualização disponível' },
+    success: { icon: 'OK', title: 'Ação concluída' },
+    warning: { icon: '!', title: 'Revisão necessária' },
+    error: { icon: 'x', title: 'Falha na operação' },
+  } as const;
 
   /** Gera um nonce criptográfico para a Content Security Policy. */
   static getNonce(): string {
@@ -51,13 +57,13 @@ export class WebviewHelper {
     const nonce = WebviewHelper.getNonce();
 
     const styleUri = webview.asWebviewUri(
-      vscode.Uri.joinPath(params.extensionUri, 'media', 'webview', 'main.css')
+      vscode.Uri.joinPath(params.extensionUri, 'media', 'webview', 'main.css'),
     );
     const animationsUri = webview.asWebviewUri(
-      vscode.Uri.joinPath(params.extensionUri, 'media', 'webview', 'animations.css')
+      vscode.Uri.joinPath(params.extensionUri, 'media', 'webview', 'animations.css'),
     );
 
-    return /*html*/`<!DOCTYPE html>
+    return /*html*/ `<!DOCTYPE html>
 <html lang="pt-BR" data-vscode-theme-kind="">
 <head>
   <meta charset="UTF-8">
@@ -83,13 +89,78 @@ export class WebviewHelper {
       --type-mcp: ${ITAU_TOKENS.colors.mcp};
       --type-instruction: ${ITAU_TOKENS.colors.instruction};
       --type-prompt: ${ITAU_TOKENS.colors.prompt};
+      --dai-accent: ${ITAU_TOKENS.colors.primary};
+      --dai-accent-rgb: 236, 112, 0;
+      --dai-success-rgb: 0, 200, 83;
+      --dai-warning-rgb: 255, 179, 0;
+      --dai-error-rgb: 255, 82, 82;
+      --dai-info-rgb: 68, 138, 255;
+      --dai-radius-sm: 8px;
+      --dai-radius-md: 12px;
+      --dai-radius-lg: 18px;
+      --dai-shadow-sm: 0 10px 24px rgba(0, 0, 0, 0.16);
+      --dai-shadow-md: 0 18px 42px rgba(0, 0, 0, 0.22);
+      --dai-shadow-focus: 0 0 0 3px rgba(236, 112, 0, 0.22);
+      --dai-ease-standard: cubic-bezier(0.22, 1, 0.36, 1);
+      --dai-ease-emphasis: cubic-bezier(0.2, 0.9, 0.2, 1);
+      --dai-ease-exit: cubic-bezier(0.4, 0, 1, 1);
+      --dai-duration-fast: 160ms;
+      --dai-duration-base: 240ms;
+      --dai-duration-slow: 420ms;
     }
   </style>
 </head>
 <body>
+  <div id="dai-toast-region" class="dai-toast-region" aria-live="polite" aria-atomic="false"></div>
   ${bodyContent}
   <script nonce="${nonce}">
     const vscode = acquireVsCodeApi();
+    const escapeHtml = (value) => String(value ?? '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+    const ensureToastRegion = () => document.getElementById('dai-toast-region');
+    const showToast = (notification) => {
+      const defaults = ${JSON.stringify(WebviewHelper.notificationDefaults)};
+      const kind = ['success', 'warning', 'error', 'info'].includes(notification?.kind)
+        ? notification.kind
+        : 'info';
+      const preset = defaults[kind] || defaults.info;
+      const region = ensureToastRegion();
+      if (!region) { return; }
+      const toast = document.createElement('div');
+      const duration = typeof notification?.duration === 'number' ? notification.duration : 4200;
+      const title = escapeHtml(notification?.title || preset.title);
+      const message = escapeHtml(notification?.message || '');
+      const icon = escapeHtml(notification?.icon || preset.icon);
+      toast.className = 'dai-toast dai-toast-' + kind + ' animate-slide-in';
+      toast.setAttribute('role', kind === 'error' ? 'alert' : 'status');
+      toast.innerHTML = '<span class="dai-toast-icon" aria-hidden="true">' + icon + '</span>'
+        + '<div class="dai-toast-copy"><strong class="dai-toast-title">' + title + '</strong>'
+        + (message ? '<span class="dai-toast-message">' + message + '</span>' : '')
+        + '</div>'
+        + '<button type="button" class="dai-toast-close" data-toast-close aria-label="Dispensar notificação">Fechar</button>';
+      const dismiss = () => {
+        toast.classList.add('dai-toast-leaving');
+        window.setTimeout(() => toast.remove(), 180);
+      };
+      toast.querySelector('[data-toast-close]')?.addEventListener('click', dismiss, { once: true });
+      region.appendChild(toast);
+      if (duration > 0) {
+        window.setTimeout(dismiss, duration);
+      }
+    };
+    window.__DAI__ = { escapeHtml, notify: showToast, postMessage: (message) => vscode.postMessage(message) };
+    window.addEventListener('message', (event) => {
+      const message = event.data || {};
+      if (message.type === 'notify') {
+        showToast(message.notification || {});
+      }
+      if (typeof onMessage === 'function') {
+        onMessage(message, window.__DAI__);
+      }
+    });
     ${scriptContent ?? ''}
   </script>
 </body>
@@ -108,16 +179,18 @@ export class WebviewHelper {
     const nonce = WebviewHelper.getNonce();
 
     const styleUri = webview.asWebviewUri(
-      vscode.Uri.joinPath(extensionUri, 'media', 'webview', 'main.css')
+      vscode.Uri.joinPath(extensionUri, 'media', 'webview', 'main.css'),
     );
     const animationsUri = webview.asWebviewUri(
-      vscode.Uri.joinPath(extensionUri, 'media', 'webview', 'animations.css')
+      vscode.Uri.joinPath(extensionUri, 'media', 'webview', 'animations.css'),
     );
 
     // Codifica o estado em base64(encodeURIComponent(JSON)) — seguro para data-attribute, sem injeção de script
-    const safeState = Buffer.from(encodeURIComponent(JSON.stringify(initialState ?? {}))).toString('base64');
+    const safeState = Buffer.from(encodeURIComponent(JSON.stringify(initialState ?? {}))).toString(
+      'base64',
+    );
 
-    return /*html*/`<!DOCTYPE html>
+    return /*html*/ `<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
@@ -143,26 +216,77 @@ export class WebviewHelper {
       --type-mcp: ${ITAU_TOKENS.colors.mcp};
       --type-instruction: ${ITAU_TOKENS.colors.instruction};
       --type-prompt: ${ITAU_TOKENS.colors.prompt};
+      --dai-accent: ${ITAU_TOKENS.colors.primary};
+      --dai-accent-rgb: 236, 112, 0;
+      --dai-success-rgb: 0, 200, 83;
+      --dai-warning-rgb: 255, 179, 0;
+      --dai-error-rgb: 255, 82, 82;
+      --dai-info-rgb: 68, 138, 255;
+      --dai-radius-sm: 8px;
+      --dai-radius-md: 12px;
+      --dai-radius-lg: 18px;
+      --dai-shadow-sm: 0 10px 24px rgba(0, 0, 0, 0.16);
+      --dai-shadow-md: 0 18px 42px rgba(0, 0, 0, 0.22);
+      --dai-shadow-focus: 0 0 0 3px rgba(236, 112, 0, 0.22);
+      --dai-ease-standard: cubic-bezier(0.22, 1, 0.36, 1);
+      --dai-ease-emphasis: cubic-bezier(0.2, 0.9, 0.2, 1);
+      --dai-ease-exit: cubic-bezier(0.4, 0, 1, 1);
+      --dai-duration-fast: 160ms;
+      --dai-duration-base: 240ms;
+      --dai-duration-slow: 420ms;
     }
   </style>
 </head>
 <body class="${bodyClassName ?? ''}">
   <div id="app-root" class="dai-shell-root" data-state="${safeState}"></div>
+  <div id="dai-toast-region" class="dai-toast-region" aria-live="polite" aria-atomic="false"></div>
   <script nonce="${nonce}">
     const vscode = acquireVsCodeApi();
     const _stateRoot = document.getElementById('app-root');
     // Decodifica o estado do data-attribute: base64 → encodeURIComponent(JSON) → JSON
     const initialState = JSON.parse(decodeURIComponent(atob(_stateRoot ? (_stateRoot.dataset.state || 'JTdCJTdE') : 'JTdCJTdE')));
     const persistedState = vscode.getState() || {};
+    const escapeHtml = (value) => String(value ?? '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+    const notificationDefaults = ${JSON.stringify(WebviewHelper.notificationDefaults)};
+    const ensureToastRegion = () => document.getElementById('dai-toast-region');
+    const showToast = (notification) => {
+      const kind = ['success', 'warning', 'error', 'info'].includes(notification?.kind)
+        ? notification.kind
+        : 'info';
+      const preset = notificationDefaults[kind] || notificationDefaults.info;
+      const region = ensureToastRegion();
+      if (!region) { return; }
+      const toast = document.createElement('div');
+      const duration = typeof notification?.duration === 'number' ? notification.duration : 4200;
+      const title = escapeHtml(notification?.title || preset.title);
+      const message = escapeHtml(notification?.message || '');
+      const icon = escapeHtml(notification?.icon || preset.icon);
+      toast.className = 'dai-toast dai-toast-' + kind + ' animate-slide-in';
+      toast.setAttribute('role', kind === 'error' ? 'alert' : 'status');
+      toast.innerHTML = '<span class="dai-toast-icon" aria-hidden="true">' + icon + '</span>'
+        + '<div class="dai-toast-copy"><strong class="dai-toast-title">' + title + '</strong>'
+        + (message ? '<span class="dai-toast-message">' + message + '</span>' : '')
+        + '</div>'
+        + '<button type="button" class="dai-toast-close" data-toast-close aria-label="Dispensar notificação">Fechar</button>';
+      const dismiss = () => {
+        toast.classList.add('dai-toast-leaving');
+        window.setTimeout(() => toast.remove(), 180);
+      };
+      toast.querySelector('[data-toast-close]')?.addEventListener('click', dismiss, { once: true });
+      region.appendChild(toast);
+      if (duration > 0) {
+        window.setTimeout(dismiss, duration);
+      }
+    };
     const app = {
       root: document.getElementById('app-root'),
       state: { ...initialState, ...persistedState },
       escapeHtml(value) {
-        return String(value ?? '')
-          .replace(/&/g, '&amp;')
-          .replace(/</g, '&lt;')
-          .replace(/>/g, '&gt;')
-          .replace(/"/g, '&quot;');
+        return escapeHtml(value);
       },
       setState(nextState) {
         this.state = nextState || {};
@@ -179,11 +303,18 @@ export class WebviewHelper {
       },
       postMessage(message) {
         vscode.postMessage(message);
+      },
+      notify(notification) {
+        showToast(notification || {});
       }
     };
     window.__DAI__ = app;
     window.addEventListener('message', (event) => {
       const message = event.data || {};
+      if (message.type === 'notify') {
+        app.notify(message.notification || {});
+        return;
+      }
       if (message.type === 'setState') {
         app.setState({ ...app.state, ...(message.state || {}) });
         return;
@@ -198,7 +329,12 @@ export class WebviewHelper {
     });
     ${scriptContent}
     app.setState(app.state);
-    document.body.classList.add('dai-hydrated');
+    const reduceMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+    if (reduceMotionQuery.matches) {
+      document.body.classList.add('dai-hydrated');
+    } else {
+      window.setTimeout(() => document.body.classList.add('dai-hydrated'), 1200);
+    }
   </script>
 </body>
 </html>`;
@@ -208,6 +344,22 @@ export class WebviewHelper {
     webview.postMessage({
       type: replace ? 'replaceState' : 'setState',
       state,
+    });
+  }
+
+  static postNotification(
+    webview: vscode.Webview,
+    notification: {
+      kind?: 'success' | 'warning' | 'error' | 'info';
+      title?: string;
+      message?: string;
+      icon?: string;
+      duration?: number;
+    },
+  ): void {
+    webview.postMessage({
+      type: 'notify',
+      notification,
     });
   }
 }

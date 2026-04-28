@@ -3,12 +3,14 @@
  */
 
 import { describe, it, expect, afterEach, beforeEach } from 'vitest';
+import * as vscode from 'vscode';
 import { InsightsGenerator } from '../../src/infrastructure/services/InsightsGenerator';
 import { GitHubMetricsService } from '../../src/infrastructure/services/GitHubMetricsService';
 import { Package, InstallStatus } from '../../src/domain/entities/Package';
 import { PackageType } from '../../src/domain/value-objects/PackageType';
 import { IPackageRepository, IWorkspaceScanner } from '../../src/domain/interfaces';
 import { AppLogger } from '../../src/infrastructure/services/AppLogger';
+import { UxDiagnosticsService } from '../../src/infrastructure/services/UxDiagnosticsService';
 import { setConfigurationValue, setAuthenticationSession } from '../setup/vscode.mock';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -54,9 +56,30 @@ const makeAgent = (id: string, overrides?: Partial<Parameters<typeof Package.cre
     ...overrides,
   });
 
+function createDiagnosticsContext(): vscode.ExtensionContext {
+  const store = new Map<string, unknown>();
+  return {
+    globalState: {
+      get: <T>(key: string, defaultValue?: T): T =>
+        store.has(key) ? (store.get(key) as T) : (defaultValue as T),
+      update: async (key: string, value: unknown) => {
+        store.set(key, value);
+      },
+    },
+  } as unknown as vscode.ExtensionContext;
+}
+
 // ─── InsightsGenerator ───────────────────────────────────────────────────────
 
 describe('InsightsGenerator', () => {
+  afterEach(() => {
+    try {
+      UxDiagnosticsService.getInstance().dispose();
+    } catch {
+      /* noop */
+    }
+  });
+
   it('retorna relatório vazio quando não há pacotes instalados', async () => {
     const gen = new InsightsGenerator(emptyRegistry, notInstalledScanner);
     const report = await gen.generateReport();
@@ -464,6 +487,23 @@ describe('InsightsGenerator', () => {
     const report = await gen.generateReport();
 
     expect(report.securityAlerts).toHaveLength(0);
+  });
+
+  it('anexa sinais locais de UX ao relatório quando o serviço está inicializado', async () => {
+    UxDiagnosticsService.getInstance().initialize(createDiagnosticsContext());
+    UxDiagnosticsService.getInstance().track('panel.config.saveFailed', {
+      surface: 'panel',
+      category: 'validation',
+    });
+
+    const gen = new InsightsGenerator(emptyRegistry, notInstalledScanner);
+    const report = await gen.generateReport();
+
+    expect(report.uxDiagnostics?.enabled).toBe(true);
+    expect(report.uxDiagnostics?.regressions[0]).toMatchObject({
+      id: 'panel.config.saveFailed',
+      count: 1,
+    });
   });
 });
 

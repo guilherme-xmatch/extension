@@ -35,9 +35,12 @@ import { ConfigPanel } from './presentation/panels/ConfigPanel';
 import { InsightsGenerator } from './infrastructure/services/InsightsGenerator';
 import { StatusBarManager } from './infrastructure/services/StatusBarManager';
 import { AppLogger } from './infrastructure/services/AppLogger';
+import { UxDiagnosticsService } from './infrastructure/services/UxDiagnosticsService';
 
 export function activate(context: vscode.ExtensionContext): void {
   const logger = AppLogger.getInstance();
+  const uxDiagnostics = UxDiagnosticsService.getInstance();
+  uxDiagnostics.initialize(context);
 
   // ─── Injeção de Dependências ──────────────────
   const container = new ServiceContainer()
@@ -102,6 +105,52 @@ export function activate(context: vscode.ExtensionContext): void {
   const statusBar = StatusBarManager.getInstance();
   statusBar.bindToCoordinator(operations);
 
+  const focusCatalog = async (): Promise<void> => {
+    await vscode.commands.executeCommand('dai-catalog.focus');
+  };
+
+  const focusInstalled = async (): Promise<void> => {
+    await vscode.commands.executeCommand('dai-installed.focus');
+  };
+
+  const showInformationWithActions = async (
+    message: string,
+    actions: Array<{ label: string; run: () => Promise<unknown> | unknown }>,
+  ): Promise<void> => {
+    const choice = await vscode.window.showInformationMessage(
+      message,
+      ...actions.map((action) => action.label),
+    );
+    const selected = actions.find((action) => action.label === choice);
+    if (selected) {
+      await selected.run();
+    }
+  };
+
+  const showErrorWithActions = async (
+    message: string,
+    actions: Array<{ label: string; run: () => Promise<unknown> | unknown }>,
+  ): Promise<void> => {
+    const choice = await vscode.window.showErrorMessage(
+      message,
+      ...actions.map((action) => action.label),
+    );
+    const selected = actions.find((action) => action.label === choice);
+    if (selected) {
+      await selected.run();
+    }
+  };
+
+  const summarizePackages = (packages: Package[]): string => {
+    const labels = packages.map((pkg) => pkg.displayName).filter(Boolean);
+    if (labels.length === 0) {
+      return '';
+    }
+    const preview = labels.slice(0, 4).join(', ');
+    const overflow = labels.length > 4 ? ` e mais ${labels.length - 4}` : '';
+    return `${preview}${overflow}`;
+  };
+
   operations.setRefreshHandler(async (targets) => {
     for (const target of targets) {
       if (target === 'catalog') {
@@ -131,12 +180,13 @@ export function activate(context: vscode.ExtensionContext): void {
     vscode.window.registerWebviewViewProvider(InstalledViewProvider.viewType, installedProvider),
     vscode.window.registerWebviewViewProvider(HealthViewProvider.viewType, healthProvider),
     statusBar,
+    uxDiagnostics,
     logger,
     operations,
     fileWatcher,
   );
 
-  const resolvePackagesForInstall = async (pkg: Package): Promise<Package[]> => {
+  const resolvePackagesForInstall = async (pkg: Package): Promise<Package[] | undefined> => {
     const config = vscode.workspace.getConfiguration('descomplicai');
     const autoResolve = config.get<boolean>('autoResolveDependencies', true);
     if (!autoResolve || pkg.dependencies.length === 0) {
@@ -166,24 +216,43 @@ export function activate(context: vscode.ExtensionContext): void {
       return [pkg];
     }
 
+    const dependencies = [...resolved.values()].filter((candidate) => candidate.id !== pkg.id);
+    const dependencySummary = summarizePackages(dependencies);
+
     const choice = await vscode.window.showInformationMessage(
-      `"${pkg.displayName}" possui ${resolved.size - 1} dependência(s). Deseja instalar o pacote completo?`,
+      `"${pkg.displayName}" possui ${resolved.size - 1} dependência(s). ${dependencySummary ? `Dependências detectadas: ${dependencySummary}. ` : ''}Escolha como deseja continuar.`,
       { modal: true },
-      `Instalar com dependências (${resolved.size})`,
-      'Apenas este pacote',
+      `Instalar pacote completo (${resolved.size})`,
+      'Instalar apenas este pacote',
+      'Cancelar',
     );
 
-    if (choice?.startsWith('Instalar com dependências')) {
+    if (choice?.startsWith('Instalar pacote completo')) {
       return [...resolved.values()];
     }
 
-    return [pkg];
+    if (choice === 'Instalar apenas este pacote') {
+      uxDiagnostics.track('modal.dependencies.packageOnly', { surface: 'modal' });
+      return [pkg];
+    }
+
+    uxDiagnostics.track('modal.dependencies.cancelled', { surface: 'modal' });
+
+    return undefined;
   };
 
   // ─── Comandos ─────────────────────────────────
   context.subscriptions.push(
     vscode.commands.registerCommand('dai.install', async () => {
       const packages = await registry.getAll();
+      if (packages.length === 0) {
+        uxDiagnostics.track('command.install.empty', { surface: 'command-palette' });
+        await showInformationWithActions(
+          'Nenhum pacote está disponível no catálogo atual. Revise a origem configurada ou abra o catálogo para investigar.',
+          [{ label: 'Abrir Catálogo', run: focusCatalog }],
+        );
+        return;
+      }
       const items: Array<{ label: string; description: string; detail: string; id: string }> =
         packages.map((p: Package) => ({
           label: `${p.categoryEmoji || p.typeIcon} ${p.displayName}`,
@@ -192,44 +261,49 @@ export function activate(context: vscode.ExtensionContext): void {
           id: p.id,
         }));
       const selected = await vscode.window.showQuickPick(items, {
+        title: 'Instalar pacote do catálogo',
         placeHolder: 'Selecione um pacote para instalar...',
         matchOnDescription: true,
         matchOnDetail: true,
+        ignoreFocusOut: true,
       });
-      if (selected) {
-        const pkg = await registry.findById(selected.id);
-        if (pkg) {
-          const packagesToInstall = await resolvePackagesForInstall(pkg);
-          await operations.run(
-            {
-              kind: packagesToInstall.length > 1 ? 'bundle-install' : 'package-install',
-              label:
-                packagesToInstall.length > 1
-                  ? `Instalando ${packagesToInstall.length} pacotes`
-                  : `Instalando ${pkg.displayName}`,
-              targetId: pkg.id,
-              refreshTargets: ['catalog', 'installed'],
-            },
-            async (operation) => {
-              if (packagesToInstall.length > 1) {
-                await installer.installMany(packagesToInstall, {
-                  onProgress: (progress) => {
-                    operation.setProgress(
-                      (progress.current / progress.total) * 100,
-                      progress.label,
-                    );
-                  },
-                });
-                return;
-              }
+      if (!selected) {
+        uxDiagnostics.track('command.install.cancelled', { surface: 'command-palette' });
+        return;
+      }
 
-              operation.setProgress(10, pkg.displayName);
-              await installer.install(pkg, {
-                onProgress: () => operation.setProgress(100, pkg.displayName),
-              });
-            },
-          );
+      const pkg = await registry.findById(selected.id);
+      if (pkg) {
+        const packagesToInstall = await resolvePackagesForInstall(pkg);
+        if (!packagesToInstall || packagesToInstall.length === 0) {
+          return;
         }
+        await operations.run(
+          {
+            kind: packagesToInstall.length > 1 ? 'bundle-install' : 'package-install',
+            label:
+              packagesToInstall.length > 1
+                ? `Instalando ${packagesToInstall.length} pacotes`
+                : `Instalando ${pkg.displayName}`,
+            targetId: pkg.id,
+            refreshTargets: ['catalog', 'installed'],
+          },
+          async (operation) => {
+            if (packagesToInstall.length > 1) {
+              await installer.installMany(packagesToInstall, {
+                onProgress: (progress) => {
+                  operation.setProgress((progress.current / progress.total) * 100, progress.label);
+                },
+              });
+              return;
+            }
+
+            operation.setProgress(10, pkg.displayName);
+            await installer.install(pkg, {
+              onProgress: () => operation.setProgress(100, pkg.displayName),
+            });
+          },
+        );
       }
     }),
 
@@ -247,30 +321,43 @@ export function activate(context: vscode.ExtensionContext): void {
         }
       }
       if (installed.length === 0) {
-        vscode.window.showInformationMessage('Nenhum pacote instalado.');
+        uxDiagnostics.track('command.uninstall.empty', { surface: 'command-palette' });
+        await showInformationWithActions(
+          'Nenhum pacote instalado foi encontrado neste workspace. Revise o painel de instalados ou abra o catálogo para adicionar novos itens.',
+          [
+            { label: 'Abrir Instalados', run: focusInstalled },
+            { label: 'Abrir Catálogo', run: focusCatalog },
+          ],
+        );
         return;
       }
       const selected = await vscode.window.showQuickPick(installed, {
+        title: 'Remover pacote instalado',
         placeHolder: 'Selecione um pacote para desinstalar...',
+        matchOnDescription: true,
+        ignoreFocusOut: true,
       });
-      if (selected) {
-        const pkg = await registry.findById(selected.id);
-        if (pkg) {
-          await operations.run(
-            {
-              kind: 'package-uninstall',
-              label: `Removendo ${pkg.displayName}`,
-              targetId: pkg.id,
-              refreshTargets: ['catalog', 'installed'],
-            },
-            async (operation) => {
-              operation.setProgress(10, pkg.displayName);
-              await installer.uninstall(pkg, {
-                onProgress: () => operation.setProgress(100, pkg.displayName),
-              });
-            },
-          );
-        }
+      if (!selected) {
+        uxDiagnostics.track('command.uninstall.cancelled', { surface: 'command-palette' });
+        return;
+      }
+
+      const pkg = await registry.findById(selected.id);
+      if (pkg) {
+        await operations.run(
+          {
+            kind: 'package-uninstall',
+            label: `Removendo ${pkg.displayName}`,
+            targetId: pkg.id,
+            refreshTargets: ['catalog', 'installed'],
+          },
+          async (operation) => {
+            operation.setProgress(10, pkg.displayName);
+            await installer.uninstall(pkg, {
+              onProgress: () => operation.setProgress(100, pkg.displayName),
+            });
+          },
+        );
       }
     }),
 
@@ -294,6 +381,14 @@ export function activate(context: vscode.ExtensionContext): void {
 
     vscode.commands.registerCommand('dai.installBundle', async () => {
       const bundles = await registry.getAllBundles();
+      if (bundles.length === 0) {
+        uxDiagnostics.track('command.installBundle.empty', { surface: 'command-palette' });
+        await showInformationWithActions(
+          'Nenhum bundle está disponível no catálogo atual. Abra o catálogo para revisar a origem sincronizada.',
+          [{ label: 'Abrir Catálogo', run: focusCatalog }],
+        );
+        return;
+      }
       const items: Array<{ label: string; description: string; detail: string; id: string }> =
         bundles.map((b: import('./domain/entities/Bundle').Bundle) => ({
           label: `$(package) ${b.displayName}`,
@@ -302,39 +397,41 @@ export function activate(context: vscode.ExtensionContext): void {
           id: b.id,
         }));
       const selected = await vscode.window.showQuickPick(items, {
+        title: 'Instalar bundle do catálogo',
         placeHolder: 'Selecione um bundle para instalar...',
         matchOnDetail: true,
+        ignoreFocusOut: true,
       });
-      if (selected) {
-        const bundle = await registry.findBundleById(selected.id);
-        if (bundle) {
-          const packages: import('./domain/entities/Package').Package[] = [];
-          for (const pkgId of bundle.packageIds) {
-            const pkg = await registry.findById(pkgId);
-            if (pkg) {
-              packages.push(pkg);
-            }
+      if (!selected) {
+        uxDiagnostics.track('command.installBundle.cancelled', { surface: 'command-palette' });
+        return;
+      }
+
+      const bundle = await registry.findBundleById(selected.id);
+      if (bundle) {
+        const packages: import('./domain/entities/Package').Package[] = [];
+        for (const pkgId of bundle.packageIds) {
+          const pkg = await registry.findById(pkgId);
+          if (pkg) {
+            packages.push(pkg);
           }
-          if (packages.length > 0) {
-            await operations.run(
-              {
-                kind: 'bundle-install',
-                label: `Instalando bundle ${bundle.displayName}`,
-                targetId: bundle.id,
-                refreshTargets: ['catalog', 'installed'],
-              },
-              async (operation) => {
-                await installer.installMany(packages, {
-                  onProgress: (progress) => {
-                    operation.setProgress(
-                      (progress.current / progress.total) * 100,
-                      progress.label,
-                    );
-                  },
-                });
-              },
-            );
-          }
+        }
+        if (packages.length > 0) {
+          await operations.run(
+            {
+              kind: 'bundle-install',
+              label: `Instalando bundle ${bundle.displayName}`,
+              targetId: bundle.id,
+              refreshTargets: ['catalog', 'installed'],
+            },
+            async (operation) => {
+              await installer.installMany(packages, {
+                onProgress: (progress) => {
+                  operation.setProgress((progress.current / progress.total) * 100, progress.label);
+                },
+              });
+            },
+          );
         }
       }
     }),
@@ -352,15 +449,27 @@ export function activate(context: vscode.ExtensionContext): void {
       let bundleId = targetBundleId;
       if (!bundleId) {
         const bundles = await registry.getAllBundles();
+        if (bundles.length === 0) {
+          uxDiagnostics.track('command.stackDiff.empty', { surface: 'command-palette' });
+          await showInformationWithActions(
+            'Nenhum bundle está disponível para comparação no catálogo atual.',
+            [{ label: 'Abrir Catálogo', run: focusCatalog }],
+          );
+          return;
+        }
         const items = bundles.map((b) => ({
           label: `${b.icon}  ${b.displayName}`,
           description: b.description,
           id: b.id,
         }));
         const selected = await vscode.window.showQuickPick(items, {
+          title: 'Comparar stack atual com um bundle',
           placeHolder: 'Selecione o bundle para comparar com seu workspace atual…',
+          matchOnDescription: true,
+          ignoreFocusOut: true,
         });
         if (!selected) {
+          uxDiagnostics.track('command.stackDiff.cancelled', { surface: 'command-palette' });
           return;
         }
         bundleId = selected.id;
@@ -376,6 +485,14 @@ export function activate(context: vscode.ExtensionContext): void {
       if (!agentId) {
         const packages = await registry.getAll();
         const agents = packages.filter((p: Package) => p.type.value === 'agent');
+        if (agents.length === 0) {
+          uxDiagnostics.track('command.configureAgent.empty', { surface: 'command-palette' });
+          await showInformationWithActions(
+            'Nenhum agente está disponível para configuração no catálogo atual.',
+            [{ label: 'Abrir Catálogo', run: focusCatalog }],
+          );
+          return;
+        }
         const items: Array<{ label: string; description: string; id: string }> = agents.map(
           (p: Package) => ({
             label: `${p.categoryEmoji} ${p.displayName}`,
@@ -384,10 +501,18 @@ export function activate(context: vscode.ExtensionContext): void {
           }),
         );
         const selected = await vscode.window.showQuickPick(items, {
+          title: 'Selecionar agente para configuração',
           placeHolder: 'Selecione um agente para configurar...',
+          matchOnDescription: true,
+          ignoreFocusOut: true,
         });
         if (selected) {
           agentId = selected.id;
+        } else {
+          uxDiagnostics.track('command.configureAgent.cancelled', {
+            surface: 'command-palette',
+          });
+          return;
         }
       }
 
@@ -402,31 +527,36 @@ export function activate(context: vscode.ExtensionContext): void {
     vscode.commands.registerCommand('dai.publishPackage', async () => {
       const uris = await vscode.window.showOpenDialog({
         canSelectMany: false,
+        title: 'Selecionar documento MCP para contribuição',
         openLabel: 'Gerar contribuição',
         filters: {
           'MCP JSON': ['json'],
         },
       });
-      if (uris && uris[0]) {
-        await operations.run(
-          {
-            kind: 'package-publish',
-            label: 'Gerando artefato de contribuição',
-            targetId: uris[0].fsPath,
-            refreshTargets: ['catalog'],
-          },
-          async (operation) => {
-            operation.setProgress(15, 'Lendo MCP');
-            await publishService.publishPackage(uris[0]);
-            operation.setProgress(100, 'Artefato gerado');
-          },
-        );
+      if (!uris?.[0]) {
+        uxDiagnostics.track('command.publishPackage.cancelled', { surface: 'command-palette' });
+        return;
       }
+
+      await operations.run(
+        {
+          kind: 'package-publish',
+          label: 'Gerando artefato de contribuição',
+          targetId: uris[0].fsPath,
+          refreshTargets: ['catalog'],
+        },
+        async (operation) => {
+          operation.setProgress(15, 'Lendo MCP');
+          await publishService.publishPackage(uris[0]);
+          operation.setProgress(100, 'Artefato gerado');
+        },
+      );
     }),
 
     vscode.commands.registerCommand('dai.importCustomMcp', async () => {
       const uris = await vscode.window.showOpenDialog({
         canSelectMany: false,
+        title: 'Selecionar documento MCP para importar',
         openLabel: 'Importar MCP',
         filters: {
           'MCP JSON': ['json'],
@@ -434,6 +564,9 @@ export function activate(context: vscode.ExtensionContext): void {
       });
 
       if (!uris?.[0]) {
+        uxDiagnostics.track('command.importCustomMcp.cancelled', {
+          surface: 'command-palette',
+        });
         return;
       }
 
@@ -861,10 +994,16 @@ export function activate(context: vscode.ExtensionContext): void {
         if (packageId) {
           const pkg = await registry.findById(packageId);
           if (!pkg) {
-            vscode.window.showErrorMessage(`Pacote "${packageId}" não encontrado no catálogo.`);
+            await showErrorWithActions(
+              `Pacote "${packageId}" não foi encontrado no catálogo atual.`,
+              [{ label: 'Abrir Catálogo', run: focusCatalog }],
+            );
             return;
           }
           const packagesToInstall = await resolvePackagesForInstall(pkg);
+          if (!packagesToInstall || packagesToInstall.length === 0) {
+            return;
+          }
           await operations.run(
             {
               kind: packagesToInstall.length > 1 ? 'bundle-install' : 'package-install',
@@ -891,7 +1030,10 @@ export function activate(context: vscode.ExtensionContext): void {
         if (bundleId) {
           const bundle = await registry.findBundleById(bundleId);
           if (!bundle) {
-            vscode.window.showErrorMessage(`Bundle "${bundleId}" não encontrado no catálogo.`);
+            await showErrorWithActions(
+              `Bundle "${bundleId}" não foi encontrado no catálogo atual.`,
+              [{ label: 'Abrir Catálogo', run: focusCatalog }],
+            );
             return;
           }
           const packages: Package[] = [];
@@ -948,7 +1090,7 @@ export function activate(context: vscode.ExtensionContext): void {
     void context.globalState.update('descomplicai.welcomeShown', true);
     vscode.window
       .showInformationMessage(
-        '🧠 DescomplicAI ativado! Abra a barra lateral para gerenciar seus AI agents.',
+        'DescomplicAI ativado. Abra a barra lateral para gerenciar seus AI agents.',
         'Abrir Catálogo',
       )
       .then((choice) => {

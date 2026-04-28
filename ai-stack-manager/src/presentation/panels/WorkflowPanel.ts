@@ -20,49 +20,58 @@
 
 import * as vscode from 'vscode';
 import { IPackageRepository, IWorkspaceScanner } from '../../domain/interfaces';
-import { WorkflowGraphBuilder, WorkflowGraphData } from '../../infrastructure/services/WorkflowGraphBuilder';
+import {
+  WorkflowGraphBuilder,
+  WorkflowGraphData,
+} from '../../infrastructure/services/WorkflowGraphBuilder';
 
 export class WorkflowPanel {
   public static currentPanel: WorkflowPanel | undefined;
-  private readonly _panel:        vscode.WebviewPanel;
+  private readonly _panel: vscode.WebviewPanel;
   private readonly _extensionUri: vscode.Uri;
-  private readonly _registry:     IPackageRepository;
-  private readonly _scanner:      IWorkspaceScanner;
-  private readonly _builder:      WorkflowGraphBuilder;
-  private _disposables:           vscode.Disposable[] = [];
+  private readonly _registry: IPackageRepository;
+  private readonly _scanner: IWorkspaceScanner;
+  private readonly _builder: WorkflowGraphBuilder;
+  private _disposables: vscode.Disposable[] = [];
 
   private constructor(
-    panel:        vscode.WebviewPanel,
+    panel: vscode.WebviewPanel,
     extensionUri: vscode.Uri,
-    registry:     IPackageRepository,
-    scanner:      IWorkspaceScanner,
+    registry: IPackageRepository,
+    scanner: IWorkspaceScanner,
   ) {
-    this._panel        = panel;
+    this._panel = panel;
     this._extensionUri = extensionUri;
-    this._registry     = registry;
-    this._scanner      = scanner;
-    this._builder      = new WorkflowGraphBuilder();
+    this._registry = registry;
+    this._scanner = scanner;
+    this._builder = new WorkflowGraphBuilder();
 
     void this.update();
 
     this._panel.onDidDispose(() => this.dispose(), null, this._disposables);
 
     // Permite que o webview solicite um refresh ou abra a barra lateral do catálogo
-    this._panel.webview.onDidReceiveMessage(async (e: { type: string }) => {
-      if (e.type === 'refresh') { await this.update(); }
-      if (e.type === 'openCatalog') {
-        void vscode.commands.executeCommand('workbench.view.extension.descomplicai-sidebar');
-      }
-      // 'saveZoom' é tratado inteiramente no cliente via vscode.setState() — nenhuma ação no servidor necessária
-    }, null, this._disposables);
+    this._panel.webview.onDidReceiveMessage(
+      async (e: { type: string }) => {
+        if (e.type === 'refresh') {
+          await this.update();
+        }
+        if (e.type === 'openCatalog') {
+          void vscode.commands.executeCommand('workbench.view.extension.descomplicai-sidebar');
+        }
+        // 'saveZoom' é tratado inteiramente no cliente via vscode.setState() — nenhuma ação no servidor necessária
+      },
+      null,
+      this._disposables,
+    );
   }
 
   // ─── API Pública ──────────────────────────────────────────────────────────────────────────
 
   public static createOrShow(
     extensionUri: vscode.Uri,
-    registry:     IPackageRepository,
-    scanner:      IWorkspaceScanner,
+    registry: IPackageRepository,
+    scanner: IWorkspaceScanner,
   ): void {
     const column = vscode.window.activeTextEditor
       ? vscode.window.activeTextEditor.viewColumn
@@ -70,7 +79,7 @@ export class WorkflowPanel {
 
     if (WorkflowPanel.currentPanel) {
       WorkflowPanel.currentPanel._panel.reveal(column);
-      void WorkflowPanel.currentPanel.update();   // atualiza ao revelar novamente
+      void WorkflowPanel.currentPanel.update(); // atualiza ao revelar novamente
       return;
     }
 
@@ -79,8 +88,8 @@ export class WorkflowPanel {
       'DescomplicAI: Workflow',
       column ?? vscode.ViewColumn.One,
       {
-        enableScripts:           true,
-        localResourceRoots:      [extensionUri],
+        enableScripts: true,
+        localResourceRoots: [extensionUri],
         retainContextWhenHidden: true,
       },
     );
@@ -93,7 +102,9 @@ export class WorkflowPanel {
     this._panel.dispose();
     while (this._disposables.length) {
       const x = this._disposables.pop();
-      if (x) { x.dispose(); }
+      if (x) {
+        x.dispose();
+      }
     }
   }
 
@@ -101,6 +112,8 @@ export class WorkflowPanel {
 
   private async update(): Promise<void> {
     try {
+      this._panel.webview.html = this._getLoadingHtml(this._panel.webview);
+
       const [allPackages, installedIds] = await Promise.all([
         this._registry.getAll(),
         this._scanner.getInstalledPackageIds(),
@@ -123,7 +136,7 @@ export class WorkflowPanel {
     );
     const graphJson = JSON.stringify(graph);
 
-    return /* html */`<!DOCTYPE html>
+    return /* html */ `<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
@@ -158,6 +171,7 @@ export class WorkflowPanel {
     .wf-board-wrapper { flex: 1; overflow: auto; padding: 28px;
       background-image: radial-gradient(var(--border-color) 1px, transparent 1px);
       background-size: 22px 22px; }
+    .wf-board-wrapper:focus-visible { outline: none; box-shadow: inset 0 0 0 2px rgba(236,112,0,0.22); }
     .wf-board { display: flex; gap: 20px; align-items: flex-start; min-width: max-content; }
 
     /* ── Phase lane ──────────────────────────────────────── */
@@ -175,6 +189,16 @@ export class WorkflowPanel {
       border-left: 3px solid var(--cat-color, #EC7000); cursor: default;
       transition: transform 0.15s, box-shadow 0.15s; }
     .wf-card:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.25); }
+    .wf-card:focus-visible {
+      outline: none;
+      border-color: rgba(236,112,0,0.42);
+      box-shadow: 0 0 0 3px rgba(236,112,0,0.18), 0 6px 20px rgba(0,0,0,0.25);
+    }
+    .wf-card.is-selected {
+      border-color: rgba(236,112,0,0.42);
+      box-shadow: 0 0 0 1px rgba(236,112,0,0.34), 0 8px 24px rgba(0,0,0,0.28);
+      background: linear-gradient(135deg, rgba(236,112,0,0.08), transparent 72%), var(--vscode-editor-background);
+    }
     .wf-card-top { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
     .wf-cat-dot { width: 8px; height: 8px; border-radius: 50%;
       background: var(--cat-color, #EC7000); flex-shrink: 0; }
@@ -200,6 +224,36 @@ export class WorkflowPanel {
       color: var(--vscode-descriptionForeground); margin-bottom: 2px; }
     .wf-legend-row { display: flex; align-items: center; gap: 8px; }
     .wf-legend-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+
+    /* ── Inspector ─────────────────────────────────────── */
+    .wf-inspector {
+      display: none;
+      padding: 16px 28px 20px;
+      border-top: 1px solid var(--border-color);
+      background: rgba(236,112,0,0.04);
+      gap: 16px;
+      align-items: flex-start;
+    }
+    .wf-inspector.visible { display: grid; grid-template-columns: 1.2fr .8fr; }
+    .wf-inspector-copy { display: flex; flex-direction: column; gap: 6px; }
+    .wf-inspector-kicker { font-size: 0.72rem; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--vscode-descriptionForeground); }
+    .wf-inspector-title { font-size: 1rem; font-weight: 700; color: var(--vscode-foreground); }
+    .wf-inspector-desc { font-size: 0.8rem; line-height: 1.6; color: var(--vscode-descriptionForeground); }
+    .wf-inspector-meta { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+    .wf-inspector-item { padding: 10px 12px; border-radius: 10px; border: 1px solid var(--border-color); background: var(--vscode-editor-background); }
+    .wf-inspector-label { display: block; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--vscode-descriptionForeground); margin-bottom: 5px; }
+    .wf-inspector-value { display: block; font-size: 0.8rem; line-height: 1.5; color: var(--vscode-foreground); word-break: break-word; }
+    .wf-sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
 
     /* ── Zoom controls ────────────────────────────────────── */
     .wf-zoom { position: fixed; bottom: 20px; right: 20px; display: flex; gap: 4px;
@@ -269,12 +323,17 @@ export class WorkflowPanel {
       background: var(--vscode-sideBar-background); font-size: 0.78rem; }
     .wf-skill-node.installed { border-color: rgba(0,230,118,0.3); }
     .wf-skill-node .skill-status { font-size: 0.68rem; opacity: 0.7; }
+
+    @media (max-width: 920px) {
+      .wf-inspector.visible { grid-template-columns: 1fr; }
+    }
   </style>
 </head>
 <body>
 
 <!-- SVG layer for delegation arrows -->
-<svg id="wf-edges" aria-hidden="true">
+<svg id="wf-edges" role="img" aria-label="Mapa visual das delegacoes entre agentes no workflow" focusable="false">
+  <title>Mapa visual das delegacoes entre agentes</title>
   <defs>
     <marker id="arrowhead" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
       <polygon points="0 0, 8 3, 0 6" fill="rgba(236,112,0,0.55)" />
@@ -295,13 +354,16 @@ export class WorkflowPanel {
       <p class="wf-subtitle" id="wf-subtitle">Carregando…</p>
     </div>
     <span class="wf-badge" id="wf-count-badge" style="display:none"></span>
-    <button class="wf-refresh-btn" id="btn-refresh" title="Atualizar">↺ Atualizar</button>
+    <button class="wf-refresh-btn" id="btn-refresh" type="button" title="Atualizar" aria-label="Atualizar workflow">↺ Atualizar</button>
   </div>
 
   <!-- Board (populated by JS) -->
-  <div class="wf-board-wrapper" id="wf-board-wrapper">
+  <div class="wf-board-wrapper" id="wf-board-wrapper" role="region" aria-label="Mapa do workflow instalado" tabindex="0">
     <div class="wf-board" id="wf-board"></div>
   </div>
+
+  <div id="wf-live-region" class="wf-sr-only" aria-live="polite"></div>
+  <aside id="wf-inspector" class="wf-inspector" aria-live="polite" aria-label="Detalhes do agente selecionado"></aside>
 
   <!-- Skills layer (populated by JS if skills exist) -->
   <div id="wf-skills-section" style="display:none"></div>
@@ -320,6 +382,9 @@ export class WorkflowPanel {
   const badgeEl    = document.getElementById('wf-count-badge');
   const edgesSvg   = document.getElementById('wf-edges');
   const wrapper    = document.getElementById('wf-board-wrapper');
+  const inspectorEl = document.getElementById('wf-inspector');
+  const liveRegionEl = document.getElementById('wf-live-region');
+  var cardMatrix = [];
 
   document.getElementById('btn-refresh').addEventListener('click', function () {
     vscode.postMessage({ type: 'refresh' });
@@ -332,9 +397,94 @@ export class WorkflowPanel {
       .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
   }
 
+  function getCardEntry(laneIndex, cardIndex) {
+    var lane = cardMatrix[laneIndex] || [];
+    if (!lane.length) { return null; }
+    var safeIndex = Math.max(0, Math.min(cardIndex, lane.length - 1));
+    return lane[safeIndex];
+  }
+
+  function renderInspector(agent) {
+    if (!inspectorEl) { return; }
+    var toolsList = (agent.tools && agent.tools.length > 0) ? agent.tools.join(', ') : 'Nenhuma ferramenta declarada';
+    var delegatesList = (agent.delegatesTo && agent.delegatesTo.length > 0) ? agent.delegatesTo.join(', ') : 'Sem delegações';
+    var skillsList = (agent.relatedSkills && agent.relatedSkills.length > 0) ? agent.relatedSkills.join(', ') : 'Sem skills relacionadas';
+    var phase = agent.workflowPhase ? agent.workflowPhase.charAt(0).toUpperCase() + agent.workflowPhase.slice(1) : 'Não informada';
+
+    inspectorEl.classList.add('visible');
+    inspectorEl.innerHTML = '<div class="wf-inspector-copy">'
+      + '<span class="wf-inspector-kicker">Agente selecionado</span>'
+      + '<span class="wf-inspector-title">' + escHtml(agent.displayName) + '</span>'
+      + '<span class="wf-inspector-desc">' + escHtml(agent.description || 'Sem descrição adicional.') + '</span>'
+      + '</div>'
+      + '<div class="wf-inspector-meta">'
+      + '<div class="wf-inspector-item"><span class="wf-inspector-label">Fase</span><span class="wf-inspector-value">' + escHtml(phase) + '</span></div>'
+      + '<div class="wf-inspector-item"><span class="wf-inspector-label">Categoria</span><span class="wf-inspector-value">' + escHtml(agent.categoryEmoji + ' ' + agent.categoryLabel) + '</span></div>'
+      + '<div class="wf-inspector-item"><span class="wf-inspector-label">Ferramentas</span><span class="wf-inspector-value">' + escHtml(toolsList) + '</span></div>'
+      + '<div class="wf-inspector-item"><span class="wf-inspector-label">Delegações</span><span class="wf-inspector-value">' + escHtml(delegatesList) + '</span></div>'
+      + '<div class="wf-inspector-item"><span class="wf-inspector-label">Skills</span><span class="wf-inspector-value">' + escHtml(skillsList) + '</span></div>'
+      + '<div class="wf-inspector-item"><span class="wf-inspector-label">Invocação direta</span><span class="wf-inspector-value">' + (agent.userInvocable ? 'Disponível com @agent' : 'Somente via workflow') + '</span></div>'
+      + '</div>';
+  }
+
+  function setSelectedCard(entry, focusCard) {
+    if (!entry) { return; }
+    cardMatrix.flat().forEach(function (item) {
+      item.card.classList.toggle('is-selected', item === entry);
+      item.card.tabIndex = item === entry ? 0 : -1;
+    });
+    renderInspector(entry.agent);
+    if (liveRegionEl) {
+      liveRegionEl.textContent = entry.agent.displayName + ' selecionado em ' + entry.phaseLabel + '.';
+    }
+    if (focusCard) {
+      entry.card.focus();
+    }
+  }
+
+  function handleCardKeydown(event, entry) {
+    var next = null;
+    switch (event.key) {
+      case 'ArrowRight':
+        next = getCardEntry(entry.laneIndex + 1, entry.cardIndex);
+        break;
+      case 'ArrowLeft':
+        next = getCardEntry(entry.laneIndex - 1, entry.cardIndex);
+        break;
+      case 'ArrowDown':
+        next = getCardEntry(entry.laneIndex, entry.cardIndex + 1);
+        break;
+      case 'ArrowUp':
+        next = getCardEntry(entry.laneIndex, entry.cardIndex - 1);
+        break;
+      case 'Home':
+        next = getCardEntry(entry.laneIndex, 0);
+        break;
+      case 'End':
+        next = getCardEntry(entry.laneIndex, Number.MAX_SAFE_INTEGER);
+        break;
+      case 'Enter':
+      case ' ':
+        event.preventDefault();
+        setSelectedCard(entry, false);
+        return;
+      default:
+        return;
+    }
+    if (next) {
+      event.preventDefault();
+      setSelectedCard(next, true);
+    }
+  }
+
   // ── Main render ────────────────────────────────────────
   function render(graph) {
     boardEl.innerHTML = '';
+    cardMatrix = [];
+    if (inspectorEl) {
+      inspectorEl.classList.remove('visible');
+      inspectorEl.innerHTML = '';
+    }
 
     if (graph.totalAgents === 0) { renderEmpty(); return; }
 
@@ -343,6 +493,7 @@ export class WorkflowPanel {
     badgeEl.style.display = 'inline-flex';
 
     graph.phases.forEach(function (phase, idx) {
+      var laneEntries = [];
       if (idx > 0) {
         var conn = document.createElement('div');
         conn.className = 'wf-connector';
@@ -353,17 +504,25 @@ export class WorkflowPanel {
       var lane = document.createElement('div');
       lane.className = 'wf-lane';
       lane.dataset.phaseId = phase.id;
+      lane.setAttribute('role', 'group');
+      lane.setAttribute('aria-label', phase.label + ', ' + phase.agents.length + ' agents');
 
       var lh = document.createElement('div');
       lh.className = 'wf-lane-header';
+      lh.id = 'wf-lane-' + phase.id;
       lh.innerHTML = '<span class="wf-lane-emoji">' + escHtml(phase.emoji) + '</span>'
         + '<span>' + escHtml(phase.label) + '</span>';
       lane.appendChild(lh);
+      lane.setAttribute('aria-labelledby', lh.id);
 
-      phase.agents.forEach(function (agent) {
+      phase.agents.forEach(function (agent, agentIndex) {
         var card = document.createElement('div');
         card.className = 'wf-card animate-fade-in';
         card.dataset.agentId = agent.id;
+        card.tabIndex = -1;
+        card.setAttribute('role', 'button');
+        card.setAttribute('aria-controls', 'wf-inspector');
+        card.setAttribute('aria-label', agent.displayName + ', fase ' + phase.label + ', categoria ' + agent.categoryLabel);
         card.style.setProperty('--cat-color', agent.categoryColor);
 
         // Busca skills para este agent
@@ -397,12 +556,25 @@ export class WorkflowPanel {
           + agentSkillChips;
         lane.appendChild(card);
 
+        var entry = {
+          card: card,
+          agent: agent,
+          laneIndex: idx,
+          cardIndex: agentIndex,
+          phaseLabel: phase.label,
+        };
+        laneEntries.push(entry);
+
         // Tooltip ao passar o mouse
         var agentSnap = agent;
         card.addEventListener('mouseenter', function () { showTooltip(agentSnap, card); });
         card.addEventListener('mouseleave', hideTooltip);
+        card.addEventListener('focus', function () { setSelectedCard(entry, false); });
+        card.addEventListener('click', function () { setSelectedCard(entry, false); });
+        card.addEventListener('keydown', function (event) { handleCardKeydown(event, entry); });
       });
 
+      cardMatrix.push(laneEntries);
       boardEl.appendChild(lane);
     });
 
@@ -415,6 +587,11 @@ export class WorkflowPanel {
     renderZoomControls();
     renderMinimap(graph);
     renderSkillsSection(graph);
+
+    var firstLane = cardMatrix.find(function (lane) { return lane.length > 0; });
+    if (firstLane && firstLane[0]) {
+      setSelectedCard(firstLane[0], false);
+    }
   }
 
   // ── Skills section ─────────────────────────────────────
@@ -432,6 +609,8 @@ export class WorkflowPanel {
 
     section.className = 'wf-skills-section animate-fade-in';
     section.style.display = 'block';
+    section.setAttribute('role', 'region');
+    section.setAttribute('aria-label', 'Skills relacionadas ao workflow');
 
     var headerHtml = '<div class="wf-skills-header">'
       + '<span>🎓</span>'
@@ -441,11 +620,11 @@ export class WorkflowPanel {
       + '</span>'
       + '</div>';
 
-    var gridHtml = '<div class="wf-skills-grid">';
+    var gridHtml = '<div class="wf-skills-grid" role="list">';
     graph.skills.forEach(function (skill) {
       var cls    = skill.installed ? 'wf-skill-node installed' : 'wf-skill-node';
       var status = skill.installed ? '✅' : '📦';
-      gridHtml += '<div class="' + cls + '">'
+      gridHtml += '<div class="' + cls + '" role="listitem" tabindex="0" aria-label="' + escHtml(skill.displayName + (skill.installed ? ', instalada' : ', não instalada')) + '">'
         + '<span>' + status + '</span>'
         + '<span>' + escHtml(skill.displayName) + '</span>'
         + '</div>';
@@ -464,6 +643,13 @@ export class WorkflowPanel {
     // Oculta a seção de skills
     var section = document.getElementById('wf-skills-section');
     if (section) { section.style.display = 'none'; }
+    if (inspectorEl) {
+      inspectorEl.classList.remove('visible');
+      inspectorEl.innerHTML = '';
+    }
+    if (liveRegionEl) {
+      liveRegionEl.textContent = 'Nenhum agent instalado.';
+    }
 
     var empty = document.createElement('div');
     empty.className = 'wf-empty animate-fade-in';
@@ -528,10 +714,12 @@ export class WorkflowPanel {
 
     var legend = document.createElement('div');
     legend.className = 'wf-legend animate-slide-in';
+    legend.setAttribute('role', 'list');
+    legend.setAttribute('aria-label', 'Legenda de categorias do workflow');
     legend.style.setProperty('--delay', '0.4s');
     var html = '<div class="wf-legend-title">Categorias</div>';
     catsSeen.forEach(function (cat) {
-      html += '<div class="wf-legend-row">'
+      html += '<div class="wf-legend-row" role="listitem">'
         + '<div class="wf-legend-dot" style="background:' + cat.color + '"></div>'
         + '<span>' + escHtml(cat.emoji) + ' ' + escHtml(cat.label) + '</span>'
         + '</div>';
@@ -539,7 +727,7 @@ export class WorkflowPanel {
     // Exibe resumo de skills se existirem
     if (graph.skills && graph.skills.length > 0) {
       var installedSkills = graph.skills.filter(function (s) { return s.installed; }).length;
-      html += '<div class="wf-legend-row" style="margin-top:4px;border-top:1px solid rgba(255,255,255,.07);padding-top:4px">'
+      html += '<div class="wf-legend-row" role="listitem" style="margin-top:4px;border-top:1px solid rgba(255,255,255,.07);padding-top:4px">'
         + '<span>🎓 ' + installedSkills + '/' + graph.skills.length + ' skills</span>'
         + '</div>';
     }
@@ -572,10 +760,10 @@ export class WorkflowPanel {
     ctrl.className = 'wf-zoom animate-slide-in';
     ctrl.style.setProperty('--delay', '0.5s');
     ctrl.innerHTML =
-      '<button class="wf-zoom-btn" id="z-out" title="Diminuir zoom">−</button>'
-      + '<button class="wf-zoom-btn" id="z-label" title="Resetar zoom">'
+      '<button class="wf-zoom-btn" id="z-out" type="button" title="Diminuir zoom" aria-label="Diminuir zoom">−</button>'
+      + '<button class="wf-zoom-btn" id="z-label" type="button" title="Resetar zoom" aria-label="Resetar zoom">'
       + Math.round(scale * 100) + '%</button>'
-      + '<button class="wf-zoom-btn" id="z-in" title="Aumentar zoom">+</button>';
+      + '<button class="wf-zoom-btn" id="z-in" type="button" title="Aumentar zoom" aria-label="Aumentar zoom">+</button>';
     document.body.appendChild(ctrl);
 
     // Aplica a escala salva na renderização inicial
@@ -699,6 +887,9 @@ export class WorkflowPanel {
     wrap.className = 'wf-minimap-wrap animate-slide-in';
     wrap.style.setProperty('--delay', '0.45s');
     wrap.setAttribute('title', 'Minimap — clique para navegar');
+    wrap.tabIndex = 0;
+    wrap.setAttribute('role', 'button');
+    wrap.setAttribute('aria-label', 'Minimap do workflow. Use Enter, clique ou setas para navegar.');
 
     var label = document.createElement('div');
     label.className = 'wf-minimap-label';
@@ -724,6 +915,18 @@ export class WorkflowPanel {
       var totalH = board.scrollHeight * sc;
       wr.scrollLeft = relX * totalW - wr.clientWidth  / 2;
       wr.scrollTop  = relY * totalH - wr.clientHeight / 2;
+    });
+    wrap.addEventListener('keydown', function (event) {
+      var wr = document.getElementById('wf-board-wrapper');
+      if (!wr) { return; }
+      if (event.key === 'ArrowRight') { event.preventDefault(); wr.scrollLeft += 180; }
+      if (event.key === 'ArrowLeft') { event.preventDefault(); wr.scrollLeft -= 180; }
+      if (event.key === 'ArrowDown') { event.preventDefault(); wr.scrollTop += 120; }
+      if (event.key === 'ArrowUp') { event.preventDefault(); wr.scrollTop -= 120; }
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        wr.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
+      }
     });
   }
 
@@ -827,10 +1030,75 @@ export class WorkflowPanel {
 </html>`;
   }
 
+  private _getLoadingHtml(webview: vscode.Webview): string {
+    const mainCssUri = webview.asWebviewUri(
+      vscode.Uri.joinPath(this._extensionUri, 'media', 'webview', 'main.css'),
+    );
+    const animCssUri = webview.asWebviewUri(
+      vscode.Uri.joinPath(this._extensionUri, 'media', 'webview', 'animations.css'),
+    );
+
+    const renderLaneSkeleton = (title: string): string => `
+      <div class="wf-lane" aria-hidden="true">
+        <div class="wf-lane-header"><span>⏳</span><span>${title}</span></div>
+        <div class="dai-skeleton-block"></div>
+        <div class="dai-skeleton-block"></div>
+      </div>`;
+
+    return /* html */ `<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DescomplicAI: Workflow</title>
+  <link href="${mainCssUri}" rel="stylesheet">
+  <link href="${animCssUri}" rel="stylesheet">
+  <style>
+    html, body { height: 100%; margin: 0; background: var(--vscode-editor-background); color: var(--vscode-foreground); }
+    .wf-root { display: flex; flex-direction: column; height: 100vh; }
+    .wf-header { display: flex; align-items: center; gap: 16px; padding: 18px 28px; border-bottom: 1px solid var(--dai-border-soft); background: var(--dai-surface-glass); }
+    .wf-header-text { flex: 1; }
+    .wf-title { font-size: 1.3rem; font-weight: 700; margin: 0; }
+    .wf-subtitle { margin: 3px 0 0; font-size: 0.82rem; color: var(--dai-text-muted); }
+    .wf-board-wrapper { flex: 1; overflow: auto; padding: 28px; background-image: radial-gradient(var(--dai-border-soft) 1px, transparent 1px); background-size: 22px 22px; }
+    .wf-board { display: flex; gap: 20px; align-items: flex-start; min-width: max-content; }
+    .wf-lane { display: flex; flex-direction: column; gap: 12px; min-width: 180px; max-width: 220px; }
+    .wf-lane-header { display: flex; align-items: center; gap: 8px; padding: 8px 12px; background: var(--vscode-editor-background); border: 1px solid var(--dai-border-soft); border-radius: 8px; font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--dai-text-muted); }
+    .wf-connector { display: flex; align-items: center; padding-top: 10px; color: var(--dai-text-muted); opacity: 0.5; font-size: 1.2rem; user-select: none; }
+  </style>
+</head>
+<body>
+<div class="wf-root">
+  <div class="wf-header">
+    <div class="dai-stack-icon dai-stack-icon--status dai-logo-loading" style="flex-shrink:0">
+      <div class="dai-stack-layer dai-layer-1"></div>
+      <div class="dai-stack-layer dai-layer-2"></div>
+      <div class="dai-stack-layer dai-layer-3"></div>
+    </div>
+    <div class="wf-header-text">
+      <h1 class="wf-title">Pipeline Dinâmico</h1>
+      <p class="wf-subtitle">Carregando a rede instalada de agents...</p>
+    </div>
+    <span class="dai-status-pill dai-status-pill-active">Atualizando</span>
+  </div>
+  <div class="wf-board-wrapper" aria-hidden="true">
+    <div class="wf-board">
+      ${renderLaneSkeleton('Triagem')}
+      <div class="wf-connector">→</div>
+      ${renderLaneSkeleton('Execução')}
+      <div class="wf-connector">→</div>
+      ${renderLaneSkeleton('Validação')}
+    </div>
+  </div>
+</div>
+</body>
+</html>`;
+  }
+
   // ─── HTML de erro ────────────────────────────────────────────────────────────────────────
 
   private _getErrorHtml(message: string): string {
-    return /* html */`<!DOCTYPE html>
+    return /* html */ `<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
@@ -852,4 +1120,3 @@ export class WorkflowPanel {
 </html>`;
   }
 }
-

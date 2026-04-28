@@ -164,12 +164,12 @@ export class HealthCheckScheduler {
         .join(', ');
       void vscode.window
         .showWarningMessage(
-          `🔴 DescomplicAI Health: ${errorCount} problema(s) crítico(s) encontrado(s). ${titles}`,
-          'Ver Relatório',
-          'Ignorar',
+          `DescomplicAI Health encontrou ${errorCount} problema(s) crítico(s). ${titles}`,
+          'Abrir Health Check',
+          'Dispensar',
         )
         .then((choice) => {
-          if (choice === 'Ver Relatório') {
+          if (choice === 'Abrir Health Check') {
             void vscode.commands.executeCommand('dai-health.focus');
           }
         });

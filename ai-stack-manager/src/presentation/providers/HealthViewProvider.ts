@@ -14,7 +14,9 @@ import { OperationMetricsSnapshot, OperationSnapshot } from '../../domain/entiti
 type HealthMessage = { command: 'runCheck' };
 
 function isHealthMessage(value: unknown): value is HealthMessage {
-  if (!value || typeof value !== 'object') { return false; }
+  if (!value || typeof value !== 'object') {
+    return false;
+  }
   const message = value as Record<string, unknown>;
   return message.command === 'runCheck';
 }
@@ -46,17 +48,25 @@ export class HealthViewProvider implements vscode.WebviewViewProvider {
     webviewView.webview.options = { enableScripts: true, localResourceRoots: [this._extensionUri] };
 
     webviewView.webview.onDidReceiveMessage(async (message: unknown) => {
-      if (!isHealthMessage(message)) { return; }
-      if (message.command === 'runCheck') { await this.runAndRender(); }
+      if (!isHealthMessage(message)) {
+        return;
+      }
+      if (message.command === 'runCheck') {
+        await this.runAndRender();
+      }
     });
 
     this.renderInitial();
   }
 
-  public async refresh(): Promise<void> { await this.runAndRender(); }
+  public async refresh(): Promise<void> {
+    await this.runAndRender();
+  }
 
   private renderInitial(): void {
-    if (!this._view) { return; }
+    if (!this._view) {
+      return;
+    }
 
     const state = { html: this.renderHero(), loading: false };
     if (!this._initialized) {
@@ -75,10 +85,15 @@ export class HealthViewProvider implements vscode.WebviewViewProvider {
   }
 
   private renderCurrentState(): void {
-    if (!this._view) { return; }
+    if (!this._view) {
+      return;
+    }
 
     if (this._lastReport) {
-      WebviewHelper.postState(this._view.webview, { html: this.renderReport(this._lastReport), loading: false });
+      WebviewHelper.postState(this._view.webview, {
+        html: this.renderReport(this._lastReport),
+        loading: false,
+      });
       return;
     }
 
@@ -86,50 +101,91 @@ export class HealthViewProvider implements vscode.WebviewViewProvider {
   }
 
   private async runAndRender(): Promise<void> {
-    if (!this._view) { return; }
+    if (!this._view) {
+      return;
+    }
     WebviewHelper.postState(this._view.webview, { html: this.renderHero(true), loading: true });
-    const report = await this._operations.run({
-      kind: 'health-check',
-      label: 'Executando health check',
-      refreshTargets: [],
-    }, async (operation) => {
-      operation.setProgress(20, 'Validando infraestrutura');
-      const value = await this._healthChecker.check();
-      operation.setProgress(100, 'Health check concluído');
-      return value;
-    });
-    this._lastReport = report;
-    WebviewHelper.postState(this._view.webview, { html: this.renderReport(report), loading: false });
+    try {
+      const report = await this._operations.run(
+        {
+          kind: 'health-check',
+          label: 'Executando health check',
+          refreshTargets: [],
+        },
+        async (operation) => {
+          operation.setProgress(20, 'Validando infraestrutura');
+          const value = await this._healthChecker.check();
+          operation.setProgress(100, 'Health check concluído');
+          return value;
+        },
+      );
+      this._lastReport = report;
+      WebviewHelper.postState(this._view.webview, {
+        html: this.renderReport(report),
+        loading: false,
+      });
+      this.notifyWebview(
+        'success',
+        'Health check concluído',
+        `Score ${report.score} com ${report.findings.length} achados analisados.`,
+      );
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : 'Não foi possível executar o health check.';
+      WebviewHelper.postState(this._view.webview, {
+        html: this.renderError(message),
+        loading: false,
+      });
+      this.notifyWebview('error', 'Falha no health check', message);
+    }
   }
 
   private renderHero(loading = false): string {
-    return /*html*/`
+    return /*html*/ `
     <div class="dai-container">
       ${this.renderOperationBanner()}
       <div class="dai-health-hero ${this._initialized ? '' : 'animate-fade-in'}">
-        <div class="dai-health-icon-large">🩺</div>
+        <div class="dai-health-mark">
+          <div class="dai-stack-icon dai-stack-icon--status ${loading ? 'dai-logo-loading' : 'dai-logo-idle'}" role="img" aria-label="Health check da DescomplicAI">
+            <div class="dai-stack-layer dai-layer-1"></div>
+            <div class="dai-stack-layer dai-layer-2"></div>
+            <div class="dai-stack-layer dai-layer-3"></div>
+          </div>
+          <span class="dai-status-pill ${loading ? 'dai-status-pill-active' : 'dai-status-pill-idle'}">${loading ? 'Escaneando infraestrutura' : 'Observabilidade pronta'}</span>
+        </div>
+        <p class="dai-health-kicker">Monitoramento operacional</p>
         <h3 class="dai-health-title">Health Check da Infraestrutura</h3>
         <p class="dai-health-subtitle">Valide a integridade dos seus agents, skills, MCPs e instructions.</p>
-        <button class="dai-btn dai-btn-primary dai-btn-lg ${loading ? 'dai-btn-loading' : ''}" id="run-check">
-          ${loading ? '<span class="dai-spinner"></span> Escaneando...' : '<span class="dai-btn-icon">▶</span> Executar Health Check'}
+        <button class="dai-btn dai-btn-primary dai-btn-lg ${loading ? 'dai-btn-loading' : ''}" type="button" id="run-check" aria-busy="${loading}" aria-label="Executar health check">
+          ${loading ? '<span class="dai-spinner"></span> Escaneando...' : '<span class="dai-btn-icon">▶</span> Executar health check'}
         </button>
       </div>
     </div>`;
   }
 
   private renderReport(report: HealthReport): string {
-    const scoreColor = report.score >= 90 ? 'var(--itau-success)'
-      : report.score >= 60 ? 'var(--itau-warning)'
-      : 'var(--itau-error)';
+    const scoreColor =
+      report.score >= 90
+        ? 'var(--itau-success)'
+        : report.score >= 60
+          ? 'var(--itau-warning)'
+          : 'var(--itau-error)';
 
     const circumference = 2 * Math.PI * 40;
     const dashOffset = circumference - (report.score / 100) * circumference;
 
-    return /*html*/`
+    return /*html*/ `
     <div class="dai-container">
       ${this.renderOperationBanner()}
-      <!-- Score Ring -->
       <div class="dai-health-score ${this._initialized ? '' : 'animate-scale-in'}">
+        <div class="dai-health-mark">
+          <div class="dai-stack-icon dai-stack-icon--status dai-logo-idle" role="img" aria-label="Health report disponível">
+            <div class="dai-stack-layer dai-layer-1"></div>
+            <div class="dai-stack-layer dai-layer-2"></div>
+            <div class="dai-stack-layer dai-layer-3"></div>
+          </div>
+          <span class="dai-status-pill ${report.score >= 90 ? 'dai-status-pill-ready' : report.score >= 60 ? 'dai-status-pill-warning' : 'dai-status-pill-active'}">${report.statusLabel}</span>
+        </div>
         <div class="dai-score-ring">
           <svg viewBox="0 0 100 100" width="120" height="120">
             <circle cx="50" cy="50" r="40" fill="none" stroke="var(--vscode-widget-border, rgba(255,255,255,0.1))" stroke-width="6"/>
@@ -149,7 +205,6 @@ export class HealthViewProvider implements vscode.WebviewViewProvider {
         </div>
       </div>
 
-      <!-- Stats Bar -->
       <div class="dai-health-stats ${this._initialized ? '' : 'animate-slide-in'}" style="--delay: 0.1s">
         <div class="dai-stat" style="--stat-color: var(--itau-error)">
           <span class="dai-stat-value">${report.errors.length}</span>
@@ -171,22 +226,27 @@ export class HealthViewProvider implements vscode.WebviewViewProvider {
 
       ${this.renderOperationInsights()}
 
-      <!-- Findings -->
       <div class="dai-section">
         <div class="dai-section-header">
           <span class="dai-section-title">Descobertas</span>
-          <button class="dai-btn dai-btn-ghost dai-btn-sm" id="rerun-check">↻ Re-scan</button>
+          <button class="dai-btn dai-btn-ghost dai-btn-sm" type="button" id="rerun-check" aria-label="Executar health check novamente">Reexecutar</button>
         </div>
         ${report.findings.length === 0 ? '<div class="dai-empty">Tudo perfeito! Nenhum problema encontrado.</div>' : ''}
-        ${report.findings.map((f, i) => {
-          const icon = f.severity === HealthSeverity.Error ? '🔴'
-            : f.severity === HealthSeverity.Warning ? '🟡'
-            : f.severity === HealthSeverity.Ok ? '🟢'
-            : '🔵';
-          const severityClass = `severity-${f.severity}`;
+        <div class="alert-list" role="list" aria-label="Descobertas do health check">
+        ${report.findings
+          .map((f, i) => {
+            const icon =
+              f.severity === HealthSeverity.Error
+                ? '🔴'
+                : f.severity === HealthSeverity.Warning
+                  ? '🟡'
+                  : f.severity === HealthSeverity.Ok
+                    ? '🟢'
+                    : '🔵';
+            const severityClass = `severity-${f.severity}`;
 
-          return /*html*/`
-          <div class="dai-finding ${this._initialized ? '' : 'animate-slide-in'} ${severityClass}" style="--delay: ${(i + 2) * 0.06}s">
+            return /*html*/ `
+          <div class="dai-finding ${this._initialized ? '' : 'animate-slide-in'} ${severityClass}" style="--delay: ${(i + 2) * 0.06}s" role="listitem">
             <div class="dai-finding-icon">${icon}</div>
             <div class="dai-finding-content">
               <span class="dai-finding-title">${f.title}</span>
@@ -195,19 +255,47 @@ export class HealthViewProvider implements vscode.WebviewViewProvider {
             </div>
             <span class="dai-finding-category">${f.category}</span>
           </div>`;
-        }).join('')}
+          })
+          .join('')}
+        </div>
+      </div>
+    </div>`;
+  }
+
+  private renderError(message: string): string {
+    return /*html*/ `
+    <div class="dai-container">
+      ${this.renderOperationBanner()}
+      <div class="dai-health-hero">
+        <div class="dai-health-mark">
+          <div class="dai-stack-icon dai-stack-icon--status dai-logo-error" role="img" aria-label="Falha ao executar health check">
+            <div class="dai-stack-layer dai-layer-1"></div>
+            <div class="dai-stack-layer dai-layer-2"></div>
+            <div class="dai-stack-layer dai-layer-3"></div>
+          </div>
+          <span class="dai-status-pill dai-status-pill-active">Erro na varredura</span>
+        </div>
+        <p class="dai-health-kicker">Monitoramento operacional</p>
+        <h3 class="dai-health-title">Não foi possível concluir o health check</h3>
+        <p class="dai-health-subtitle">${message}</p>
+        <button class="dai-btn dai-btn-primary dai-btn-lg" type="button" id="retry-check" aria-label="Tentar executar health check novamente">
+          <span class="dai-btn-icon">↻</span> Tentar novamente
+        </button>
       </div>
     </div>`;
   }
 
   private getScript(): string {
-    return /*js*/`
+    return /*js*/ `
     const render = (state) => state.html || '<div class="dai-container"></div>';
     const bind = (state, app) => {
       app.root.querySelector('#run-check')?.addEventListener('click', () => {
         app.postMessage({ command: 'runCheck' });
       });
       app.root.querySelector('#rerun-check')?.addEventListener('click', () => {
+        app.postMessage({ command: 'runCheck' });
+      });
+      app.root.querySelector('#retry-check')?.addEventListener('click', () => {
         app.postMessage({ command: 'runCheck' });
       });
     };
@@ -220,15 +308,29 @@ export class HealthViewProvider implements vscode.WebviewViewProvider {
       return '';
     }
 
-    const progress = typeof operation.progress === 'number' ? `${operation.progress}%` : 'Em andamento';
-    return /*html*/`
-    <div class="dai-recommendation-banner">
-      <div class="dai-rec-icon">⏳</div>
-      <div class="dai-rec-content">
-        <p class="dai-rec-msg"><b>${operation.label}</b>${operation.message ? ` — ${operation.message}` : ''}</p>
-        <span class="dai-tag">${progress}</span>
+    const progressValue =
+      typeof operation.progress === 'number'
+        ? Math.max(6, Math.min(100, Math.round(operation.progress)))
+        : 24;
+    const progressLabel =
+      typeof operation.progress === 'number' ? `${progressValue}%` : 'Em andamento';
+    const message = operation.message
+      ? operation.message
+      : 'Atualizando outras áreas da sua stack.';
+    return /*html*/ `
+    <section class="dai-operation-banner" role="status" aria-live="polite" aria-label="Progresso da operação atual">
+      <div class="dai-operation-head">
+        <div class="dai-operation-copy">
+          <span class="dai-operation-kicker">Execução em andamento</span>
+          <p class="dai-operation-label">${operation.label}</p>
+          <p class="dai-operation-message">${message}</p>
+        </div>
+        <span class="dai-status-pill dai-status-pill-active">${progressLabel}</span>
       </div>
-    </div>`;
+      <div class="dai-progress-track" aria-hidden="true">
+        <span class="dai-progress-value" style="width: ${progressValue}%"></span>
+      </div>
+    </section>`;
   }
 
   private renderOperationInsights(): string {
@@ -244,26 +346,25 @@ export class HealthViewProvider implements vscode.WebviewViewProvider {
       .sort((left, right) => right.totalRuns - left.totalRuns)
       .slice(0, 3);
 
-    return /*html*/`
+    return /*html*/ `
     <div class="dai-section">
       <div class="dai-section-header">
         <span class="dai-section-title">Operações Recentes</span>
       </div>
       <div class="dai-health-stats">
-        ${topMetrics.map(metric => this.renderMetricCard(metric)).join('')}
+        ${topMetrics.map((metric) => this.renderMetricCard(metric)).join('')}
       </div>
-      <div class="alert-list">
-        ${history.map(entry => this.renderHistoryEntry(entry)).join('')}
+      <div class="alert-list" role="list" aria-label="Histórico recente de operações">
+        ${history.map((entry) => this.renderHistoryEntry(entry)).join('')}
       </div>
     </div>`;
   }
 
   private renderMetricCard(metric: OperationMetricsSnapshot): string {
-    const successRate = metric.totalRuns > 0
-      ? Math.round((metric.completedRuns / metric.totalRuns) * 100)
-      : 0;
+    const successRate =
+      metric.totalRuns > 0 ? Math.round((metric.completedRuns / metric.totalRuns) * 100) : 0;
 
-    return /*html*/`
+    return /*html*/ `
     <div class="dai-stat" style="--stat-color: var(--itau-info)">
       <span class="dai-stat-value">${metric.totalRuns}</span>
       <span class="dai-stat-label">${this.toMetricLabel(metric.kind)}</span>
@@ -273,13 +374,15 @@ export class HealthViewProvider implements vscode.WebviewViewProvider {
 
   private renderHistoryEntry(entry: OperationSnapshot): string {
     const isSuccess = entry.status === 'completed';
-    const duration = entry.finishedAt ? `${Math.max(0, entry.finishedAt - entry.startedAt)}ms` : 'em andamento';
+    const duration = entry.finishedAt
+      ? `${Math.max(0, entry.finishedAt - entry.startedAt)}ms`
+      : 'em andamento';
     const cssClass = isSuccess ? 'ok' : entry.status === 'failed' ? 'warning' : '';
     const icon = isSuccess ? '🟢' : entry.status === 'failed' ? '🔴' : '🔵';
     const detail = entry.errorMessage ?? entry.message ?? 'Sem detalhes adicionais';
 
-    return /*html*/`
-    <div class="alert-item ${cssClass}">
+    return /*html*/ `
+    <div class="alert-item ${cssClass}" role="listitem">
       <span class="alert-title">${icon} ${entry.label}</span>
       <span class="alert-desc">${this.toMetricLabel(entry.kind)} · ${entry.status} · ${duration} — ${detail}</span>
     </div>`;
@@ -297,5 +400,16 @@ export class HealthViewProvider implements vscode.WebviewViewProvider {
     };
 
     return labels[kind];
+  }
+
+  private notifyWebview(
+    kind: 'success' | 'warning' | 'error' | 'info',
+    title: string,
+    message: string,
+  ): void {
+    if (!this._view) {
+      return;
+    }
+    WebviewHelper.postNotification(this._view.webview, { kind, title, message });
   }
 }

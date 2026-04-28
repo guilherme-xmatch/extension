@@ -14,8 +14,13 @@ import { Bundle } from '../../src/domain/entities/Bundle';
 import { HealthReport, HealthSeverity } from '../../src/domain/entities/HealthReport';
 import { HealthCheckerService } from '../../src/infrastructure/services/HealthChecker';
 import { AppLogger } from '../../src/infrastructure/services/AppLogger';
-import { IPackageRepository, IWorkspaceScanner, IInstaller, IOperationCoordinator } from '../../src/domain/interfaces';
-import { setWorkspaceRoot } from '../setup/vscode.mock';
+import {
+  IPackageRepository,
+  IWorkspaceScanner,
+  IInstaller,
+  IOperationCoordinator,
+} from '../../src/domain/interfaces';
+import { queueInformationMessageResponse, setWorkspaceRoot } from '../setup/vscode.mock';
 
 // â”€â”€â”€ Mock Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
@@ -33,7 +38,12 @@ function createMockWebviewView() {
     postMessage: vi.fn(async () => true),
     onDidReceiveMessage: (listener: (msg: unknown) => void) => {
       messageListeners.push(listener);
-      return { dispose: () => { const i = messageListeners.indexOf(listener); if (i >= 0) messageListeners.splice(i, 1); } };
+      return {
+        dispose: () => {
+          const i = messageListeners.indexOf(listener);
+          if (i >= 0) messageListeners.splice(i, 1);
+        },
+      };
     },
   };
 
@@ -54,7 +64,7 @@ function createMockWebviewView() {
       return { dispose: vi.fn() };
     },
     __fireMessage: (msg: unknown) => {
-      messageListeners.forEach(l => l(msg));
+      messageListeners.forEach((l) => l(msg));
     },
   };
 
@@ -80,26 +90,28 @@ function createMockOperations(): IOperationCoordinator {
   };
 }
 
-const makeAgent = (id: string) => Package.create({
-  id,
-  name: id,
-  displayName: id,
-  description: 'test',
-  type: PackageType.Agent,
-  version: '1.0.0',
-  tags: [],
-  author: 'test',
-  files: [{ relativePath: `.github/agents/${id}.agent.md`, content: '# agent' }],
-});
+const makeAgent = (id: string) =>
+  Package.create({
+    id,
+    name: id,
+    displayName: id,
+    description: 'test',
+    type: PackageType.Agent,
+    version: '1.0.0',
+    tags: [],
+    author: 'test',
+    files: [{ relativePath: `.github/agents/${id}.agent.md`, content: '# agent' }],
+  });
 
-const makeBundle = () => Bundle.create({
-  id: 'bundle-backend',
-  name: 'backend',
-  displayName: 'Backend Stack',
-  description: 'full backend',
-  version: '1.0.0',
-  packageIds: ['agent-backend'],
-});
+const makeBundle = () =>
+  Bundle.create({
+    id: 'bundle-backend',
+    name: 'backend',
+    displayName: 'Backend Stack',
+    description: 'full backend',
+    version: '1.0.0',
+    packageIds: ['agent-backend'],
+  });
 
 const emptyRegistry: IPackageRepository = {
   getAll: async () => [],
@@ -136,7 +148,11 @@ describe('CatalogViewProvider', () => {
   let logger: AppLogger;
 
   beforeEach(() => {
-    try { AppLogger.getInstance().dispose(); } catch { /* */ }
+    try {
+      AppLogger.getInstance().dispose();
+    } catch {
+      /* */
+    }
     logger = AppLogger.getInstance();
   });
 
@@ -157,7 +173,10 @@ describe('CatalogViewProvider', () => {
     provider.resolveWebviewView(
       view as unknown as vscode.WebviewView,
       {} as vscode.WebviewViewResolveContext,
-      { isCancellationRequested: false, onCancellationRequested: vi.fn() } as unknown as vscode.CancellationToken,
+      {
+        isCancellationRequested: false,
+        onCancellationRequested: vi.fn(),
+      } as unknown as vscode.CancellationToken,
     );
 
     expect(view.webview.options).toMatchObject({ enableScripts: true });
@@ -167,7 +186,11 @@ describe('CatalogViewProvider', () => {
 
   it('refresh() posta mensagem com pacotes quando view estÃ¡ resolvida', async () => {
     const agent = makeAgent('agent-backend');
-    const registry: IPackageRepository = { ...emptyRegistry, getAll: async () => [agent], getAllBundles: async () => [] };
+    const registry: IPackageRepository = {
+      ...emptyRegistry,
+      getAll: async () => [agent],
+      getAllBundles: async () => [],
+    };
     const provider = new CatalogViewProvider(
       vscode.Uri.file('/ext'),
       registry,
@@ -180,7 +203,10 @@ describe('CatalogViewProvider', () => {
     provider.resolveWebviewView(
       view as unknown as vscode.WebviewView,
       {} as vscode.WebviewViewResolveContext,
-      { isCancellationRequested: false, onCancellationRequested: vi.fn() } as unknown as vscode.CancellationToken,
+      {
+        isCancellationRequested: false,
+        onCancellationRequested: vi.fn(),
+      } as unknown as vscode.CancellationToken,
     );
 
     await provider.refresh();
@@ -198,7 +224,9 @@ describe('CatalogViewProvider', () => {
     };
     const scanner: IWorkspaceScanner = {
       ...notInstalledScanner,
-      detectProjectProfile: async () => [{ profile: 'Backend API', bundleId: 'bundle-backend', confidence: 0.9 }],
+      detectProjectProfile: async () => [
+        { profile: 'Backend API', bundleId: 'bundle-backend', confidence: 0.9 },
+      ],
     };
 
     const provider = new CatalogViewProvider(
@@ -213,7 +241,10 @@ describe('CatalogViewProvider', () => {
     provider.resolveWebviewView(
       view as unknown as vscode.WebviewView,
       {} as vscode.WebviewViewResolveContext,
-      { isCancellationRequested: false, onCancellationRequested: vi.fn() } as unknown as vscode.CancellationToken,
+      {
+        isCancellationRequested: false,
+        onCancellationRequested: vi.fn(),
+      } as unknown as vscode.CancellationToken,
     );
 
     await provider.refresh();
@@ -231,11 +262,14 @@ describe('CatalogViewProvider', () => {
     provider.resolveWebviewView(
       view as unknown as vscode.WebviewView,
       {} as vscode.WebviewViewResolveContext,
-      { isCancellationRequested: false, onCancellationRequested: vi.fn() } as unknown as vscode.CancellationToken,
+      {
+        isCancellationRequested: false,
+        onCancellationRequested: vi.fn(),
+      } as unknown as vscode.CancellationToken,
     );
     vi.mocked(view.webview.postMessage).mockClear();
     view.__fireMessage({ command: 'refresh' });
-    await new Promise(resolve => setTimeout(resolve, 20));
+    await new Promise((resolve) => setTimeout(resolve, 20));
     expect(view.webview.postMessage).toHaveBeenCalled();
   });
 
@@ -252,18 +286,48 @@ describe('CatalogViewProvider', () => {
     provider.resolveWebviewView(
       view as unknown as vscode.WebviewView,
       {} as vscode.WebviewViewResolveContext,
-      { isCancellationRequested: false, onCancellationRequested: vi.fn() } as unknown as vscode.CancellationToken,
+      {
+        isCancellationRequested: false,
+        onCancellationRequested: vi.fn(),
+      } as unknown as vscode.CancellationToken,
     );
 
     // mensagem invÃ¡lida nÃ£o deve lanÃ§ar
-    expect(() => view.__fireMessage({ command: 'hackerAttack', payload: '<script>alert(1)</script>' })).not.toThrow();
+    expect(() =>
+      view.__fireMessage({ command: 'hackerAttack', payload: '<script>alert(1)</script>' }),
+    ).not.toThrow();
     expect(() => view.__fireMessage(null)).not.toThrow();
     expect(() => view.__fireMessage('not an object')).not.toThrow();
   });
 
   it('mensagem "install" aciona instalaÃ§Ã£o via coordinator', async () => {
     const agent = makeAgent('agent-backend');
-    const registry: IPackageRepository = { ...emptyRegistry, getAll: async () => [agent], findById: async (id) => id === agent.id ? agent : undefined };
+    const dependency = makeAgent('agent-shared');
+    const agentWithDependency = Package.create({
+      id: agent.id,
+      name: agent.name,
+      displayName: agent.displayName,
+      description: agent.description,
+      type: agent.type,
+      version: agent.version.toString(),
+      tags: [...agent.tags],
+      author: agent.author,
+      files: agent.files.map((file) => ({ ...file })),
+      dependencies: [dependency.id],
+    });
+    const registry: IPackageRepository = {
+      ...emptyRegistry,
+      getAll: async () => [agentWithDependency, dependency],
+      findById: async (id) => {
+        if (id === agentWithDependency.id) {
+          return agentWithDependency;
+        }
+        if (id === dependency.id) {
+          return dependency;
+        }
+        return undefined;
+      },
+    };
     const operations = createMockOperations();
     const provider = new CatalogViewProvider(
       vscode.Uri.file('/ext'),
@@ -274,15 +338,71 @@ describe('CatalogViewProvider', () => {
     );
 
     const view = createMockWebviewView();
+    queueInformationMessageResponse('Instalar apenas este pacote');
     provider.resolveWebviewView(
       view as unknown as vscode.WebviewView,
       {} as vscode.WebviewViewResolveContext,
-      { isCancellationRequested: false, onCancellationRequested: vi.fn() } as unknown as vscode.CancellationToken,
+      {
+        isCancellationRequested: false,
+        onCancellationRequested: vi.fn(),
+      } as unknown as vscode.CancellationToken,
     );
 
     view.__fireMessage({ command: 'install', packageId: 'agent-backend' });
-    await new Promise(resolve => setTimeout(resolve, 20));
+    await new Promise((resolve) => setTimeout(resolve, 20));
     expect(operations.run).toHaveBeenCalled();
+  });
+
+  it('cancelar o modal de dependências aborta a instalação', async () => {
+    const dependency = makeAgent('agent-shared');
+    const agent = Package.create({
+      id: 'agent-backend',
+      name: 'agent-backend',
+      displayName: 'agent-backend',
+      description: 'test',
+      type: PackageType.Agent,
+      version: '1.0.0',
+      tags: [],
+      author: 'test',
+      dependencies: [dependency.id],
+      files: [{ relativePath: '.github/agents/agent-backend.agent.md', content: '# agent' }],
+    });
+    const registry: IPackageRepository = {
+      ...emptyRegistry,
+      findById: async (id) => {
+        if (id === agent.id) {
+          return agent;
+        }
+        if (id === dependency.id) {
+          return dependency;
+        }
+        return undefined;
+      },
+    };
+    const operations = createMockOperations();
+    const provider = new CatalogViewProvider(
+      vscode.Uri.file('/ext'),
+      registry,
+      notInstalledScanner,
+      mockInstaller,
+      operations,
+    );
+
+    const view = createMockWebviewView();
+    queueInformationMessageResponse(undefined);
+    provider.resolveWebviewView(
+      view as unknown as vscode.WebviewView,
+      {} as vscode.WebviewViewResolveContext,
+      {
+        isCancellationRequested: false,
+        onCancellationRequested: vi.fn(),
+      } as unknown as vscode.CancellationToken,
+    );
+
+    view.__fireMessage({ command: 'install', packageId: agent.id });
+    await new Promise((resolve) => setTimeout(resolve, 20));
+
+    expect(operations.run).not.toHaveBeenCalled();
   });
 
   it('mensagem "install" com packageId vazio Ã© rejeitada (type guard)', () => {
@@ -299,7 +419,10 @@ describe('CatalogViewProvider', () => {
     provider.resolveWebviewView(
       view as unknown as vscode.WebviewView,
       {} as vscode.WebviewViewResolveContext,
-      { isCancellationRequested: false, onCancellationRequested: vi.fn() } as unknown as vscode.CancellationToken,
+      {
+        isCancellationRequested: false,
+        onCancellationRequested: vi.fn(),
+      } as unknown as vscode.CancellationToken,
     );
 
     view.__fireMessage({ command: 'install', packageId: '' }); // packageId vazio â†’ type guard rejeita
@@ -319,7 +442,10 @@ describe('CatalogViewProvider', () => {
     provider.resolveWebviewView(
       view as unknown as vscode.WebviewView,
       {} as vscode.WebviewViewResolveContext,
-      { isCancellationRequested: false, onCancellationRequested: vi.fn() } as unknown as vscode.CancellationToken,
+      {
+        isCancellationRequested: false,
+        onCancellationRequested: vi.fn(),
+      } as unknown as vscode.CancellationToken,
     );
 
     view.__fireMessage({ command: 'openExternal', url: 'http://insecure.example.com' });
@@ -339,11 +465,14 @@ describe('CatalogViewProvider', () => {
     provider.resolveWebviewView(
       view as unknown as vscode.WebviewView,
       {} as vscode.WebviewViewResolveContext,
-      { isCancellationRequested: false, onCancellationRequested: vi.fn() } as unknown as vscode.CancellationToken,
+      {
+        isCancellationRequested: false,
+        onCancellationRequested: vi.fn(),
+      } as unknown as vscode.CancellationToken,
     );
 
     view.__fireMessage({ command: 'openExternal', url: 'https://github.com' });
-    await new Promise(resolve => setTimeout(resolve, 10));
+    await new Promise((resolve) => setTimeout(resolve, 10));
     expect(vscode.env.openExternal).toHaveBeenCalled();
   });
 
@@ -361,13 +490,17 @@ describe('CatalogViewProvider', () => {
     provider.resolveWebviewView(
       view as unknown as vscode.WebviewView,
       {} as vscode.WebviewViewResolveContext,
-      { isCancellationRequested: false, onCancellationRequested: vi.fn() } as unknown as vscode.CancellationToken,
+      {
+        isCancellationRequested: false,
+        onCancellationRequested: vi.fn(),
+      } as unknown as vscode.CancellationToken,
     );
 
     view.__fireMessage({ command: 'search', query: 'x'.repeat(501) });
     // O type guard rejeita a mensagem â€” nenhuma atualizaÃ§Ã£o de view deve acontecer
     // (postMessage pode ser chamado por resolveWebviewView inicial, nÃ£o por search)
-    const callCountBefore = (view.webview.postMessage as ReturnType<typeof vi.fn>).mock.calls.length;
+    const callCountBefore = (view.webview.postMessage as ReturnType<typeof vi.fn>).mock.calls
+      .length;
     view.__fireMessage({ command: 'search', query: 'x'.repeat(501) });
     const callCountAfter = (view.webview.postMessage as ReturnType<typeof vi.fn>).mock.calls.length;
     expect(callCountAfter).toBe(callCountBefore);
@@ -391,11 +524,14 @@ describe('CatalogViewProvider', () => {
     provider.resolveWebviewView(
       view as unknown as vscode.WebviewView,
       {} as vscode.WebviewViewResolveContext,
-      { isCancellationRequested: false, onCancellationRequested: vi.fn() } as unknown as vscode.CancellationToken,
+      {
+        isCancellationRequested: false,
+        onCancellationRequested: vi.fn(),
+      } as unknown as vscode.CancellationToken,
     );
     vi.mocked(view.webview.postMessage).mockClear();
     view.__fireMessage({ command: 'search', query: 'backend' });
-    await new Promise(resolve => setTimeout(resolve, 20));
+    await new Promise((resolve) => setTimeout(resolve, 20));
     expect(view.webview.postMessage).toHaveBeenCalled();
   });
 
@@ -417,11 +553,14 @@ describe('CatalogViewProvider', () => {
     provider.resolveWebviewView(
       view as unknown as vscode.WebviewView,
       {} as vscode.WebviewViewResolveContext,
-      { isCancellationRequested: false, onCancellationRequested: vi.fn() } as unknown as vscode.CancellationToken,
+      {
+        isCancellationRequested: false,
+        onCancellationRequested: vi.fn(),
+      } as unknown as vscode.CancellationToken,
     );
     vi.mocked(view.webview.postMessage).mockClear();
     view.__fireMessage({ command: 'filter', type: 'agent' });
-    await new Promise(resolve => setTimeout(resolve, 20));
+    await new Promise((resolve) => setTimeout(resolve, 20));
     expect(view.webview.postMessage).toHaveBeenCalled();
   });
 
@@ -430,8 +569,8 @@ describe('CatalogViewProvider', () => {
     const agent = makeAgent('agent-backend');
     const registry: IPackageRepository = {
       ...emptyRegistry,
-      findBundleById: async (id) => id === bundle.id ? bundle : undefined,
-      findById: async (id) => id === agent.id ? agent : undefined,
+      findBundleById: async (id) => (id === bundle.id ? bundle : undefined),
+      findById: async (id) => (id === agent.id ? agent : undefined),
     };
     const operations = createMockOperations();
     const provider = new CatalogViewProvider(
@@ -445,10 +584,13 @@ describe('CatalogViewProvider', () => {
     provider.resolveWebviewView(
       view as unknown as vscode.WebviewView,
       {} as vscode.WebviewViewResolveContext,
-      { isCancellationRequested: false, onCancellationRequested: vi.fn() } as unknown as vscode.CancellationToken,
+      {
+        isCancellationRequested: false,
+        onCancellationRequested: vi.fn(),
+      } as unknown as vscode.CancellationToken,
     );
     view.__fireMessage({ command: 'installBundle', bundleId: 'bundle-backend' });
-    await new Promise(resolve => setTimeout(resolve, 20));
+    await new Promise((resolve) => setTimeout(resolve, 20));
     expect(operations.run).toHaveBeenCalled();
   });
 
@@ -456,7 +598,7 @@ describe('CatalogViewProvider', () => {
     const agent = makeAgent('agent-backend');
     const registry: IPackageRepository = {
       ...emptyRegistry,
-      findById: async (id) => id === agent.id ? agent : undefined,
+      findById: async (id) => (id === agent.id ? agent : undefined),
     };
     const operations = createMockOperations();
     const provider = new CatalogViewProvider(
@@ -470,10 +612,13 @@ describe('CatalogViewProvider', () => {
     provider.resolveWebviewView(
       view as unknown as vscode.WebviewView,
       {} as vscode.WebviewViewResolveContext,
-      { isCancellationRequested: false, onCancellationRequested: vi.fn() } as unknown as vscode.CancellationToken,
+      {
+        isCancellationRequested: false,
+        onCancellationRequested: vi.fn(),
+      } as unknown as vscode.CancellationToken,
     );
     view.__fireMessage({ command: 'uninstall', packageId: 'agent-backend' });
-    await new Promise(resolve => setTimeout(resolve, 20));
+    await new Promise((resolve) => setTimeout(resolve, 20));
     expect(operations.run).toHaveBeenCalled();
   });
 
@@ -481,7 +626,7 @@ describe('CatalogViewProvider', () => {
     const agent = makeAgent('agent-backend');
     const registry: IPackageRepository = {
       ...emptyRegistry,
-      findById: async (id) => id === agent.id ? agent : undefined,
+      findById: async (id) => (id === agent.id ? agent : undefined),
       getAgentNetwork: async () => [agent],
       getAll: async () => [agent],
       getAllBundles: async () => [],
@@ -495,13 +640,17 @@ describe('CatalogViewProvider', () => {
       operations,
     );
     const view = createMockWebviewView();
+    queueInformationMessageResponse('Instalar rede completa (1)');
     provider.resolveWebviewView(
       view as unknown as vscode.WebviewView,
       {} as vscode.WebviewViewResolveContext,
-      { isCancellationRequested: false, onCancellationRequested: vi.fn() } as unknown as vscode.CancellationToken,
+      {
+        isCancellationRequested: false,
+        onCancellationRequested: vi.fn(),
+      } as unknown as vscode.CancellationToken,
     );
     view.__fireMessage({ command: 'installNetwork', packageId: 'agent-backend' });
-    await new Promise(resolve => setTimeout(resolve, 20));
+    await new Promise((resolve) => setTimeout(resolve, 20));
     expect(operations.run).toHaveBeenCalled();
   });
 });
@@ -512,7 +661,11 @@ describe('HealthViewProvider', () => {
   let logger: AppLogger;
 
   beforeEach(() => {
-    try { AppLogger.getInstance().dispose(); } catch { /* */ }
+    try {
+      AppLogger.getInstance().dispose();
+    } catch {
+      /* */
+    }
     logger = AppLogger.getInstance();
   });
 
@@ -537,7 +690,10 @@ describe('HealthViewProvider', () => {
     provider.resolveWebviewView(
       view as unknown as vscode.WebviewView,
       {} as vscode.WebviewViewResolveContext,
-      { isCancellationRequested: false, onCancellationRequested: vi.fn() } as unknown as vscode.CancellationToken,
+      {
+        isCancellationRequested: false,
+        onCancellationRequested: vi.fn(),
+      } as unknown as vscode.CancellationToken,
     );
 
     expect(typeof view.webview.html).toBe('string');
@@ -555,11 +711,14 @@ describe('HealthViewProvider', () => {
     provider.resolveWebviewView(
       view as unknown as vscode.WebviewView,
       {} as vscode.WebviewViewResolveContext,
-      { isCancellationRequested: false, onCancellationRequested: vi.fn() } as unknown as vscode.CancellationToken,
+      {
+        isCancellationRequested: false,
+        onCancellationRequested: vi.fn(),
+      } as unknown as vscode.CancellationToken,
     );
 
     view.__fireMessage({ command: 'runCheck' });
-    await new Promise(resolve => setTimeout(resolve, 20));
+    await new Promise((resolve) => setTimeout(resolve, 20));
 
     expect(checker.check).toHaveBeenCalled();
     expect(view.webview.postMessage).toHaveBeenCalled();
@@ -577,7 +736,10 @@ describe('HealthViewProvider', () => {
     provider.resolveWebviewView(
       view as unknown as vscode.WebviewView,
       {} as vscode.WebviewViewResolveContext,
-      { isCancellationRequested: false, onCancellationRequested: vi.fn() } as unknown as vscode.CancellationToken,
+      {
+        isCancellationRequested: false,
+        onCancellationRequested: vi.fn(),
+      } as unknown as vscode.CancellationToken,
     );
 
     view.__fireMessage({ command: 'unknown' });
@@ -608,7 +770,10 @@ describe('HealthViewProvider', () => {
     provider.resolveWebviewView(
       view as unknown as vscode.WebviewView,
       {} as vscode.WebviewViewResolveContext,
-      { isCancellationRequested: false, onCancellationRequested: vi.fn() } as unknown as vscode.CancellationToken,
+      {
+        isCancellationRequested: false,
+        onCancellationRequested: vi.fn(),
+      } as unknown as vscode.CancellationToken,
     );
 
     await provider.refresh();
@@ -616,10 +781,27 @@ describe('HealthViewProvider', () => {
   });
 
   it('runCheck com findings de erro inclui severidades no payload postado', async () => {
-    const report = HealthReport.create([
-      { id: 'no-github-dir', severity: HealthSeverity.Error, category: 'general', title: 'Sem .github', message: 'Diretório .github ausente', autoFixable: false },
-      { id: 'no-vscode-dir', severity: HealthSeverity.Warning, category: 'general', title: 'Sem .vscode', message: 'Diretório .vscode ausente', autoFixable: true },
-    ], 10);
+    const report = HealthReport.create(
+      [
+        {
+          id: 'no-github-dir',
+          severity: HealthSeverity.Error,
+          category: 'general',
+          title: 'Sem .github',
+          message: 'Diretório .github ausente',
+          autoFixable: false,
+        },
+        {
+          id: 'no-vscode-dir',
+          severity: HealthSeverity.Warning,
+          category: 'general',
+          title: 'Sem .vscode',
+          message: 'Diretório .vscode ausente',
+          autoFixable: true,
+        },
+      ],
+      10,
+    );
     const checker = { check: vi.fn(async () => report) } as unknown as HealthCheckerService;
     const provider = new HealthViewProvider(
       vscode.Uri.file('/ext'),
@@ -630,11 +812,16 @@ describe('HealthViewProvider', () => {
     provider.resolveWebviewView(
       view as unknown as vscode.WebviewView,
       {} as vscode.WebviewViewResolveContext,
-      { isCancellationRequested: false, onCancellationRequested: vi.fn() } as unknown as vscode.CancellationToken,
+      {
+        isCancellationRequested: false,
+        onCancellationRequested: vi.fn(),
+      } as unknown as vscode.CancellationToken,
     );
     view.__fireMessage({ command: 'runCheck' });
-    await new Promise(resolve => setTimeout(resolve, 20));
-    const postMessageArgs = (view.webview.postMessage as ReturnType<typeof vi.fn>).mock.calls.map((c) => c[0]);
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    const postMessageArgs = (view.webview.postMessage as ReturnType<typeof vi.fn>).mock.calls.map(
+      (c) => c[0],
+    );
     const stateCall = postMessageArgs.find((msg) => msg?.type === 'setState');
     expect(stateCall).toBeDefined();
     expect(checker.check).toHaveBeenCalled();
@@ -647,7 +834,11 @@ describe('InstalledViewProvider', () => {
   let logger: AppLogger;
 
   beforeEach(() => {
-    try { AppLogger.getInstance().dispose(); } catch { /* */ }
+    try {
+      AppLogger.getInstance().dispose();
+    } catch {
+      /* */
+    }
     logger = AppLogger.getInstance();
   });
 
@@ -669,7 +860,10 @@ describe('InstalledViewProvider', () => {
     provider.resolveWebviewView(
       view as unknown as vscode.WebviewView,
       {} as vscode.WebviewViewResolveContext,
-      { isCancellationRequested: false, onCancellationRequested: vi.fn() } as unknown as vscode.CancellationToken,
+      {
+        isCancellationRequested: false,
+        onCancellationRequested: vi.fn(),
+      } as unknown as vscode.CancellationToken,
     );
 
     expect(view.webview.options).toMatchObject({ enableScripts: true });
@@ -692,7 +886,10 @@ describe('InstalledViewProvider', () => {
     provider.resolveWebviewView(
       view as unknown as vscode.WebviewView,
       {} as vscode.WebviewViewResolveContext,
-      { isCancellationRequested: false, onCancellationRequested: vi.fn() } as unknown as vscode.CancellationToken,
+      {
+        isCancellationRequested: false,
+        onCancellationRequested: vi.fn(),
+      } as unknown as vscode.CancellationToken,
     );
 
     await provider.refresh();
@@ -711,11 +908,14 @@ describe('InstalledViewProvider', () => {
     provider.resolveWebviewView(
       view as unknown as vscode.WebviewView,
       {} as vscode.WebviewViewResolveContext,
-      { isCancellationRequested: false, onCancellationRequested: vi.fn() } as unknown as vscode.CancellationToken,
+      {
+        isCancellationRequested: false,
+        onCancellationRequested: vi.fn(),
+      } as unknown as vscode.CancellationToken,
     );
     vi.mocked(view.webview.postMessage).mockClear();
     view.__fireMessage({ command: 'refresh' });
-    await new Promise(resolve => setTimeout(resolve, 20));
+    await new Promise((resolve) => setTimeout(resolve, 20));
     expect(view.webview.postMessage).toHaveBeenCalled();
   });
 
@@ -724,7 +924,7 @@ describe('InstalledViewProvider', () => {
     const registry: IPackageRepository = {
       ...emptyRegistry,
       getAll: async () => [agent],
-      findById: async (id) => id === agent.id ? agent : undefined,
+      findById: async (id) => (id === agent.id ? agent : undefined),
     };
     const operations = createMockOperations();
     const provider = new InstalledViewProvider(
@@ -739,11 +939,14 @@ describe('InstalledViewProvider', () => {
     provider.resolveWebviewView(
       view as unknown as vscode.WebviewView,
       {} as vscode.WebviewViewResolveContext,
-      { isCancellationRequested: false, onCancellationRequested: vi.fn() } as unknown as vscode.CancellationToken,
+      {
+        isCancellationRequested: false,
+        onCancellationRequested: vi.fn(),
+      } as unknown as vscode.CancellationToken,
     );
 
     view.__fireMessage({ command: 'uninstall', packageId: 'agent-backend' });
-    await new Promise(resolve => setTimeout(resolve, 20));
+    await new Promise((resolve) => setTimeout(resolve, 20));
     expect(operations.run).toHaveBeenCalled();
   });
 
@@ -761,7 +964,10 @@ describe('InstalledViewProvider', () => {
     provider.resolveWebviewView(
       view as unknown as vscode.WebviewView,
       {} as vscode.WebviewViewResolveContext,
-      { isCancellationRequested: false, onCancellationRequested: vi.fn() } as unknown as vscode.CancellationToken,
+      {
+        isCancellationRequested: false,
+        onCancellationRequested: vi.fn(),
+      } as unknown as vscode.CancellationToken,
     );
 
     view.__fireMessage({ command: 'uninstall', packageId: '' });
@@ -782,11 +988,14 @@ describe('InstalledViewProvider', () => {
     provider.resolveWebviewView(
       view as unknown as vscode.WebviewView,
       {} as vscode.WebviewViewResolveContext,
-      { isCancellationRequested: false, onCancellationRequested: vi.fn() } as unknown as vscode.CancellationToken,
+      {
+        isCancellationRequested: false,
+        onCancellationRequested: vi.fn(),
+      } as unknown as vscode.CancellationToken,
     );
 
     view.__fireMessage({ command: 'openFile', filePath: '.github/agents/backend.agent.md' });
-    await new Promise(resolve => setTimeout(resolve, 10));
+    await new Promise((resolve) => setTimeout(resolve, 10));
     expect(vscode.window.showTextDocument).toHaveBeenCalled();
   });
 
@@ -803,7 +1012,10 @@ describe('InstalledViewProvider', () => {
     provider.resolveWebviewView(
       view as unknown as vscode.WebviewView,
       {} as vscode.WebviewViewResolveContext,
-      { isCancellationRequested: false, onCancellationRequested: vi.fn() } as unknown as vscode.CancellationToken,
+      {
+        isCancellationRequested: false,
+        onCancellationRequested: vi.fn(),
+      } as unknown as vscode.CancellationToken,
     );
 
     view.__fireMessage({ command: 'openFile', filePath: '../../etc/passwd' });
@@ -823,7 +1035,10 @@ describe('InstalledViewProvider', () => {
     provider.resolveWebviewView(
       view as unknown as vscode.WebviewView,
       {} as vscode.WebviewViewResolveContext,
-      { isCancellationRequested: false, onCancellationRequested: vi.fn() } as unknown as vscode.CancellationToken,
+      {
+        isCancellationRequested: false,
+        onCancellationRequested: vi.fn(),
+      } as unknown as vscode.CancellationToken,
     );
 
     view.__fireMessage({ command: 'openFile', filePath: '/absolute/path/file.ts' });
@@ -843,7 +1058,10 @@ describe('InstalledViewProvider', () => {
     provider.resolveWebviewView(
       view as unknown as vscode.WebviewView,
       {} as vscode.WebviewViewResolveContext,
-      { isCancellationRequested: false, onCancellationRequested: vi.fn() } as unknown as vscode.CancellationToken,
+      {
+        isCancellationRequested: false,
+        onCancellationRequested: vi.fn(),
+      } as unknown as vscode.CancellationToken,
     );
 
     expect(() => view.__fireMessage({ command: 'xss', payload: '<img onerror=1>' })).not.toThrow();

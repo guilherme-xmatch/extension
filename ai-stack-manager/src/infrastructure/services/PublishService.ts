@@ -7,6 +7,7 @@ import { Package } from '../../domain/entities/Package';
 import { PackageType } from '../../domain/value-objects/PackageType';
 import { AppLogger } from './AppLogger';
 import { McpDocumentAdapter, NormalizedMcpDocument } from './McpDocumentAdapter';
+import { UxDiagnosticsService } from './UxDiagnosticsService';
 
 export class PublishService {
   private readonly logger = AppLogger.getInstance();
@@ -25,12 +26,12 @@ export class PublishService {
 
       if (document.format !== 'copilot') {
         void vscode.window.showInformationMessage(
-          `Formato detectado: ${document.format === 'claude-desktop' ? 'Claude Desktop / Cursor' : document.format}. Convertendo para formato Copilot/VS Code.`
+          `Formato detectado: ${document.format === 'claude-desktop' ? 'Claude Desktop / Cursor' : document.format}. O arquivo será convertido para o formato Copilot/VS Code.`,
         );
       }
 
       const packages = Object.entries(document.servers).map(([serverName, serverConfig]) =>
-        this.buildCustomMcpPackage(serverName, serverConfig, document.inputs)
+        this.buildCustomMcpPackage(serverName, serverConfig, document.inputs),
       );
 
       for (const pkg of packages) {
@@ -42,6 +43,10 @@ export class PublishService {
     } catch (error) {
       statusBar.setError('Falha ao importar MCP');
       this.logger.error('CUSTOM_MCP_IMPORT_FAILED', { filePath: fileUri.fsPath, error });
+      UxDiagnosticsService.getInstance().track('service.importCustomMcp.failed', {
+        surface: 'notification',
+        category: UxDiagnosticsService.categorizeError(error),
+      });
       throw error;
     }
   }
@@ -70,11 +75,11 @@ export class PublishService {
           '',
           '## Instalação',
           '',
-          ...pkg.ui.installNotes.map(note => `- ${note}`),
+          ...pkg.ui.installNotes.map((note) => `- ${note}`),
           '',
           '## Highlights',
           '',
-          ...pkg.ui.highlights.map(item => `- ${item}`),
+          ...pkg.ui.highlights.map((item) => `- ${item}`),
         ].join('\n');
         const readme = [
           `# ${pkg.displayName}`,
@@ -94,29 +99,49 @@ export class PublishService {
           '- details.md',
         ].join('\n');
 
-        fs.writeFileSync(path.join(packageRoot, 'manifest.json'), JSON.stringify(manifest, null, 2), 'utf-8');
-        fs.writeFileSync(path.join(packageRoot, 'mcp.json'), JSON.stringify({ servers: { [serverName]: serverConfig }, inputs: document.inputs }, null, 2), 'utf-8');
+        fs.writeFileSync(
+          path.join(packageRoot, 'manifest.json'),
+          JSON.stringify(manifest, null, 2),
+          'utf-8',
+        );
+        fs.writeFileSync(
+          path.join(packageRoot, 'mcp.json'),
+          JSON.stringify(
+            { servers: { [serverName]: serverConfig }, inputs: document.inputs },
+            null,
+            2,
+          ),
+          'utf-8',
+        );
         fs.writeFileSync(path.join(packageRoot, 'README.md'), readme, 'utf-8');
         fs.writeFileSync(path.join(packageRoot, 'details.md'), details, 'utf-8');
       }
 
       statusBar.setSuccess('Artefato gerado');
-      await vscode.window.showInformationMessage(
-        'Artefato de contribuição gerado com sucesso.',
-        'Abrir pasta',
-        'Abrir repositório oficial',
-      ).then(async choice => {
-        if (choice === 'Abrir pasta') {
-          await vscode.commands.executeCommand('revealFileInOS', vscode.Uri.file(artifactRoot));
-        }
-        if (choice === 'Abrir repositório oficial') {
-          await vscode.env.openExternal(vscode.Uri.parse('https://github.com/guilherme-xmatch/DescomplicAI'));
-        }
-      });
+      await vscode.window
+        .showInformationMessage(
+          'Contribuição gerada com sucesso.',
+          'Abrir pasta',
+          'Abrir repositório oficial',
+        )
+        .then(async (choice) => {
+          if (choice === 'Abrir pasta') {
+            await vscode.commands.executeCommand('revealFileInOS', vscode.Uri.file(artifactRoot));
+          }
+          if (choice === 'Abrir repositório oficial') {
+            await vscode.env.openExternal(
+              vscode.Uri.parse('https://github.com/guilherme-xmatch/DescomplicAI'),
+            );
+          }
+        });
     } catch (error: any) {
       statusBar.setError('Falha ao publicar');
       this.logger.error('PACKAGE_PUBLISH_FAILED', { filePath: fileUri.fsPath, error });
-      vscode.window.showErrorMessage(`Falha na publicação: ${error.message}`);
+      UxDiagnosticsService.getInstance().track('service.publishPackage.failed', {
+        surface: 'notification',
+        category: UxDiagnosticsService.categorizeError(error),
+      });
+      vscode.window.showErrorMessage(`Não foi possível gerar a contribuição. ${error.message}`);
     }
   }
 
@@ -164,7 +189,11 @@ export class PublishService {
     };
   }
 
-  private buildCustomMcpPackage(serverName: string, serverConfig: unknown, inputs: NormalizedMcpDocument['inputs']): Package {
+  private buildCustomMcpPackage(
+    serverName: string,
+    serverConfig: unknown,
+    inputs: NormalizedMcpDocument['inputs'],
+  ): Package {
     const slug = this.slugify(serverName);
     const description = this.describeServer(serverName, serverConfig);
     const content = JSON.stringify({ servers: { [serverName]: serverConfig }, inputs }, null, 2);
@@ -232,11 +261,13 @@ export class PublishService {
   }
 
   private slugify(value: string): string {
-    return value
-      .toLowerCase()
-      .replace(/[^a-z0-9-]+/g, '-')
-      .replace(/^-+|-+$/g, '')
-      .replace(/-{2,}/g, '-') || 'custom-mcp';
+    return (
+      value
+        .toLowerCase()
+        .replace(/[^a-z0-9-]+/g, '-')
+        .replace(/^-+|-+$/g, '')
+        .replace(/-{2,}/g, '-') || 'custom-mcp'
+    );
   }
 
   private toDisplayName(value: string): string {
@@ -244,6 +275,6 @@ export class PublishService {
       .replace(/[-_]+/g, ' ')
       .replace(/\s+/g, ' ')
       .trim()
-      .replace(/\b\w/g, char => char.toUpperCase());
+      .replace(/\b\w/g, (char) => char.toUpperCase());
   }
 }
